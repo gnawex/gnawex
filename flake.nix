@@ -19,6 +19,7 @@
             elixir
             erlang
             gleam
+            nodejs-14_x
 
             # dev tools
             elixir_ls
