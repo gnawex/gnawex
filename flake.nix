@@ -24,6 +24,10 @@
             # dev tools
             elixir_ls
 
+            # documentation
+            mdbook
+            mdbook-mermaid
+
             cacert
             inotify-tools
 

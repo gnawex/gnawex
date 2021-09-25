@@ -38,3 +38,6 @@ gen
 # Nix
 .direnv/
 result/
+
+# mdbook
+**/book/
