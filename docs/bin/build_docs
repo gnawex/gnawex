@@ -1,0 +1,14 @@
+#!/bin/bash
+
+echo "========> Setting up mdbook-mermaid"
+curl -L https://github.com/badboy/mdbook-mermaid/releases/download/v0.8.3/mdbook-mermaid-v0.8.3-x86_64-unknown-linux-gnu.tar.gz | tar xvz
+echo pwd
+export PATH="$PATH:."
+
+echo "========> Installing mermaid"
+mdbook-mermaid install .
+
+echo "========> Building"
+curl -L https://github.com/rust-lang/mdBook/releases/download/v0.4.12/mdbook-v0.4.12-x86_64-unknown-linux-gnu.tar.gz | tar xvz && ./mdbook build .
+
+echo "Done!"
