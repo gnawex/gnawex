@@ -7,6 +7,7 @@ defmodule Gnawex.MixProject do
       version: "0.1.0",
       elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
+      elixirc_options: [warnings_as_errors: true],
       erlc_paths: ["src", "gen"],
       compilers: [:gleam, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
@@ -52,7 +53,8 @@ defmodule Gnawex.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:mix_gleam, "~> 0.1.0"},
       {:gleam_stdlib, "~> 0.17.0"},
-      {:surface, "~> 0.5.2"}
+      {:surface, "~> 0.5.2"},
+      {:exceptional, "~> 2.1"}
     ]
   end
 
