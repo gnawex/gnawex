@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "alpinejs": "^3.4.1",
+    "alpinejs": "^3.4.1"
   },
   "devDependencies": {
     "autoprefixer": "^10.3.5",
