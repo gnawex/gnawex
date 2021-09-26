@@ -2,9 +2,8 @@
 
 - [WIP: Introduction](./introduction.md)
 - [WIP: Roles](./roles/index.md)
-  - [User](./roles/user.md)
+  - [Trader](./roles/trader.md)
 - [WIP: Flow](./flowchart/index.md)
-  - [Registration](./flowchart/registration.md)
   - [Selling](./flowchart/selling.md)
   - [Buying](./flowchart/buying.md)
   - [Order match](./flowchart/order-match.md)
