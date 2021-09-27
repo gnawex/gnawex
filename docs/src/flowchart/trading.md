@@ -22,10 +22,6 @@ flowchart LR
   C --> NewBid[Bid: 200SB x 0 TSR]
 ```
 
-### Expiration
-
-Transactions automatically expire 5 minutes after you've gone offline. The justification for this is that the involved parties must be active to ensure swift fulfillment.
-
 ## The transaction flow
 
 Both flows of buy and sell are identical.
@@ -62,14 +58,15 @@ flowchart LR
   AskA[Ask 1: 200SB x 2 TSR] --> TxnA([Transaction 1])
   Bid[Bid: 200SB x 6 TSR] --> TxnA
 
-  Bid --> TxnB([Transaction 2])
-  AskB[/Ask 2: 200SB x 5 TSR/] --> TxnB
+  AskB[Ask 2: 200SB x 5 TSR] --> TxnB
 
-  TxnB --> NewAskB[Ask 2: 200SB x 0 TSR]
-  TxnA --> NewAskA[Ask 1: 200SB x 1 TSR]
+  TxnB --> NewAskB[Ask 2: 200SB x 1 TSR]
+  TxnA --> NewAskA[Ask 1: 200SB x 0 TSR]
 
-  TxnA --> NewBid[Bid: 200SB x 0 TSR]
-  TxnB --> NewBid
+  TxnA --> NewBid[Bid: 200SB x 4 TSR]
+
+  NewBid --> TxnB([Transaction 2])
+  TxnB --> NewNewBid[Bid: 200SB x 0 TSR]
 ```
 
 ## Terms
