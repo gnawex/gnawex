@@ -8,6 +8,7 @@
   - [Transactions](./trading/transactions.md)
   - [Matching](./trading/matching.md)
   - [Items](./trading/items.md)
+  - [WIP: Maps](./trading/maps.md)
 - [WIP: Penalties](./penalties.md)
 - [Developers](./dev/index.md)
   - [Getting started](./dev/getting-started.md)

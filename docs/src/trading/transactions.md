@@ -3,6 +3,11 @@
 A **transaction** involves a bid and ask. These listings involved can be more
 than one depending on the situation.
 
+> **Note:** The transaction flow is identical with items, maps, and bounties.
+> The only difference is the data needed.
+
+> **Note:** The transaction flow is identical with items, maps, and bounties. The only difference is the data needed.
+
 ```mermaid
 flowchart LR
   Ask[Ask: 200SB x 5 TSR] --> C([Transaction 1])
