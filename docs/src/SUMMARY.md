@@ -7,7 +7,7 @@
   - [Listings](./trading/listings.md)
   - [Transactions](./trading/transactions.md)
   - [Matching](./trading/matching.md)
-  - [Items](./trading/items.md)
+  - [Tradable](./trading/tradable.md)
 - [WIP: Penalties](./penalties.md)
 - [Developers](./dev/index.md)
   - [Getting started](./dev/getting-started.md)

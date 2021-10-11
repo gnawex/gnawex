@@ -1,6 +1,7 @@
-# Items
+# Tradable Items
 
-Items refer to any item that can be sent with MouseHunt's *Send supplies* option.
+Tradable items refer to any item that can be sent with MouseHunt's
+*Send supplies* option.
 
 Creating *any* listing for items require the following information:
 
