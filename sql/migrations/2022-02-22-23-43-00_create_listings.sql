@@ -8,7 +8,7 @@ CREATE TABLE listings (
   cost            INT NOT NULL CHECK (cost > 0),
   type            LISTING_TYPE NOT NULL,
   batch           INT NOT NULL,
-  is_active       BOOLEAN NOT NULL,
+  is_active       BOOLEAN DEFAULT true NOT NULL,
 
   created_at      TIMESTAMP DEFAULT current_timestamp NOT NULL,
   updated_at      TIMESTAMP DEFAULT current_timestamp NOT NULL,
