@@ -2,6 +2,21 @@
 
 A third-party exchange for [MouseHunt](https://mousehuntgame.com).
 
+## Project structure
+
+```
+.
+├── bin           Scripts
+├── docs          Documentation for the entire project
+├── flake.lock    Lock file for Nix
+├── flake.nix     Reproducible dev environments
+├── LICENSE       How you can use the software, and other terms
+├── migrations    Migration scripts
+├── README.md     Read it!
+└── seeds         Database seeds
+```
+
+>>>>>>> d10ab09 (Add naive implementation for matching listings)
 ## Getting started
 
 Note: I'm currently experimenting with a lot of stuff, especially with `plpgsql`
