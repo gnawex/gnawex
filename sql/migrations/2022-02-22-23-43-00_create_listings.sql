@@ -80,7 +80,11 @@ BEGIN
       LIMIT 1
       INTO matched_id;
 
-      CALL transact(NEW.id, matched_id, NEW.item_id);
+      IF matched_id IS NOT NULL THEN
+        CALL transact(NEW.id, matched_id, NEW.item_id);
+      ELSE
+        RAISE NOTICE 'Could not find a SELL order for listing ID % at %.', NEW.id, now();
+      END IF;
 
     WHEN NEW.type = 'sell' THEN
       SELECT listings.id
@@ -94,7 +98,11 @@ BEGIN
       LIMIT 1
       INTO matched_id;
 
-      CALL transact(matched_id, NEW.id, NEW.item_id);
+      IF matched_id IS NOT NULL THEN
+        CALL transact(matched_id, NEW.id, NEW.item_id);
+      ELSE
+        RAISE NOTICE 'Could not find a BUY order for listing ID % at %.', NEW.id, now();
+      END IF;
   END CASE;
 
   RETURN NULL;
@@ -139,7 +147,7 @@ DECLARE
   -- Item quantity of the sell order
   sell_quantity      INTEGER;
 BEGIN
-  RAISE NOTICE 'Creating a transaction for BUY order %, and SELL order % at %',
+  RAISE NOTICE 'Creating a transaction for BUY order %, and SELL order % at %.',
     buy_order_id, sell_order_id, now();
 
   -- Creates a transaction involving two listings; a buy and sell listing.
