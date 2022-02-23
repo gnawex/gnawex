@@ -1,5 +1,5 @@
--- The `transact` procedure processes two listings (or orders). Currently, the
--- `item_id` fields don't have to match.
+-- The `transact` procedure processes two listings (or orders).
+-- `transact` requires these two listings to have the same `item_id` value.
 --
 -- 1. Creates a row in `transactions` with the buy and sell order IDs.
 -- 2. Gets the sell order's quantity; puts it in `sell_quantity`.
@@ -10,21 +10,25 @@
 -- It's considered a failure if the update operations in step 4 and 5 affects 0
 -- rows. Such failure will cause a rollback in the database transaction.
 --
--- TODO: Require the `item_id`s to match before it processes the transaction.
-CREATE OR REPLACE PROCEDURE transact(buy_order_id BIGINT, sell_order_id BIGINT)
+-- Example:
+--
+-- Buy order ID 3, sell order ID 1, item ID 1
+-- db=# CALL transact(3, 1, 1);
+CREATE OR REPLACE PROCEDURE transact(buy_order_id BIGINT, sell_order_id BIGINT,
+listing_item_id BIGINT)
 AS $$
 DECLARE
   -- Number of affected rows in the buy order's update
-  buy_affected_rows  integer;
+  buy_affected_rows  INTEGER;
 
   -- Number of affected rows in the sell order's update
-  sell_affected_rows integer;
+  sell_affected_rows INTEGER;
 
   -- Item quantity of the buy order
-  buy_quantity       integer;
+  buy_quantity       INTEGER;
 
   -- Item quantity of the sell order
-  sell_quantity      integer;
+  sell_quantity      INTEGER;
 BEGIN
   -- Creates a transaction involving two listings; a buy and sell listing.
   INSERT INTO transactions (buy_order, sell_order) VALUES (3, 1);
@@ -32,16 +36,26 @@ BEGIN
   -- Get the sell order's quantity
   SELECT COALESCE(SUM(quantity), 0) AS quantity
   FROM listings
-  WHERE listings.id = sell_order_id
-  AND   listings.type = 'sell'
+  WHERE listings.id        = sell_order_id
+    AND listings.type      = 'sell'
+    AND listings.is_active = true
   INTO sell_quantity;
+
+  IF sell_quantity = 0 THEN
+    RAISE EXCEPTION 'Sell order is not valid. It either has no stock or is inactive.';
+  END IF;
 
   -- Get the buy order's quantity
   SELECT COALESCE(SUM(quantity), 0) AS quantity
   FROM listings
-  WHERE listings.id = buy_order_id
-  AND listings.type = 'buy'
+  WHERE listings.id        = buy_order_id
+    AND listings.type      = 'buy'
+    AND listings.is_active = true
   INTO buy_quantity;
+
+  IF sell_quantity = 0 THEN
+    RAISE EXCEPTION 'Buy order is not valid. It either has no stock or is inactive.';
+  END IF;
 
   -- Reduces the quantity of a listing by 1. This ensures that
   -- something was actually reduced cause otherwise, the transaction
@@ -55,13 +69,14 @@ BEGIN
                  ELSE true
             END
       WHERE id = buy_order_id
-      AND   listings.type = 'buy'
-      AND   listings.quantity > 0
+        AND listings.type = 'buy'
+        AND listings.quantity > 0
+        AND listings.item_id = listing_item_id
       RETURNING 1
   )
   SELECT COUNT(*) FROM affected_buy_cte INTO buy_affected_rows;
 
-  IF BUY_AFFECTED_ROWS = 0 THEN
+  IF buy_affected_rows = 0 THEN
     RAISE EXCEPTION 'I was not able to update the BUY order. This transaction is not valid.';
   END IF;
 
@@ -75,12 +90,14 @@ BEGIN
                  THEN false
                  ELSE true
             END
-      WHERE id = sell_order_id AND listings.type = 'sell'
+      WHERE id = sell_order_id 
+        AND listings.type = 'sell'
+        AND listings.item_id = listing_item_id
       RETURNING 1
   )
-  SELECT count(*) FROM affected_sell_cte INTO sell_affected_rows;
+  SELECT COUNT(*) FROM affected_sell_cte INTO sell_affected_rows;
 
-  IF SELL_AFFECTED_ROWS = 0 THEN
+  IF sell_affected_rows = 0 THEN
     RAISE EXCEPTION 'I was not able to update the SELL order. This transaction is not valid.';
   END IF;
 END;
