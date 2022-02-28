@@ -12,7 +12,12 @@
           lib =  nixpkgs.lib;
       in {
         devShell = pkgs.mkShell rec {
-          buildInputs = with pkgs; [];
+          buildInputs = with pkgs; [
+
+          ];
         };
+
+        shellHook = ''
+        ''; 
       });
 }

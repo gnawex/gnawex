@@ -14,8 +14,9 @@ Make sure you start with a fresh database. You can name it whatever you like
 as of now, but I'll be using `gnawex_dev_db`, and `gnawex_db` for dev, and prod
 respectively. You could also just drop the entire database if you want.
 
-0. Create the database `createdb gnawex_db --username postgres`
-1. Run the migrations. You have to set the `user`/`password`/`host`/`port` if
+1. Create the database `createdb gnawex_db --username postgres`
+
+2. Run the migrations. You have to set the `user`/`password`/`host`/`port` if
    ever it varies from the default.
 
 ```sh
@@ -33,7 +34,7 @@ psql \
   --file migrations/2022-02-22-23-43-00_create_listings.sql
 ```
 
-2. Seed the database
+3. Seed the database
 
 ```sh
 psql \
@@ -47,16 +48,10 @@ psql \
 psql \
   --user postgres \
   --dbname=gnawex_db \
-  --command "\copy listings FROM 'seeds/listings.csv' delimiter ',' csv header" && \
-psql \
-  --user postgres \
-  --dbname=gnawex_db \
-  --command "\copy transactions FROM 'seeds/transactions.csv' delimiter ',' csv header" 
+  --command "\copy listings FROM 'seeds/listings.csv' delimiter ',' csv header"
 ```
 
 ### Project structure
 
 - `migrations/`: Tables, functions, procedures, triggers, etc.
 - `seeds/`: Sample seed data. Right now it's pretty basic.
-
-
