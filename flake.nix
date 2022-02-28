@@ -13,11 +13,21 @@
       in {
         devShell = pkgs.mkShell rec {
           buildInputs = with pkgs; [
+            # Compilers
+            elixir
+            erlang
 
+            # Dev tools
+            elixir_ls
+
+            # Used for hot reload
+            inotify-tools
           ];
         };
 
         shellHook = ''
+        export LANG="en_US.UTF-8";
+        export LC_TYPE="en_US.UTF-8";
         ''; 
       });
 }
