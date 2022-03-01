@@ -16,7 +16,6 @@ A third-party exchange for [MouseHunt](https://mousehuntgame.com).
 └── seeds         Database seeds
 ```
 
->>>>>>> d10ab09 (Add naive implementation for matching listings)
 ## Getting started
 
 Note: I'm currently experimenting with a lot of stuff, especially with `plpgsql`
@@ -70,3 +69,4 @@ psql \
 
 - `migrations/`: Tables, functions, procedures, triggers, etc.
 - `seeds/`: Sample seed data. Right now it's pretty basic.
+
