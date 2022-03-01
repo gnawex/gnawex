@@ -38,13 +38,15 @@ defmodule Docs.MixProject do
     [
       "guides/gnawex.md",
       "guides/introduction/setup.md",
-      "guides/introduction/available-scripts.md"
+      "guides/introduction/available-scripts.md",
+      "guides/auth/roles.md"
     ]
   end
 
   defp groups_for_extras do
     [
       Introduction: ~r/guides\/introduction\/.?/,
+      Auth: ~r/guides\/auth\/.?/,
     ]
   end
 
