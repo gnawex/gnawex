@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.28.2">
+    <meta name="project" content="GNAWEX v0.1.0">
+
+    <title>Available scripts — GNAWEX v0.1.0</title>
+    <link rel="stylesheet" href="dist/elixir-69d615db1d0fc8b2ce48.css" />
+
+    <script src="dist/sidebar_items-7e2db41b19.js"></script>
+
+      <script src="docs_config.js"></script>
+
+    <script async src="dist/app-073abeeda7b7e6d5d7e9.js"></script>
+
+
+  </head>
+  <body data-type="extras">
+    <script>
+
+      try {
+        if (localStorage.getItem('night-mode') === 'true') {
+          document.body.classList.add('night-mode');
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+
+<section class="sidebar">
+  <button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+    <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+  </button>
+
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+      <a href="http://gnawex.com">
+        <img src="assets/logo.svg" alt="GNAWEX" class="sidebar-projectImage">
+      </a>
+
+    <div class="sidebar-projectDetails">
+      <a href="http://gnawex.com" class="sidebar-projectName" translate="no">
+GNAWEX
+      </a>
+      <strong class="sidebar-projectVersion" translate="no">
+        v0.1.0
+      </strong>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">GUIDES</a></li>
+
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="settings display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+    <a href="https://github.com/gnawex/gnawex/blob/main/guides/introduction/available-scripts.md#L1" title="View Source" class="view-source" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span>Available scripts</span>
+</h1>
+
+<blockquote><p>In the future, I'm going to rely on <code class="inline">Makefile</code> instead of <code class="inline">fish</code> scripts
+since it's tedious to manually load the script into the environment.</p></blockquote><p>For these scripts to work, you need <code class="inline">psql</code> and <code class="inline">postgresql</code> setup. <code class="inline">psql</code> comes
+with <code class="inline">postgresql</code>.</p><h2 id="migrate" class="section-heading">
+  <a href="#migrate" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">migrate</p>
+  </a>
+  <code class="inline">migrate</code>
+</h2>
+<p>Takes <strong>all</strong> migration files from <code class="inline">migrations/</code>, and loads it in <code class="inline">gnawex_db</code>.</p><pre><code class="makeup sh" translate="no"><span class=""># This is pretty much it
+</span><span class="">migrate
+</span></code></pre><h2 id="seed-db" class="section-heading">
+  <a href="#seed-db" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">seed-db</p>
+  </a>
+  <code class="inline">seed-db</code>
+</h2>
+<p><code class="inline">seed-db</code> expects 1 argument, which can either be <code class="inline">dev</code>, or <code class="inline">prod</code>. If you're
+using this for a dev environment, use <code class="inline">dev</code>, otherwise if it's for production
+then use <code class="inline">prod</code>. You know how it goes. The seed files are in <code class="inline">seeds/</code> as <code class="inline">.csv</code>
+with headers, and delimited with <code class="inline">,</code>.</p><p>Here are the files those two look for:</p><ul><li><code class="inline">seed-db dev</code><ul><li><code class="inline">seeds/users.csv</code>: Dummy users</li><li><code class="inline">seeds/items.csv</code>: Tradable MouseHunt items</li><li><code class="inline">seeds/listings.csv</code>: Dummy listings</li></ul></li><li><code class="inline">seed-db prod</code>: <strong>TODO</strong></li></ul><h2 id="drop-db" class="section-heading">
+  <a href="#drop-db" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">drop-db</p>
+  </a>
+  <code class="inline">drop-db</code>
+</h2>
+<p>Drops <code class="inline">gnawex_db</code>.</p><h2 id="reset-db" class="section-heading">
+  <a href="#reset-db" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">reset-db</p>
+  </a>
+  <code class="inline">reset-db</code>
+</h2>
+<p>This is a convenience function that resets <code class="inline">gnawex_db</code>.</p><pre><code class="makeup sh" translate="no"><span class="">drop-db
+</span><span class="">createdb gnawex_db --user postgres
+</span><span class="">migrate
+</span><span class="">seed-db dev
+</span><span class="">
+</span><span class=""># Or you could just run this:
+</span><span class="">reset-db
+</span></code></pre>
+<div class="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="setup.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+Setup
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+  </div>
+</div>
+
+      <footer class="footer">
+
+        <p>
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.28.2) for the
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+
+
+  </body>
+</html>

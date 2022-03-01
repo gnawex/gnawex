@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.28.2">
+    <meta name="project" content="GNAWEX v0.1.0">
+
+    <title>Setup — GNAWEX v0.1.0</title>
+    <link rel="stylesheet" href="dist/elixir-69d615db1d0fc8b2ce48.css" />
+
+    <script src="dist/sidebar_items-7e2db41b19.js"></script>
+
+      <script src="docs_config.js"></script>
+
+    <script async src="dist/app-073abeeda7b7e6d5d7e9.js"></script>
+
+
+  </head>
+  <body data-type="extras">
+    <script>
+
+      try {
+        if (localStorage.getItem('night-mode') === 'true') {
+          document.body.classList.add('night-mode');
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+
+<section class="sidebar">
+  <button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+    <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+  </button>
+
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+      <a href="http://gnawex.com">
+        <img src="assets/logo.svg" alt="GNAWEX" class="sidebar-projectImage">
+      </a>
+
+    <div class="sidebar-projectDetails">
+      <a href="http://gnawex.com" class="sidebar-projectName" translate="no">
+GNAWEX
+      </a>
+      <strong class="sidebar-projectVersion" translate="no">
+        v0.1.0
+      </strong>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">GUIDES</a></li>
+
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="settings display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+    <a href="https://github.com/gnawex/gnawex/blob/main/guides/introduction/setup.md#L1" title="View Source" class="view-source" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span>Setup</span>
+</h1>
+
+<p>There isn't much to setup here since GNAWEX is still in its infancy. I'm
+currently working on the database side of things before I start working on the
+application-level, since PostgreSQL is surprisingly powerful, more than I
+definitely expected.</p><h2 id="database" class="section-heading">
+  <a href="#database" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">database</p>
+  </a>
+  Database
+</h2>
+<p>I'm using version 14.1 of PostgreSQL, although 14.x should be fine. I don't
+guarantee backwards compatibility with &lt;14 because it's tiring.</p><h3 id="creating-gnawex_db" class="section-heading">
+  <a href="#creating-gnawex_db" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">creating-gnawex_db</p>
+  </a>
+  Creating <code class="inline">gnawex_db</code>
+</h3>
+<p>If you're using NixOS, you're in luck. In your <code class="inline">configuration.nix</code> file, just
+add this:</p><pre><code class="nix">services.postgresql = {
+  enable = true;
+  package = pkgs.postgresql_14;
+  authentication = pkgs.lib.mkOverride 14 ''
+    local all all trust
+    host all all ::1/128 trust
+  '';
+};</code></pre><p>This sets up a PostgreSQL server with a default user <code class="inline">postgres</code> (no password).
+Currently, I'm not utilizing permissions and policies so using the default
+<code class="inline">postgres</code> user is fine.</p><p>The project assumes you named the database as <code class="inline">gnawex_db</code>, which you can do
+with <code class="inline">createdb gnawex_db --user postgres</code>.</p><h3 id="running-migration-scripts" class="section-heading">
+  <a href="#running-migration-scripts" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">running-migration-scripts</p>
+  </a>
+  Running migration scripts
+</h3>
+<p>The migration scripts can be found in <code class="inline">migrations/</code> at the project root. You
+can manually load each <code class="inline">.sql</code> file with <code class="inline">\i path/to/file.sql</code>. If you're using
+<code class="inline">fish</code> shell, you could do this:</p><pre><code class="makeup sh" translate="no"><span class=""># Load the functions
+</span><span class="">source bin/functions.fish
+</span><span class="">
+</span><span class="">migrate
+</span></code></pre><blockquote><p><em>Why manually write this?</em> I'm manually managing migration files since this
+project isn't that large, and neither is it that important where I need 
+utmost care. It's a great exercise to manually write migration files anyway.</p></blockquote>
+<div class="bottom-actions">
+  <div class="bottom-actions-item">
+
+      <a href="gnawex.html" class="bottom-actions-button" rel="prev">
+        <span class="subheader">
+          ← Previous Page
+        </span>
+        <span class="title">
+GNAWEX
+        </span>
+      </a>
+
+  </div>
+  <div class="bottom-actions-item">
+
+      <a href="available-scripts.html" class="bottom-actions-button" rel="next">
+        <span class="subheader">
+          Next Page →
+        </span>
+        <span class="title">
+Available scripts
+        </span>
+      </a>
+
+  </div>
+</div>
+
+      <footer class="footer">
+
+        <p>
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.28.2) for the
+          <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+
+
+  </body>
+</html>
