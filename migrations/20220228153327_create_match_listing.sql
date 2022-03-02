@@ -9,6 +9,8 @@ GRANT anon TO gnawex_merchant;
 --------------------------------------------------------------------------------
 -- Procedures
 
+-- TODO: Is there a way to make this less procedural?
+-- TODO: Refactor for `find_matches/4`
 -- The `transact` procedure processes two listings (or orders).
 -- `transact` requires these two listings to have the same `item_id` value.
 --
@@ -128,6 +130,50 @@ LANGUAGE plpgsql;
 --------------------------------------------------------------------------------
 -- Functions
 
+-- This looks for the matching listings. If you have a BUY listing, it is going
+-- to look for one or more SELL listings of the same item ID, and cost.
+-- It can return multiple listings that fulfills the quantity. But obviously,
+-- there's no guarantee that it will, and it depends on what's in the DB.
+--
+-- Example:
+--
+-- Looks for one or more listings with the following:
+--
+-- 1. Item ID of 6
+-- 2. Cost of 250
+-- 3. Enough to fulfill a quantity of 22
+-- 4. A matching listing for BUY, which is SELL
+--
+-- gnawex_db=# select find_matches(6, 250, 22, 'buy')
+-- find_matches
+-- --------------
+--             3
+--             5
+--             6
+--
+-- What is returned are rows of listing IDs that match these criteria!
+CREATE OR REPLACE FUNCTION find_matches(item_id BIGINT, cost INTEGER,
+  quantity INTEGER, type LISTING_TYPE) RETURNS TABLE (id INTEGER) AS $$
+  WITH running_amount_cte AS (
+    SELECT id, sum(quantity) OVER (ORDER BY created_at ASC) AS running_amount
+    FROM listings
+    WHERE item_id   = $1
+      AND type      = (
+        -- Flips the listing type. If it's a SELL listing, look for a matching
+        -- BUY listing, and vice versa.
+        CASE WHEN $4 = 'buy' THEN 'sell'
+             ELSE 'buy'
+        END
+      ) :: LISTING_TYPE
+      AND is_active = TRUE
+      AND cost      = $2
+  )
+  SELECT id
+  FROM running_amount_cte AS ra
+  WHERE ra.running_amount <= $3;
+$$ LANGUAGE sql;
+
+-- TODO: Refactor for `find_matches/4`
 CREATE OR REPLACE FUNCTION match() RETURNS TRIGGER AS $$
 DECLARE
  -- The matching listing ID
