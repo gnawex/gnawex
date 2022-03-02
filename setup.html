@@ -10,7 +10,7 @@
     <title>Setup — GNAWEX v0.1.0</title>
     <link rel="stylesheet" href="dist/elixir-69d615db1d0fc8b2ce48.css" />
 
-    <script src="dist/sidebar_items-7e2db41b19.js"></script>
+    <script src="dist/sidebar_items-ff8e5576f5.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -139,7 +139,43 @@ can manually load each <code class="inline">.sql</code> file with <code class="i
 </span><span class="">migrate
 </span></code></pre><blockquote><p><em>Why manually write this?</em> I'm manually managing migration files since this
 project isn't that large, and neither is it that important where I need 
-utmost care. It's a great exercise to manually write migration files anyway.</p></blockquote>
+utmost care. It's a great exercise to manually write migration files anyway.</p></blockquote><h3 id="pgadmin" class="section-heading">
+  <a href="#pgadmin" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">pgadmin</p>
+  </a>
+  <code class="inline">pgAdmin</code>
+</h3>
+<p><code class="inline">pgAdmin</code> can be pretty useful, and I personally use it for <code class="inline">EXPLAIN</code> to
+understand the query planner better. You can either set it up manually, or use
+nix.</p><pre><code class="makeup sh" translate="no"><span class=""># At the project root, `gnawex/`
+</span><span class="">
+</span><span class=""># Run the nix shell. If you&#39;re using nix-direnv, then it should automatically
+</span><span class=""># load the environment for you. So you can skip this, if ever.
+</span><span class="">nix develop
+</span><span class="">
+</span><span class=""># If you&#39;re using sudo, replace doas with sudo
+</span><span class="">doas pgadmin4
+</span></code></pre><p>You'll need elevated privileges since <code class="inline">pgadmin</code> needs write permissions in
+<code class="inline">/var/lib/pgadmin</code>. Doing this for the first time will ask for credentials
+you want to set, it doesn't really matter since it's just for a dev env, just
+remember it.</p><p>You should see something like this:</p><pre><code class="makeup sh" translate="no"><span class="">sekun@nixos ~/P/gnawex (main) [1]&gt; doas pgadmin4
+</span><span class="">doas (sekun@nixos) password: 
+</span><span class="">NOTE: Configuring authentication for SERVER mode.
+</span><span class="">
+</span><span class="">Enter the email address and password to use for the initial pgAdmin user account:
+</span><span class="">
+</span><span class="">Email address: postgres@example.com
+</span><span class="">Password: 
+</span><span class="">Retype password:
+</span><span class="">Starting pgAdmin 4. Please navigate to http://127.0.0.1:5050 in your browser.
+</span><span class="">2022-03-01 12:12:37,060: WARNING    werkzeug:   WebSocket transport not available. Install eventlet or gevent and gevent-websocket for improved performance.
+</span><span class=""> * Serving Flask app &#39;pgadmin&#39; (lazy loading)
+</span><span class=""> * Environment: production
+</span><span class="">   WARNING: This is a development server. Do not use it in a production deployment.
+</span><span class="">   Use a production WSGI server instead.
+</span><span class=""> * Debug mode: off
+</span></code></pre><p><code class="inline">pgadmin</code> should be available in the URL specified above. In my case, it's
+<a href="http://127.0.0.1:5050.">http://127.0.0.1:5050.</a></p>
 <div class="bottom-actions">
   <div class="bottom-actions-item">
 
