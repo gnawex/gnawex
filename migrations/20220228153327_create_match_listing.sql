@@ -1,4 +1,12 @@
 --------------------------------------------------------------------------------
+-- gnawex_merchant role
+
+CREATE ROLE gnawex_merchant BYPASSRLS;
+GRANT SELECT, UPDATE ON listings TO gnawex_merchant;
+GRANT INSERT ON transactions TO gnawex_merchant;
+GRANT anon TO gnawex_merchant;
+
+--------------------------------------------------------------------------------
 -- Procedures
 
 -- The `transact` procedure processes two listings (or orders).
@@ -31,40 +39,41 @@ DECLARE
 
   -- Item quantity of the sell order
   sell_quantity      INTEGER;
+
+  buyer_id           BIGINT;
+
+  seller_id          BIGINT;
 BEGIN
   RAISE NOTICE 'Creating a transaction for BUY order %, and SELL order % at %.',
     buy_order_id, sell_order_id, now();
 
-  -- Creates a transaction involving two listings; a buy and sell listing.
-  INSERT 
-    INTO transactions (buy_order, sell_order)
-    VALUES (buy_order_id, sell_order_id);
+  SET LOCAL ROLE gnawex_merchant;
 
   -- Get the sell order's quantity
-  SELECT COALESCE(SUM(quantity), 0) AS quantity
+  SELECT COALESCE(quantity, 0) AS quantity, listings.user_id
     FROM listings
     WHERE listings.id        = sell_order_id
       AND listings.type      = 'sell'
       AND listings.is_active = true
-    INTO sell_quantity;
+    INTO sell_quantity, seller_id;
 
   IF sell_quantity = 0 THEN
     RAISE EXCEPTION 'Sell order is not valid. It either has no stock or is inactive.';
   END IF;
 
   -- Get the buy order's quantity
-  SELECT COALESCE(SUM(quantity), 0) AS quantity
+  SELECT COALESCE(quantity, 0) AS quantity, listings.user_id
     FROM listings
     WHERE listings.id        = buy_order_id
       AND listings.type      = 'buy'
       AND listings.is_active = true
-    INTO buy_quantity;
+    INTO buy_quantity, buyer_id;
 
-  IF sell_quantity = 0 THEN
+  IF buy_quantity = 0 THEN
     RAISE EXCEPTION 'Buy order is not valid. It either has no stock or is inactive.';
   END IF;
 
-  -- Reduces the quantity of a listing by 1. This ensures that
+  -- Reduces the quantity of a listing. This ensures that
   -- something was actually reduced cause otherwise, the transaction
   -- just rolls back. It's considered an invalid transaction.
   WITH affected_buy_cte AS (
@@ -107,6 +116,11 @@ BEGIN
   IF sell_affected_rows = 0 THEN
     RAISE EXCEPTION 'I was not able to update the SELL order. This transaction is not valid.';
   END IF;
+
+   -- Creates a transaction involving two listings; a buy and sell listing.
+  INSERT 
+    INTO transactions (buyer_id, seller_id, buy_order, sell_order)
+    VALUES (buyer_id, seller_id, buy_order_id, sell_order_id);
 END;
 $$
 LANGUAGE plpgsql;
@@ -116,6 +130,7 @@ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION match() RETURNS TRIGGER AS $$
 DECLARE
+ -- The matching listing ID
   matched_id INTEGER;
 BEGIN
   CASE

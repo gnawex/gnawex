@@ -66,6 +66,14 @@ end
 
 function reset-db --description "Resets gnawex_db"
   drop-db
+
+  echo "===========> Dropping roles..."
+  psql \
+    --user postgres \
+    --command "DROP ROLE anon, authenticator, gnawex_merchant, sekun, valid_user;"
+
+  echo "-----------> Done"
+
   createdb gnawex_db --user postgres
   migrate
   seed-db dev
