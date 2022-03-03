@@ -25,10 +25,6 @@ GRANT SELECT (id, is_banned, is_verified) ON users TO valid_user;
 -- Functions & procedures
 GRANT EXECUTE ON FUNCTION match() TO valid_user;
 
--- TODO: Update
-GRANT EXECUTE ON PROCEDURE transact(BIGINT, BIGINT, BIGINT, INTEGER, 
-  LISTING_TYPE, INTEGER) TO valid_user;
-
 --------------------------------------------------------------------------------
 -- Experiment with RLS
 
