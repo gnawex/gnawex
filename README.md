@@ -2,6 +2,10 @@
 
 A third-party exchange for [MouseHunt](https://mousehuntgame.com).
 
+## Documentation
+
+- [docs.gnawex.com](https://docs.gnawex.com) - Project's user guide
+
 ## Project structure
 
 ```

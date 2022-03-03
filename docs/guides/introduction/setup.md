@@ -96,3 +96,25 @@ Starting pgAdmin 4. Please navigate to http://127.0.0.1:5050 in your browser.
 `pgadmin` should be available in the URL specified above. In my case, it's
 http://127.0.0.1:5050.
 
+## Troubleshooting
+
+### ERROR: missing data for column `<COLUMN_NAME>`
+
+```
+===========> Seeding dev db
+-----------> users from seeds/users.csv
+COPY 7
+-----------> Done
+-----------> items from seeds/items.csv
+COPY 6
+-----------> Done
+-----------> listings from seeds/listings.csv
+ERROR:  missing data for column "item_id"
+CONTEXT:  COPY listings, line 12: ""
+```
+
+This happens when you have a newline at the end of the file. `psql` thinks it's
+another row for it to copy over to the database, but it's empty so it fails.
+To fix this, just delete the newline, and make sure that the last line of the
+file is the last row you want copied to the DB.
+
