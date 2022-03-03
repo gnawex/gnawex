@@ -7,6 +7,7 @@ CREATE TYPE LISTING_TYPE AS ENUM ('buy', 'sell');
 -- Tables
 
 CREATE TABLE listings (
+  -- TODO: I want to make this a UUID, not BIGSERIAL.
   id              BIGSERIAL NOT NULL,
   item_id         BIGSERIAL NOT NULL,
   user_id         BIGSERIAL NOT NULL,
