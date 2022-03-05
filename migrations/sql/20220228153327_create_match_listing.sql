@@ -2,8 +2,11 @@
 -- gnawex_merchant role
 
 CREATE ROLE gnawex_merchant BYPASSRLS;
+
 GRANT SELECT, UPDATE ON listings TO gnawex_merchant;
+
 GRANT INSERT ON transactions TO gnawex_merchant;
+
 GRANT anon TO gnawex_merchant;
 
 --------------------------------------------------------------------------------
@@ -23,10 +26,8 @@ BEGIN
   -- altered after a transaction exists. I suppose altering `is_active` is
   -- fine.
   SET LOCAL ROLE gnawex_merchant;
-
   -- Brace yourself for loads of CTEs. I don't know if I want it like this but
   -- hey, if it ain't broke don't fix it.
-
   -- Ok I know this word doesn't exist but I don't know what else to call it.
   WITH matches_cte AS (
     -- Looks for matching listing(s) based on the following:
@@ -90,10 +91,8 @@ BEGIN
               total_cte.running_amount - total_cte.total_quantity = 0 AND
                 total_cte.total_quantity > NEW.quantity
             THEN total_cte.total_quantity - NEW.quantity
-
             ELSE
               GREATEST(total_cte.running_amount - total_cte.total_quantity, 0) :: INT
-
           END
         )
         FROM total_cte
@@ -104,19 +103,14 @@ BEGIN
       SELECT
         CASE WHEN NEW.type = 'buy' THEN NEW.id ELSE total_cte.id
         END AS buy_order,
-
         CASE WHEN NEW.type = 'buy' THEN total_cte.id ELSE NEW.id
         END AS sell_order,
-
         CASE WHEN NEW.type = 'buy' THEN NEW.user_id ELSE total_cte.user_id
         END AS buyer_id,
-
         CASE WHEN NEW.type = 'buy' THEN total_cte.user_id ELSE NEW.user_id
         END AS seller_id
-
         FROM total_cte
     );
-
   RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
