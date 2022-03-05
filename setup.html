@@ -10,7 +10,7 @@
     <title>Setup — GNAWEX v0.1.0</title>
     <link rel="stylesheet" href="dist/elixir-69d615db1d0fc8b2ce48.css" />
 
-    <script src="dist/sidebar_items-d44b20baec.js"></script>
+    <script src="dist/sidebar_items-ff8e5576f5.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -120,26 +120,152 @@ add this:</p><pre><code class="nix">services.postgresql = {
   package = pkgs.postgresql_14;
   authentication = pkgs.lib.mkOverride 14 ''
     local all all trust
+    host all all localhost trust
     host all all ::1/128 trust
   '';
 };</code></pre><p>This sets up a PostgreSQL server with a default user <code class="inline">postgres</code> (no password).
 Currently, I'm not utilizing permissions and policies so using the default
 <code class="inline">postgres</code> user is fine.</p><p>The project assumes you named the database as <code class="inline">gnawex_db</code>, which you can do
-with <code class="inline">createdb gnawex_db --user postgres</code>.</p><h3 id="running-migration-scripts" class="section-heading">
-  <a href="#running-migration-scripts" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
-  <p class="sr-only">running-migration-scripts</p>
+with <code class="inline">mix ecto.create</code>.</p><h3 id="applying-migrations" class="section-heading">
+  <a href="#applying-migrations" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">applying-migrations</p>
   </a>
-  Running migration scripts
+  Applying migrations
 </h3>
-<p>The migration scripts can be found in <code class="inline">migrations/</code> at the project root. You
-can manually load each <code class="inline">.sql</code> file with <code class="inline">\i path/to/file.sql</code>. If you're using
-<code class="inline">fish</code> shell, you could do this:</p><pre><code class="makeup sh" translate="no"><span class=""># Load the functions
-</span><span class="">source bin/functions.fish
+<p>For schema migrations, I'm using <a href="https://github.com/elixir-ecto/ecto"><code class="inline">ecto</code></a>
+since it's quite convenient to rely on its migrations feature, and I can
+execute SQL scripts with <code class="inline">execute/1</code> if I parse it properly.</p><p>The migration scripts can be found in <code class="inline">migrations/priv/repo/migrations</code> from
+the project root. You can manually load each <code class="inline">.sql</code> file with
+<code class="inline">\i path/to/file.sql</code> while in <code class="inline">psql</code>, but <code class="inline">ecto</code> helps make it more convenient.</p><blockquote><p><strong>NOTE:</strong> You'll need <code class="inline">elixir</code> and <code class="inline">erlang</code> setup for this. If you're using
+<code class="inline">nix-direnv</code>, and have nix flakes enabled, you don't have to worry about
+getting the right dependencies since I already set things up.</p></blockquote><p><strong>Example</strong></p><pre><code class="makeup sh" translate="no"><span class="">[sekun@nixos:~/Projects/gnawex]$ cd migrations
+</span><span class="">direnv: loading ~/Projects/gnawex/migrations/.envrc
+</span><span class="">direnv: using flake
+</span><span class="">direnv: using cached dev shell
+</span><span class="">direnv: export +AR +AS +CC +CONFIG_SHELL +CXX +HOST_PATH +IN_NIX_SHELL +LD +NIX_BINTOOLS +NIX_BINTOOLS_WRAPPER_TAR
+</span><span class="">GET_HOST_x86_64_unknown_linux_gnu +NIX_BUILD_CORES +NIX_CC +NIX_CC_WRAPPER_TARGET_HOST_x86_64_unknown_linux_gnu +N
+</span><span class="">IX_CFLAGS_COMPILE +NIX_ENFORCE_NO_NATIVE +NIX_HARDENING_ENABLE +NIX_INDENT_MAKE +NIX_LDFLAGS +NIX_STORE +NM +OBJCO
+</span><span class="">PY +OBJDUMP +RANLIB +READELF +SIZE +SOURCE_DATE_EPOCH +STRINGS +STRIP +buildInputs +buildPhase +builder +configure
+</span><span class="">Flags +depsBuildBuild +depsBuildBuildPropagated +depsBuildTarget +depsBuildTargetPropagated +depsHostHost +depsHos
+</span><span class="">tHostPropagated +depsTargetTarget +depsTargetTargetPropagated +doCheck +doInstallCheck +dontAddDisableDepTrack +na
+</span><span class="">me +nativeBuildInputs +out +outputs +patches +phases +propagatedBuildInputs +propagatedNativeBuildInputs +shell +s
+</span><span class="">hellHook +stdenv +strictDeps +system ~PATH ~XDG_DATA_DIRS
 </span><span class="">
-</span><span class="">migrate
-</span></code></pre><blockquote><p><em>Why manually write this?</em> I'm manually managing migration files since this
-project isn't that large, and neither is it that important where I need 
-utmost care. It's a great exercise to manually write migration files anyway.</p></blockquote><h3 id="pgadmin" class="section-heading">
+</span><span class=""># You should probably run `mix deps.get` first before this line if it&#39;s your
+</span><span class=""># first time running it.
+</span><span class="">[sekun@nixos:~/Projects/gnawex/migrations]$ mix do ecto.create, ecto.migrate
+</span><span class="">The database for Migrations.Repo has already been created
+</span><span class="">
+</span><span class="">19:38:03.252 [info]  == Running 20220305031642 Migrations.Repo.Migrations.CreateUsers.up/0 forward
+</span><span class="">
+</span><span class="">19:38:03.255 [info]  execute &quot;--------------------------------------------------------------------------------\n--
+</span><span class=""> `anon` permissions\n-- NOTE: `anon` is pretty much public&quot;
+</span><span class="">
+</span><span class="">19:38:03.256 [info]  execute &quot;CREATE ROLE anon;&quot;
+</span><span class="">
+</span><span class="">19:38:03.256 [info]  execute &quot;GRANT USAGE ON SCHEMA public TO anon;&quot;
+</span><span class="">
+</span><span class="">19:38:03.257 [info]  execute &quot;--------------------------------------------------------------------------------\n--
+</span><span class=""> `authenticator` serves as an alternative for `postgres` with less elevated\n-- permissions. Use this to connect t
+</span><span class="">o the database, or something.&quot;
+</span><span class="">
+</span><span class="">19:38:03.257 [info]  execute &quot;-- NOTE: I don&#39;t know how to set this for prod\n-- TODO: Use passwd\nCREATE ROLE aut
+</span><span class="">henticator NOINHERIT LOGIN PASSWORD &#39;foobarbaz&#39;;&quot;
+</span><span class="">
+</span><span class="">19:38:03.260 [info]  execute &quot;GRANT anon TO authenticator;&quot;
+</span><span class="">
+</span><span class="">19:38:03.261 [info]  execute &quot;--------------------------------------------------------------------------------&quot;
+</span><span class="">
+</span><span class="">19:38:03.261 [info]  execute &quot;CREATE TYPE ROLE AS ENUM (&#39;admin&#39;, &#39;mod&#39;, &#39;user&#39;);&quot;
+</span><span class="">
+</span><span class="">...
+</span></code></pre><p>If you take a look at one of the scripts, it would look something like this:</p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Migrations.Repo.Migrations.CreateUsers</span><span class="w"> </span><span class="k" data-group-id="3118138173-1">do</span><span class="w">
+  </span><span class="kn">use</span><span class="w"> </span><span class="nc">Ecto.Migration</span><span class="w">
+
+  </span><span class="kn">import</span><span class="w"> </span><span class="nc">Migrations</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">up</span><span class="w"> </span><span class="k" data-group-id="3118138173-2">do</span><span class="w">
+    </span><span class="n">execute_file</span><span class="w"> </span><span class="s">&quot;./sql/20220222233600_create_users.sql&quot;</span><span class="w">
+  </span><span class="k" data-group-id="3118138173-2">end</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">down</span><span class="w"> </span><span class="k" data-group-id="3118138173-3">do</span><span class="w">
+    </span><span class="n">execute_each</span><span class="w"> </span><span class="s">&quot;&quot;&quot;
+    DROP TABLE users;
+
+    DROP TYPE ROLE;
+
+    DROP ROLE authenticator;
+
+    REVOKE USAGE ON SCHEMA public FROM anon;
+
+    DROP ROLE anon;
+    &quot;&quot;&quot;</span><span class="w">
+  </span><span class="k" data-group-id="3118138173-3">end</span><span class="w">
+</span><span class="k" data-group-id="3118138173-1">end</span></code></pre><p><code class="inline">execute_each/1</code> and <code class="inline">execute_file/1</code> are helper functions I wrote to handle
+executing each statement since <code class="inline">postgrex</code> cannot handle a bunch of statements
+in a single <code class="inline">execute/1</code>. So essentially, this reads the SQL script, does some
+basic parsing behind the scenes (it just splits it by double newlines), and
+runs execute on each list item.</p><p><code class="inline">up/0</code> is responsible for <em>applying</em> changes to the schema, while <code class="inline">down/0</code>
+reverts it.</p><blockquote><p><strong>Note:</strong> I'm no longer maintaining the old scripts in <code class="inline">bin/functions.fish</code>.
+So don't bother using them!</p></blockquote><h3 id="viewing-migration-statuses" class="section-heading">
+  <a href="#viewing-migration-statuses" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">viewing-migration-statuses</p>
+  </a>
+  Viewing migration statuses
+</h3>
+<p>If you're curious which migrations have been applied, you can use
+<code class="inline">mix ecto.migrations</code>, and the output would look something like this:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="0317784708-1">[</span><span class="n">sekun</span><span class="na">@nixos</span><span class="p">:</span><span class="err">~</span><span class="o">/</span><span class="nc">Projects</span><span class="o">/</span><span class="n">gnawex</span><span class="o">/</span><span class="n">migrations</span><span class="p" data-group-id="0317784708-1">]</span><span class="err">$</span><span class="w"> </span><span class="n">mix</span><span class="w"> </span><span class="n">ecto</span><span class="o">.</span><span class="n">migrations</span><span class="w">
+
+</span><span class="ss">Repo</span><span class="p">:</span><span class="w"> </span><span class="nc">Migrations.Repo</span><span class="w">
+
+  </span><span class="nc">Status</span><span class="w">    </span><span class="nc">Migration</span><span class="w"> </span><span class="nc">ID</span><span class="w">    </span><span class="nc">Migration</span><span class="w"> </span><span class="nc">Name</span><span class="w">
+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="w">
+  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305031642</span><span class="w">  </span><span class="n">create_users</span><span class="w">
+  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305041253</span><span class="w">  </span><span class="n">create_items</span><span class="w">
+  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305044710</span><span class="w">  </span><span class="n">create_listings</span><span class="w">
+  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305110451</span><span class="w">  </span><span class="n">create_match_listing</span><span class="w">
+  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305112208</span><span class="w">  </span><span class="n">create_role</span></code></pre><p>The <code class="inline">Status</code> column tells you which migrations have been applied, if ever one
+is reverted, it would be <code class="inline">down</code> instead of <code class="inline">up</code>.</p><h3 id="rolling-back-migrations" class="section-heading">
+  <a href="#rolling-back-migrations" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">rolling-back-migrations</p>
+  </a>
+  Rolling back migrations
+</h3>
+<p>If you made changes to how the dropping of a migration is done, or if you just
+want to drop a migration, you can use <code class="inline">mix ecto.rollback --to &lt;MIGRATION_ID&gt;</code>.</p><p>Here's an example:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="9978734666-1">[</span><span class="n">sekun</span><span class="na">@nixos</span><span class="p">:</span><span class="err">~</span><span class="o">/</span><span class="nc">Projects</span><span class="o">/</span><span class="n">gnawex</span><span class="o">/</span><span class="n">migrations</span><span class="p" data-group-id="9978734666-1">]</span><span class="err">$</span><span class="w"> </span><span class="n">mix</span><span class="w"> </span><span class="n">ecto</span><span class="o">.</span><span class="n">migrations</span><span class="w">
+
+</span><span class="ss">Repo</span><span class="p">:</span><span class="w"> </span><span class="nc">Migrations.Repo</span><span class="w">
+
+  </span><span class="nc">Status</span><span class="w">    </span><span class="nc">Migration</span><span class="w"> </span><span class="nc">ID</span><span class="w">    </span><span class="nc">Migration</span><span class="w"> </span><span class="nc">Name</span><span class="w">
+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="w">
+  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305031642</span><span class="w">  </span><span class="n">create_users</span><span class="w">
+  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305041253</span><span class="w">  </span><span class="n">create_items</span><span class="w">
+  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305044710</span><span class="w">  </span><span class="n">create_listings</span><span class="w">
+  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305110451</span><span class="w">  </span><span class="n">create_match_listing</span><span class="w">
+  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305112208</span><span class="w">  </span><span class="n">create_role</span><span class="w">
+
+
+</span><span class="p" data-group-id="9978734666-2">[</span><span class="n">sekun</span><span class="na">@nixos</span><span class="p">:</span><span class="err">~</span><span class="o">/</span><span class="nc">Projects</span><span class="o">/</span><span class="n">gnawex</span><span class="o">/</span><span class="n">migrations</span><span class="p" data-group-id="9978734666-2">]</span><span class="err">$</span><span class="w"> </span><span class="n">mix</span><span class="w"> </span><span class="n">ecto</span><span class="o">.</span><span class="n">rollback</span><span class="w"> </span><span class="o">--</span><span class="n">to</span><span class="w"> </span><span class="mi">20220305112208</span><span class="w">
+
+</span><span class="mi">19</span><span class="p">:</span><span class="mi">46</span><span class="p">:</span><span class="mf">31.763</span><span class="w"> </span><span class="p" data-group-id="9978734666-3">[</span><span class="n">info</span><span class="p" data-group-id="9978734666-3">]</span><span class="w">  </span><span class="o">==</span><span class="w"> </span><span class="nc">Running</span><span class="w"> </span><span class="mi">20220305112208</span><span class="w"> </span><span class="nc">Migrations.Repo.Migrations.CreateRole</span><span class="o">.</span><span class="n">down</span><span class="o">/</span><span class="mi">0</span><span class="w"> </span><span class="n">forward</span><span class="w">
+
+</span><span class="mi">19</span><span class="p">:</span><span class="mi">46</span><span class="p">:</span><span class="mf">31.766</span><span class="w"> </span><span class="p" data-group-id="9978734666-4">[</span><span class="n">info</span><span class="p" data-group-id="9978734666-4">]</span><span class="w">  </span><span class="n">execute</span><span class="w"> </span><span class="s">&quot;DROP POLICY txn_read ON transactions;&quot;</span><span class="w">
+
+</span><span class="n">...</span><span class="w">
+
+</span><span class="mi">19</span><span class="p">:</span><span class="mi">46</span><span class="p">:</span><span class="mf">31.772</span><span class="w"> </span><span class="p" data-group-id="9978734666-5">[</span><span class="n">info</span><span class="p" data-group-id="9978734666-5">]</span><span class="w">  </span><span class="o">==</span><span class="w"> </span><span class="nc">Migrated</span><span class="w"> </span><span class="mi">20220305112208</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="mf">0.0</span><span class="n">s</span><span class="w">
+
+</span><span class="p" data-group-id="9978734666-6">[</span><span class="n">sekun</span><span class="na">@nixos</span><span class="p">:</span><span class="err">~</span><span class="o">/</span><span class="nc">Projects</span><span class="o">/</span><span class="n">gnawex</span><span class="o">/</span><span class="n">migrations</span><span class="p" data-group-id="9978734666-6">]</span><span class="err">$</span><span class="w"> </span><span class="n">mix</span><span class="w"> </span><span class="n">ecto</span><span class="o">.</span><span class="n">migrations</span><span class="w">
+
+</span><span class="ss">Repo</span><span class="p">:</span><span class="w"> </span><span class="nc">Migrations.Repo</span><span class="w">
+
+  </span><span class="nc">Status</span><span class="w">    </span><span class="nc">Migration</span><span class="w"> </span><span class="nc">ID</span><span class="w">    </span><span class="nc">Migration</span><span class="w"> </span><span class="nc">Name</span><span class="w">
+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="w">
+  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305031642</span><span class="w">  </span><span class="n">create_users</span><span class="w">
+  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305041253</span><span class="w">  </span><span class="n">create_items</span><span class="w">
+  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305044710</span><span class="w">  </span><span class="n">create_listings</span><span class="w">
+  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305110451</span><span class="w">  </span><span class="n">create_match_listing</span><span class="w">
+  </span><span class="n">down</span><span class="w">      </span><span class="mi">20220305112208</span><span class="w">  </span><span class="n">create_role</span></code></pre><h3 id="pgadmin" class="section-heading">
   <a href="#pgadmin" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
   <p class="sr-only">pgadmin</p>
   </a>
@@ -175,31 +301,7 @@ remember it.</p><p>You should see something like this:</p><pre><code class="make
 </span><span class="">   Use a production WSGI server instead.
 </span><span class=""> * Debug mode: off
 </span></code></pre><p><code class="inline">pgadmin</code> should be available in the URL specified above. In my case, it's
-<a href="http://127.0.0.1:5050.">http://127.0.0.1:5050.</a></p><h2 id="troubleshooting" class="section-heading">
-  <a href="#troubleshooting" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
-  <p class="sr-only">troubleshooting</p>
-  </a>
-  Troubleshooting
-</h2>
-<h3 id="error-missing-data-for-column-column_name" class="section-heading">
-  <a href="#error-missing-data-for-column-column_name" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
-  <p class="sr-only">error-missing-data-for-column-column_name</p>
-  </a>
-  ERROR: missing data for column <code class="inline">&lt;COLUMN_NAME&gt;</code>
-</h3>
-<pre><code class="makeup elixir" translate="no"><span class="o">===</span><span class="o">===</span><span class="o">===</span><span class="o">==</span><span class="o">&gt;</span><span class="w"> </span><span class="nc">Seeding</span><span class="w"> </span><span class="n">dev</span><span class="w"> </span><span class="n">db</span><span class="w">
-</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-&gt;</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">seeds</span><span class="o">/</span><span class="n">users</span><span class="o">.</span><span class="n">csv</span><span class="w">
-</span><span class="nc">COPY</span><span class="w"> </span><span class="mi">7</span><span class="w">
-</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-&gt;</span><span class="w"> </span><span class="nc">Done</span><span class="w">
-</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-&gt;</span><span class="w"> </span><span class="n">items</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">seeds</span><span class="o">/</span><span class="n">items</span><span class="o">.</span><span class="n">csv</span><span class="w">
-</span><span class="nc">COPY</span><span class="w"> </span><span class="mi">6</span><span class="w">
-</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-&gt;</span><span class="w"> </span><span class="nc">Done</span><span class="w">
-</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-&gt;</span><span class="w"> </span><span class="n">listings</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">seeds</span><span class="o">/</span><span class="n">listings</span><span class="o">.</span><span class="n">csv</span><span class="w">
-</span><span class="ss">ERROR</span><span class="p">:</span><span class="w">  </span><span class="n">missing</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">column</span><span class="w"> </span><span class="s">&quot;item_id&quot;</span><span class="w">
-</span><span class="ss">CONTEXT</span><span class="p">:</span><span class="w">  </span><span class="nc">COPY</span><span class="w"> </span><span class="n">listings</span><span class="p">,</span><span class="w"> </span><span class="n">line</span><span class="w"> </span><span class="mi">12</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span></code></pre><p>This happens when you have a newline at the end of the file. <code class="inline">psql</code> thinks it's
-another row for it to copy over to the database, but it's empty so it fails.
-To fix this, just delete the newline, and make sure that the last line of the
-file is the last row you want copied to the DB.</p>
+<a href="http://127.0.0.1:5050.">http://127.0.0.1:5050.</a></p>
 <div class="bottom-actions">
   <div class="bottom-actions-item">
 
