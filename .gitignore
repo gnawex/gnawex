@@ -29,3 +29,6 @@ cabal.project.local~
 
 .direnv/
 result
+
+**/_build/**/*
+**/deps/**/*

@@ -4,6 +4,7 @@ CREATE ROLE valid_user;
 
 -- dummy user to toy around with
 CREATE USER sekun;
+
 GRANT valid_user TO sekun;
 
 --------------------------------------------------------------------------------
@@ -14,6 +15,7 @@ GRANT SELECT ON items TO valid_user;
 
 -- Listings
 GRANT SELECT, INSERT, UPDATE ON listings TO valid_user;
+
 GRANT SELECT, UPDATE ON listings_id_seq TO valid_user;
 
 -- Transactions

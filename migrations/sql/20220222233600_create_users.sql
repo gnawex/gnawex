@@ -35,6 +35,6 @@ CREATE TABLE users (
   role            ROLE,
   is_banned       BOOLEAN,
   is_verified     BOOLEAN,
-
   PRIMARY KEY(id)
 );
+
