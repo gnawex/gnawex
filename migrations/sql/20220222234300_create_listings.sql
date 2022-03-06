@@ -64,6 +64,4 @@ CREATE INDEX active_id ON listings (id) WHERE is_active = true;
 --------------------------------------------------------------------------------
 -- Roles
 
-GRANT SELECT ON listings TO anon;
-
 --------------------------------------------------------------------------------
