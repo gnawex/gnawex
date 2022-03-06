@@ -46,11 +46,41 @@
         "type": "github"
       }
     },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1646523963,
+        "narHash": "sha256-ixFwYnaOycrzs0iN9RvyRMEGCkQ9Pj58x6V/qc2khy8=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "a173e92ee458878651356b9bcfb1e2b5145f76af",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "postgrestPkg": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_2"
+      },
+      "locked": {
+        "narHash": "sha256-BX+WrqHPmZ0nQHp3rY1cwkdhPF3JwkX2YATI6Tii96M=",
+        "path": "./nix/postgrest",
+        "type": "path"
+      },
+      "original": {
+        "path": "./nix/postgrest",
+        "type": "path"
+      }
+    },
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
         "masterpkgs": "masterpkgs",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "postgrestPkg": "postgrestPkg"
       }
     }
   },

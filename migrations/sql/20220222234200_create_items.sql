@@ -6,3 +6,9 @@ CREATE TABLE items (
   updated_at      TIMESTAMP DEFAULT current_timestamp NOT NULL,
   PRIMARY KEY(id)
 );
+
+--------------------------------------------------------------------------------
+
+GRANT SELECT ON items TO anon;
+
+--------------------------------------------------------------------------------

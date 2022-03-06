@@ -2,7 +2,7 @@
 -- `anon` permissions
 -- NOTE: `anon` is pretty much public
 
-CREATE ROLE anon;
+CREATE ROLE anon NOLOGIN;
 
 GRANT USAGE ON SCHEMA public TO anon;
 

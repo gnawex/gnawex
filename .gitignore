@@ -27,8 +27,8 @@ cabal.project.local~
 .HTF/
 .ghc.environment.*
 
-.direnv/
-result
+**/.direnv/
+**/result
 
 **/_build/**/*
 **/deps/**/*
