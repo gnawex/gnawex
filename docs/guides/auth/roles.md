@@ -1,8 +1,15 @@
 # Roles
 
-Roles are used to determine who can perform what operation in the database.
-There are two kinds of roles, but they can be related in some way. The
-difference is on where it exists.
+Roles are used to determine who can perform what operation in GNAWEX.
+
+| Name          | Description                                                                       |
+|---------------|-----------------------------------------------------------------------------------|
+| authenticator | The entrypoint role that GNAWEX starts with.                                      |
+| anon          | The role that GNAWEX will switch to when the user is not authenticated.           |
+| verified_user | The role that GNAWEX will switch to when the user is authenticated, and verified. |
+| banned_user   | The role that GNAWEX will switch to when the user is authenticated, but banned.   |
+| auth          | Role that owns the `auth` schema.                                                 |
+| api           | Role that owns the `api` schema.                                                  |
 
 ## User roles
 

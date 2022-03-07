@@ -1,24 +1,13 @@
---------------------------------------------------------------------------------
--- gnawex_merchant role
+-- Deploy gnawex:match_listing to pg
+-- requires: listings
+-- requires: transactions
 
-CREATE ROLE gnawex_merchant BYPASSRLS;
-
-GRANT SELECT, UPDATE ON listings TO gnawex_merchant;
-
-GRANT INSERT ON transactions TO gnawex_merchant;
-
-GRANT anon TO gnawex_merchant;
-
---------------------------------------------------------------------------------
--- Procedures
-
---------------------------------------------------------------------------------
--- Functions
+BEGIN;
 
 -- NOTE: `trigger_match/0` is in the same transaction as the one that called it.
 -- So if ever something gets inserted, then any of this fails, it will also
 -- rollback the original insert operation.
-CREATE OR REPLACE FUNCTION match() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION app.match() RETURNS TRIGGER AS $$
 BEGIN
   -- Need `gnawex_merchant` to update the involved listings because `valid_user`
   -- can't. Users are not permitted to modify the listing once created.
@@ -37,8 +26,8 @@ BEGIN
     -- 3. Listings not created by the matchee's user
     -- 4. Same `cost`
     -- 5. If it's active (`is_active`)
-    SELECT id, quantity, item_id, user_id, sum(quantity) OVER (ORDER BY id ASC) AS running_amount
-      FROM listings
+    SELECT listing_id, quantity, item_id, user_id, sum(quantity) OVER (ORDER BY id ASC) AS running_amount
+      FROM app.listings
       WHERE item_id = NEW.item_id
         AND is_active = TRUE
         AND type = (
@@ -56,20 +45,20 @@ BEGIN
   ), update_matchee AS (
     -- Updates the matchee with the new quantity after it got matched with
     -- other listing(s).
-    UPDATE listings
+    UPDATE app.listings
       SET quantity = GREATEST(total_cte.running_amount - total_cte.total_quantity, 0) :: INT
       FROM total_cte
-      WHERE listings.id = NEW.id
+      WHERE listing_id = NEW.listing_id
   ), update_matches AS (
    -- Updates the matches after being matched with the matchee.
-    UPDATE listings
+    UPDATE app.listings
         SET quantity = (
           CASE
             -- `total_cte.total_quantity` doesn't reflect the matchee's
             -- quantity! In fact, it only represents the total quantity fetched
             -- that may (at least) fulfill the matchee. The `total_quantity`
             -- can exceed `NEW.quantity` (the matchee quantity)!
-            -- 
+            --
             -- So, you have to check two things:
             --
             -- (1)
@@ -81,7 +70,7 @@ BEGIN
             -- `total_cte.total_quantity > NEW.quantity`
             -- Since you have to check if the last matching listing should have
             -- a new quantity of 0. If the `total_quantity` does exceed the
-            -- actual quantity, then you have to subtract it. 
+            -- actual quantity, then you have to subtract it.
             -- e.g total_quantity = 5, quantity = 3. The last match's quantity
             -- is going to be 2.
             --
@@ -96,9 +85,9 @@ BEGIN
           END
         )
         FROM total_cte
-        WHERE listings.id = total_cte.id
+        WHERE listing_id = total_cte.id
   )
-  INSERT INTO transactions (buy_order, sell_order, buyer_id, seller_id)
+  INSERT INTO app.transactions (buy_order, sell_order, buyer_id, seller_id)
     (
       SELECT
         CASE WHEN NEW.type = 'buy' THEN NEW.id ELSE total_cte.id
@@ -115,14 +104,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
---------------------------------------------------------------------------------
--- Triggers
-
 CREATE OR REPLACE TRIGGER match_listings
   AFTER INSERT
-   ON listings
+   ON app.listings
    FOR EACH ROW
-    EXECUTE PROCEDURE match();
+    EXECUTE PROCEDURE app.match();
 
---------------------------------------------------------------------------------
-
+COMMIT;
