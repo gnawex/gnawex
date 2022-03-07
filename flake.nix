@@ -13,10 +13,10 @@
       let pkgs = nixpkgs.legacyPackages.${system};
           postgrest = postgrestPkg.defaultPackage.${system};
           lib =  nixpkgs.lib;
-
       in {
         devShell = pkgs.mkShell rec {
           buildInputs = [
+            pkgs.sqitchPg
             postgrest
             masterpkgs.legacyPackages.${system}.pgadmin4
           ];
