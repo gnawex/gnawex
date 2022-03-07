@@ -106,7 +106,7 @@ with <code class="inline">postgresql</code>.</p><h2 id="migrate" class="section-
   </a>
   <code class="inline">migrate</code>
 </h2>
-<p>Takes <strong>all</strong> migration files from <code class="inline">migrations/</code>, and loads it in <code class="inline">gnawex_db</code>.</p><pre><code class="makeup sh" translate="no"><span class=""># This is pretty much it
+<blockquote><p>NOTE: Unmaintained</p></blockquote><p>Takes <strong>all</strong> migration files from <code class="inline">migrations/</code>, and loads it in <code class="inline">gnawex_db</code>.</p><pre><code class="makeup sh" translate="no"><span class=""># This is pretty much it
 </span><span class="">migrate
 </span></code></pre><h2 id="seed-db" class="section-heading">
   <a href="#seed-db" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
@@ -129,7 +129,7 @@ with headers, and delimited with <code class="inline">,</code>.</p><p>Here are t
   </a>
   <code class="inline">reset-db</code>
 </h2>
-<p>This is a convenience function that resets <code class="inline">gnawex_db</code>.</p><pre><code class="makeup sh" translate="no"><span class="">drop-db
+<blockquote><p>NOTE: Unmaintained</p></blockquote><p>This is a convenience function that resets <code class="inline">gnawex_db</code>.</p><pre><code class="makeup sh" translate="no"><span class="">drop-db
 </span><span class="">createdb gnawex_db --user postgres
 </span><span class="">migrate
 </span><span class="">seed-db dev

@@ -126,146 +126,77 @@ add this:</p><pre><code class="nix">services.postgresql = {
 };</code></pre><p>This sets up a PostgreSQL server with a default user <code class="inline">postgres</code> (no password).
 Currently, I'm not utilizing permissions and policies so using the default
 <code class="inline">postgres</code> user is fine.</p><p>The project assumes you named the database as <code class="inline">gnawex_db</code>, which you can do
-with <code class="inline">mix ecto.create</code>.</p><h3 id="applying-migrations" class="section-heading">
+with <code class="inline">createdb gnawex_db --user postgres</code>.</p><h3 id="applying-migrations" class="section-heading">
   <a href="#applying-migrations" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
   <p class="sr-only">applying-migrations</p>
   </a>
   Applying migrations
 </h3>
-<p>For schema migrations, I'm using <a href="https://github.com/elixir-ecto/ecto"><code class="inline">ecto</code></a>
-since it's quite convenient to rely on its migrations feature, and I can
-execute SQL scripts with <code class="inline">execute/1</code> if I parse it properly.</p><p>The migration scripts can be found in <code class="inline">migrations/priv/repo/migrations</code> from
-the project root. You can manually load each <code class="inline">.sql</code> file with
-<code class="inline">\i path/to/file.sql</code> while in <code class="inline">psql</code>, but <code class="inline">ecto</code> helps make it more convenient.</p><blockquote><p><strong>NOTE:</strong> You'll need <code class="inline">elixir</code> and <code class="inline">erlang</code> setup for this. If you're using
-<code class="inline">nix-direnv</code>, and have nix flakes enabled, you don't have to worry about
-getting the right dependencies since I already set things up.</p></blockquote><p><strong>Example</strong></p><pre><code class="makeup sh" translate="no"><span class="">[sekun@nixos:~/Projects/gnawex]$ cd migrations
-</span><span class="">direnv: loading ~/Projects/gnawex/migrations/.envrc
-</span><span class="">direnv: using flake
-</span><span class="">direnv: using cached dev shell
-</span><span class="">direnv: export +AR +AS +CC +CONFIG_SHELL +CXX +HOST_PATH +IN_NIX_SHELL +LD +NIX_BINTOOLS +NIX_BINTOOLS_WRAPPER_TAR
-</span><span class="">GET_HOST_x86_64_unknown_linux_gnu +NIX_BUILD_CORES +NIX_CC +NIX_CC_WRAPPER_TARGET_HOST_x86_64_unknown_linux_gnu +N
-</span><span class="">IX_CFLAGS_COMPILE +NIX_ENFORCE_NO_NATIVE +NIX_HARDENING_ENABLE +NIX_INDENT_MAKE +NIX_LDFLAGS +NIX_STORE +NM +OBJCO
-</span><span class="">PY +OBJDUMP +RANLIB +READELF +SIZE +SOURCE_DATE_EPOCH +STRINGS +STRIP +buildInputs +buildPhase +builder +configure
-</span><span class="">Flags +depsBuildBuild +depsBuildBuildPropagated +depsBuildTarget +depsBuildTargetPropagated +depsHostHost +depsHos
-</span><span class="">tHostPropagated +depsTargetTarget +depsTargetTargetPropagated +doCheck +doInstallCheck +dontAddDisableDepTrack +na
-</span><span class="">me +nativeBuildInputs +out +outputs +patches +phases +propagatedBuildInputs +propagatedNativeBuildInputs +shell +s
-</span><span class="">hellHook +stdenv +strictDeps +system ~PATH ~XDG_DATA_DIRS
+<p>For schema migrations, I'm using <a href="https://github.com/flyway/flyway"><code class="inline">flyway</code></a>
+since it's quite convenient.</p><p>The migration scripts can be found in <code class="inline">./sql</code> from the project root. You can
+manually load each <code class="inline">.sql</code> file with <code class="inline">\i path/to/file.sql</code> while in <code class="inline">psql</code>,
+but <code class="inline">flyway</code> makes it easier.</p><p><strong>Example</strong></p><pre><code class="makeup sh" translate="no"><span class="">sekun@nixos ~/P/gnawex (chore/use-flyway-for-schema-migrations)&gt; flyway migrate
+</span><span class="">Flyway is up to date
+</span><span class="">Flyway Community Edition 8.5.2 by Redgate
+</span><span class="">See what&#39;s new here: https://flywaydb.org/documentation/learnmore/releaseNotes#8.5.2
 </span><span class="">
-</span><span class=""># You should probably run `mix deps.get` first before this line if it&#39;s your
-</span><span class=""># first time running it.
-</span><span class="">[sekun@nixos:~/Projects/gnawex/migrations]$ mix do ecto.create, ecto.migrate
-</span><span class="">The database for Migrations.Repo has already been created
+</span><span class="">Database: jdbc:postgresql://localhost:5432/gnawex_db (PostgreSQL 14.1)
+</span><span class="">Successfully validated 6 migrations (execution time 00:00.017s)
+</span><span class="">Current version of schema &quot;public&quot;: &lt;&lt; Empty Schema &gt;&gt;
+</span><span class="">Migrating schema &quot;public&quot; to version &quot;20220222233600 - create users&quot;
+</span><span class="">Migrating schema &quot;public&quot; to version &quot;20220222234200 - create items&quot;
+</span><span class="">Migrating schema &quot;public&quot; to version &quot;20220222234300 - create listings&quot;
+</span><span class="">Migrating schema &quot;public&quot; to version &quot;20220228153327 - create match listing&quot;
+</span><span class="">Migrating schema &quot;public&quot; to version &quot;20220301143724 - create role&quot;
+</span><span class="">Migrating schema &quot;public&quot; to version &quot;20220307020011 - create listings view&quot;
+</span><span class="">Successfully applied 6 migrations to schema &quot;public&quot;, now at version v20220307020011 (execution time 00:00.149s)
+</span><span class="">sekun@nixos ~/P/gnawex (chore/use-flyway-for-schema-migrations)&gt; psql gnawex_db -U postgres
+</span><span class="">psql (14.1)
+</span><span class="">Type &quot;help&quot; for help.
 </span><span class="">
-</span><span class="">19:38:03.252 [info]  == Running 20220305031642 Migrations.Repo.Migrations.CreateUsers.up/0 forward
-</span><span class="">
-</span><span class="">19:38:03.255 [info]  execute &quot;--------------------------------------------------------------------------------\n--
-</span><span class=""> `anon` permissions\n-- NOTE: `anon` is pretty much public&quot;
-</span><span class="">
-</span><span class="">19:38:03.256 [info]  execute &quot;CREATE ROLE anon;&quot;
-</span><span class="">
-</span><span class="">19:38:03.256 [info]  execute &quot;GRANT USAGE ON SCHEMA public TO anon;&quot;
-</span><span class="">
-</span><span class="">19:38:03.257 [info]  execute &quot;--------------------------------------------------------------------------------\n--
-</span><span class=""> `authenticator` serves as an alternative for `postgres` with less elevated\n-- permissions. Use this to connect t
-</span><span class="">o the database, or something.&quot;
-</span><span class="">
-</span><span class="">19:38:03.257 [info]  execute &quot;-- NOTE: I don&#39;t know how to set this for prod\n-- TODO: Use passwd\nCREATE ROLE aut
-</span><span class="">henticator NOINHERIT LOGIN PASSWORD &#39;foobarbaz&#39;;&quot;
-</span><span class="">
-</span><span class="">19:38:03.260 [info]  execute &quot;GRANT anon TO authenticator;&quot;
-</span><span class="">
-</span><span class="">19:38:03.261 [info]  execute &quot;--------------------------------------------------------------------------------&quot;
-</span><span class="">
-</span><span class="">19:38:03.261 [info]  execute &quot;CREATE TYPE ROLE AS ENUM (&#39;admin&#39;, &#39;mod&#39;, &#39;user&#39;);&quot;
-</span><span class="">
-</span><span class="">...
-</span></code></pre><p>If you take a look at one of the scripts, it would look something like this:</p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Migrations.Repo.Migrations.CreateUsers</span><span class="w"> </span><span class="k" data-group-id="2992402681-1">do</span><span class="w">
-  </span><span class="kn">use</span><span class="w"> </span><span class="nc">Ecto.Migration</span><span class="w">
-
-  </span><span class="kn">import</span><span class="w"> </span><span class="nc">Migrations</span><span class="w">
-
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">up</span><span class="w"> </span><span class="k" data-group-id="2992402681-2">do</span><span class="w">
-    </span><span class="n">execute_file</span><span class="w"> </span><span class="s">&quot;./sql/20220222233600_create_users.sql&quot;</span><span class="w">
-  </span><span class="k" data-group-id="2992402681-2">end</span><span class="w">
-
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">down</span><span class="w"> </span><span class="k" data-group-id="2992402681-3">do</span><span class="w">
-    </span><span class="n">execute_each</span><span class="w"> </span><span class="s">&quot;&quot;&quot;
-    DROP TABLE users;
-
-    DROP TYPE ROLE;
-
-    DROP ROLE authenticator;
-
-    REVOKE USAGE ON SCHEMA public FROM anon;
-
-    DROP ROLE anon;
-    &quot;&quot;&quot;</span><span class="w">
-  </span><span class="k" data-group-id="2992402681-3">end</span><span class="w">
-</span><span class="k" data-group-id="2992402681-1">end</span></code></pre><p><code class="inline">execute_each/1</code> and <code class="inline">execute_file/1</code> are helper functions I wrote to handle
-executing each statement since <code class="inline">postgrex</code> cannot handle a bunch of statements
-in a single <code class="inline">execute/1</code>. So essentially, this reads the SQL script, does some
-basic parsing behind the scenes (it just splits it by double newlines), and
-runs execute on each list item.</p><p><code class="inline">up/0</code> is responsible for <em>applying</em> changes to the schema, while <code class="inline">down/0</code>
-reverts it.</p><blockquote><p><strong>Note:</strong> I'm no longer maintaining the old scripts in <code class="inline">bin/functions.fish</code>.
-So don't bother using them!</p></blockquote><h3 id="viewing-migration-statuses" class="section-heading">
+</span><span class="">gnawex_db=# \d
+</span><span class="">                  List of relations
+</span><span class=""> Schema |         Name          |   Type   |  Owner   
+</span><span class="">--------+-----------------------+----------+----------
+</span><span class=""> public | flyway_schema_history | table    | postgres
+</span><span class=""> public | item_listings         | view     | postgres
+</span><span class=""> public | items                 | table    | postgres
+</span><span class=""> public | items_id_seq          | sequence | postgres
+</span><span class=""> public | listings              | table    | postgres
+</span><span class=""> public | listings_id_seq       | sequence | postgres
+</span><span class=""> public | listings_item_id_seq  | sequence | postgres
+</span><span class=""> public | listings_user_id_seq  | sequence | postgres
+</span><span class=""> public | transactions          | table    | postgres
+</span><span class=""> public | users                 | table    | postgres
+</span><span class=""> public | users_hunter_id_seq   | sequence | postgres
+</span><span class=""> public | users_id_seq          | sequence | postgres
+</span><span class="">(12 rows)
+</span></code></pre><blockquote><p><strong>Note:</strong> I'm no longer maintaining the old scripts in <code class="inline">bin/functions.fish</code>.
+So don't bother using them! All but the seeding script.</p></blockquote><h3 id="viewing-migration-statuses" class="section-heading">
   <a href="#viewing-migration-statuses" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
   <p class="sr-only">viewing-migration-statuses</p>
   </a>
   Viewing migration statuses
 </h3>
 <p>If you're curious which migrations have been applied, you can use
-<code class="inline">mix ecto.migrations</code>, and the output would look something like this:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="0653944462-1">[</span><span class="n">sekun</span><span class="na">@nixos</span><span class="p">:</span><span class="err">~</span><span class="o">/</span><span class="nc">Projects</span><span class="o">/</span><span class="n">gnawex</span><span class="o">/</span><span class="n">migrations</span><span class="p" data-group-id="0653944462-1">]</span><span class="err">$</span><span class="w"> </span><span class="n">mix</span><span class="w"> </span><span class="n">ecto</span><span class="o">.</span><span class="n">migrations</span><span class="w">
+<code class="inline">flyway info</code>, and the output would look something like this:</p><pre><code class="makeup elixir" translate="no"><span class="n">sekun</span><span class="na">@nixos</span><span class="w"> </span><span class="err">~</span><span class="o">/</span><span class="nc">P</span><span class="o">/</span><span class="n">gnawex</span><span class="w"> </span><span class="p" data-group-id="4790290430-1">(</span><span class="n">chore</span><span class="o">/</span><span class="kn">use</span><span class="o">-</span><span class="n">flyway</span><span class="o">-</span><span class="k">for</span><span class="o">-</span><span class="n">schema</span><span class="o">-</span><span class="n">migrations</span><span class="p" data-group-id="4790290430-1">)</span><span class="o">&gt;</span><span class="w"> </span><span class="n">flyway</span><span class="w"> </span><span class="n">info</span><span class="w">
+</span><span class="nc">Flyway</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">up</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">date</span><span class="w">
+</span><span class="nc">Flyway</span><span class="w"> </span><span class="nc">Community</span><span class="w"> </span><span class="nc">Edition</span><span class="w"> </span><span class="mf">8.5</span><span class="o">.</span><span class="mi">2</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="nc">Redgate</span><span class="w">
+</span><span class="nc">See</span><span class="w"> </span><span class="n">what</span><span class="err">&#39;</span><span class="n">s</span><span class="w"> </span><span class="n">new</span><span class="w"> </span><span class="ss">here</span><span class="p">:</span><span class="w"> </span><span class="n">https</span><span class="ss">://</span><span class="n">flywaydb</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="n">documentation</span><span class="o">/</span><span class="n">learnmore</span><span class="o">/</span><span class="n">releaseNotes</span><span class="c1">#8.5.2</span><span class="w">
 
-</span><span class="ss">Repo</span><span class="p">:</span><span class="w"> </span><span class="nc">Migrations.Repo</span><span class="w">
+</span><span class="ss">Database</span><span class="p">:</span><span class="w"> </span><span class="n">jdbc</span><span class="ss">:postgresql</span><span class="ss">://</span><span class="n">localhost</span><span class="p">:</span><span class="mi">5432</span><span class="o">/</span><span class="n">gnawex_db</span><span class="w"> </span><span class="p" data-group-id="4790290430-2">(</span><span class="nc">PostgreSQL</span><span class="w"> </span><span class="mf">14.1</span><span class="p" data-group-id="4790290430-2">)</span><span class="w">
+</span><span class="nc">Schema</span><span class="w"> </span><span class="ss">version</span><span class="p">:</span><span class="w"> </span><span class="mi">20220307020011</span><span class="w">
 
-  </span><span class="nc">Status</span><span class="w">    </span><span class="nc">Migration</span><span class="w"> </span><span class="nc">ID</span><span class="w">    </span><span class="nc">Migration</span><span class="w"> </span><span class="nc">Name</span><span class="w">
-</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="w">
-  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305031642</span><span class="w">  </span><span class="n">create_users</span><span class="w">
-  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305041253</span><span class="w">  </span><span class="n">create_items</span><span class="w">
-  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305044710</span><span class="w">  </span><span class="n">create_listings</span><span class="w">
-  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305110451</span><span class="w">  </span><span class="n">create_match_listing</span><span class="w">
-  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305112208</span><span class="w">  </span><span class="n">create_role</span></code></pre><p>The <code class="inline">Status</code> column tells you which migrations have been applied, if ever one
-is reverted, it would be <code class="inline">down</code> instead of <code class="inline">up</code>.</p><h3 id="rolling-back-migrations" class="section-heading">
-  <a href="#rolling-back-migrations" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
-  <p class="sr-only">rolling-back-migrations</p>
-  </a>
-  Rolling back migrations
-</h3>
-<p>If you made changes to how the dropping of a migration is done, or if you just
-want to drop a migration, you can use <code class="inline">mix ecto.rollback --to &lt;MIGRATION_ID&gt;</code>.</p><p>Here's an example:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="1272657067-1">[</span><span class="n">sekun</span><span class="na">@nixos</span><span class="p">:</span><span class="err">~</span><span class="o">/</span><span class="nc">Projects</span><span class="o">/</span><span class="n">gnawex</span><span class="o">/</span><span class="n">migrations</span><span class="p" data-group-id="1272657067-1">]</span><span class="err">$</span><span class="w"> </span><span class="n">mix</span><span class="w"> </span><span class="n">ecto</span><span class="o">.</span><span class="n">migrations</span><span class="w">
-
-</span><span class="ss">Repo</span><span class="p">:</span><span class="w"> </span><span class="nc">Migrations.Repo</span><span class="w">
-
-  </span><span class="nc">Status</span><span class="w">    </span><span class="nc">Migration</span><span class="w"> </span><span class="nc">ID</span><span class="w">    </span><span class="nc">Migration</span><span class="w"> </span><span class="nc">Name</span><span class="w">
-</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="w">
-  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305031642</span><span class="w">  </span><span class="n">create_users</span><span class="w">
-  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305041253</span><span class="w">  </span><span class="n">create_items</span><span class="w">
-  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305044710</span><span class="w">  </span><span class="n">create_listings</span><span class="w">
-  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305110451</span><span class="w">  </span><span class="n">create_match_listing</span><span class="w">
-  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305112208</span><span class="w">  </span><span class="n">create_role</span><span class="w">
-
-
-</span><span class="p" data-group-id="1272657067-2">[</span><span class="n">sekun</span><span class="na">@nixos</span><span class="p">:</span><span class="err">~</span><span class="o">/</span><span class="nc">Projects</span><span class="o">/</span><span class="n">gnawex</span><span class="o">/</span><span class="n">migrations</span><span class="p" data-group-id="1272657067-2">]</span><span class="err">$</span><span class="w"> </span><span class="n">mix</span><span class="w"> </span><span class="n">ecto</span><span class="o">.</span><span class="n">rollback</span><span class="w"> </span><span class="o">--</span><span class="n">to</span><span class="w"> </span><span class="mi">20220305112208</span><span class="w">
-
-</span><span class="mi">19</span><span class="p">:</span><span class="mi">46</span><span class="p">:</span><span class="mf">31.763</span><span class="w"> </span><span class="p" data-group-id="1272657067-3">[</span><span class="n">info</span><span class="p" data-group-id="1272657067-3">]</span><span class="w">  </span><span class="o">==</span><span class="w"> </span><span class="nc">Running</span><span class="w"> </span><span class="mi">20220305112208</span><span class="w"> </span><span class="nc">Migrations.Repo.Migrations.CreateRole</span><span class="o">.</span><span class="n">down</span><span class="o">/</span><span class="mi">0</span><span class="w"> </span><span class="n">forward</span><span class="w">
-
-</span><span class="mi">19</span><span class="p">:</span><span class="mi">46</span><span class="p">:</span><span class="mf">31.766</span><span class="w"> </span><span class="p" data-group-id="1272657067-4">[</span><span class="n">info</span><span class="p" data-group-id="1272657067-4">]</span><span class="w">  </span><span class="n">execute</span><span class="w"> </span><span class="s">&quot;DROP POLICY txn_read ON transactions;&quot;</span><span class="w">
-
-</span><span class="n">...</span><span class="w">
-
-</span><span class="mi">19</span><span class="p">:</span><span class="mi">46</span><span class="p">:</span><span class="mf">31.772</span><span class="w"> </span><span class="p" data-group-id="1272657067-5">[</span><span class="n">info</span><span class="p" data-group-id="1272657067-5">]</span><span class="w">  </span><span class="o">==</span><span class="w"> </span><span class="nc">Migrated</span><span class="w"> </span><span class="mi">20220305112208</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="mf">0.0</span><span class="n">s</span><span class="w">
-
-</span><span class="p" data-group-id="1272657067-6">[</span><span class="n">sekun</span><span class="na">@nixos</span><span class="p">:</span><span class="err">~</span><span class="o">/</span><span class="nc">Projects</span><span class="o">/</span><span class="n">gnawex</span><span class="o">/</span><span class="n">migrations</span><span class="p" data-group-id="1272657067-6">]</span><span class="err">$</span><span class="w"> </span><span class="n">mix</span><span class="w"> </span><span class="n">ecto</span><span class="o">.</span><span class="n">migrations</span><span class="w">
-
-</span><span class="ss">Repo</span><span class="p">:</span><span class="w"> </span><span class="nc">Migrations.Repo</span><span class="w">
-
-  </span><span class="nc">Status</span><span class="w">    </span><span class="nc">Migration</span><span class="w"> </span><span class="nc">ID</span><span class="w">    </span><span class="nc">Migration</span><span class="w"> </span><span class="nc">Name</span><span class="w">
-</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="w">
-  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305031642</span><span class="w">  </span><span class="n">create_users</span><span class="w">
-  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305041253</span><span class="w">  </span><span class="n">create_items</span><span class="w">
-  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305044710</span><span class="w">  </span><span class="n">create_listings</span><span class="w">
-  </span><span class="n">up</span><span class="w">        </span><span class="mi">20220305110451</span><span class="w">  </span><span class="n">create_match_listing</span><span class="w">
-  </span><span class="n">down</span><span class="w">      </span><span class="mi">20220305112208</span><span class="w">  </span><span class="n">create_role</span></code></pre><h3 id="pgadmin" class="section-heading">
+</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="nc">Category</span><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="nc">Version</span><span class="w">        </span><span class="o">|</span><span class="w"> </span><span class="nc">Description</span><span class="w">          </span><span class="o">|</span><span class="w"> </span><span class="nc">Type</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">Installed</span><span class="w"> </span><span class="nc">On</span><span class="w">        </span><span class="o">|</span><span class="w"> </span><span class="nc">State</span><span class="w">   </span><span class="o">|</span><span class="w">
+</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="nc">Versioned</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">20220222233600</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">create</span><span class="w"> </span><span class="n">users</span><span class="w">         </span><span class="o">|</span><span class="w"> </span><span class="nc">SQL</span><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="mi">2022</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">07</span><span class="w"> </span><span class="mi">14</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">29</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">Success</span><span class="w"> </span><span class="o">|</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="nc">Versioned</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">20220222234200</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">create</span><span class="w"> </span><span class="n">items</span><span class="w">         </span><span class="o">|</span><span class="w"> </span><span class="nc">SQL</span><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="mi">2022</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">07</span><span class="w"> </span><span class="mi">14</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">29</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">Success</span><span class="w"> </span><span class="o">|</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="nc">Versioned</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">20220222234300</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">create</span><span class="w"> </span><span class="n">listings</span><span class="w">      </span><span class="o">|</span><span class="w"> </span><span class="nc">SQL</span><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="mi">2022</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">07</span><span class="w"> </span><span class="mi">14</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">29</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">Success</span><span class="w"> </span><span class="o">|</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="nc">Versioned</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">20220228153327</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">create</span><span class="w"> </span><span class="n">match</span><span class="w"> </span><span class="n">listing</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">SQL</span><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="mi">2022</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">07</span><span class="w"> </span><span class="mi">14</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">29</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">Success</span><span class="w"> </span><span class="o">|</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="nc">Versioned</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">20220301143724</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">create</span><span class="w"> </span><span class="n">role</span><span class="w">          </span><span class="o">|</span><span class="w"> </span><span class="nc">SQL</span><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="mi">2022</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">07</span><span class="w"> </span><span class="mi">14</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">29</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">Success</span><span class="w"> </span><span class="o">|</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="nc">Versioned</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">20220307020011</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">create</span><span class="w"> </span><span class="n">listings</span><span class="w"> </span><span class="n">view</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">SQL</span><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="mi">2022</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">07</span><span class="w"> </span><span class="mi">14</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">29</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">Success</span><span class="w"> </span><span class="o">|</span><span class="w">
+</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span></code></pre><p>The <code class="inline">State</code> column tells you which migrations have been successfully applied.</p><h3 id="pgadmin" class="section-heading">
   <a href="#pgadmin" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
   <p class="sr-only">pgadmin</p>
   </a>
