@@ -15,6 +15,20 @@
         "type": "github"
       }
     },
+    "flywayPkg": {
+      "inputs": {
+        "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "narHash": "sha256-naRJ6B/UByjaG++JF3w02FmQL4dvLVIFG/6U1DVdr9A=",
+        "path": "./nix/flyway",
+        "type": "path"
+      },
+      "original": {
+        "path": "./nix/flyway",
+        "type": "path"
+      }
+    },
     "masterpkgs": {
       "locked": {
         "lastModified": 1646106690,
@@ -33,6 +47,21 @@
     },
     "nixpkgs": {
       "locked": {
+        "lastModified": 1646523963,
+        "narHash": "sha256-ixFwYnaOycrzs0iN9RvyRMEGCkQ9Pj58x6V/qc2khy8=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "a173e92ee458878651356b9bcfb1e2b5145f76af",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_2": {
+      "locked": {
         "lastModified": 1646027090,
         "narHash": "sha256-ifZeFq98wismIFh175lJN/WIYy7o3ssmjyLf9Y3VcDY=",
         "owner": "NixOS",
@@ -46,7 +75,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_2": {
+    "nixpkgs_3": {
       "locked": {
         "lastModified": 1646523963,
         "narHash": "sha256-ixFwYnaOycrzs0iN9RvyRMEGCkQ9Pj58x6V/qc2khy8=",
@@ -63,7 +92,7 @@
     },
     "postgrestPkg": {
       "inputs": {
-        "nixpkgs": "nixpkgs_2"
+        "nixpkgs": "nixpkgs_3"
       },
       "locked": {
         "narHash": "sha256-BX+WrqHPmZ0nQHp3rY1cwkdhPF3JwkX2YATI6Tii96M=",
@@ -78,8 +107,9 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
+        "flywayPkg": "flywayPkg",
         "masterpkgs": "masterpkgs",
-        "nixpkgs": "nixpkgs",
+        "nixpkgs": "nixpkgs_2",
         "postgrestPkg": "postgrestPkg"
       }
     }
