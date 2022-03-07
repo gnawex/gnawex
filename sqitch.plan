@@ -1,0 +1,15 @@
+%syntax-version=1.0.0
+%project=gnawex
+%uri=https://github.com/gnawex/gnawex
+
+pgcrypto 2022-03-08T03:53:13Z sekun <sekun@nixos> # For encryption
+citext 2022-03-08T03:53:41Z sekun <sekun@nixos> # For case-insensitive text
+pgtap 2022-03-08T03:54:07Z sekun <sekun@nixos> # For pg unit tests
+app_schema 2022-03-08T04:02:39Z sekun <sekun@nixos> # GNAWEX app schema
+users 2022-03-08T04:04:23Z sekun <sekun@nixos> # GNAWEX users
+items 2022-03-08T06:56:21Z sekun <sekun@nixos> # Items that can be traded
+listings 2022-03-08T06:59:47Z sekun <sekun@nixos> # Buy/sell listings
+transactions 2022-03-08T07:07:24Z sekun <sekun@nixos> # A record of listings that have matched
+match_listings 2022-03-08T07:10:31Z sekun <sekun@nixos> # Automated listing matcher
+roles 2022-03-08T07:29:35Z sekun <sekun@nixos> # GNAWEX roles/users
+role_permissions 2022-03-08T07:38:55Z sekun <sekun@nixos> # What each role can/cannot do
