@@ -20,6 +20,10 @@
             postgrest
             masterpkgs.legacyPackages.${system}.pgadmin4
           ];
+
+          shellHook = ''
+          source bin/seed
+          '';
         };
       });
 }
