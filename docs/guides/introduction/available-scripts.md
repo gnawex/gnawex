@@ -8,6 +8,8 @@ with `postgresql`.
 
 ## `migrate`
 
+> NOTE: Unmaintained
+
 Takes **all** migration files from `migrations/`, and loads it in `gnawex_db`.
 
 ```sh
@@ -35,6 +37,8 @@ Here are the files those two look for:
 Drops `gnawex_db`.
 
 ## `reset-db`
+
+> NOTE: Unmaintained
 
 This is a convenience function that resets `gnawex_db`.
 
