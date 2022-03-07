@@ -1,0 +1,38 @@
+#!/usr/local/bin/bash
+
+function seed-db --description "Seeds `gnawex_db`" {
+  case $1 in
+    dev)
+      echo "===========> Seeding dev db"
+
+      echo "-----------> users from seeds/users.csv"
+      psql \
+        --user=postgres \
+        --dbname=gnawex_db \
+        --command "\copy users FROM 'seeds/users.csv' delimiter ',' csv header"
+      echo "-----------> Done"
+
+      echo "-----------> items from seeds/items.csv"
+      psql \
+      --user postgres \
+      --dbname=gnawex_db \
+      --command "\copy items FROM 'seeds/items.csv' delimiter ',' csv header"
+      echo "-----------> Done"
+
+      echo "-----------> listings from seeds/listings.csv"
+      psql \
+        --user postgres \
+        --dbname=gnawex_db \
+        --command "\copy listings FROM 'seeds/listings.csv' delimiter ',' csv header" 
+      echo "-----------> Done"
+
+    prod)
+      echo "===========> Seeding prod db"
+      echo "Oh yeah, haven't implemented this yet. Seeding nothing!"
+
+    *)
+      echo Unknown argument. Available args: dev, prod
+
+  esac
+}
+
