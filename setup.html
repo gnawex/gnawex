@@ -124,79 +124,112 @@ add this:</p><pre><code class="nix">services.postgresql = {
     host all all ::1/128 trust
   '';
 };</code></pre><p>This sets up a PostgreSQL server with a default user <code class="inline">postgres</code> (no password).
-Currently, I'm not utilizing permissions and policies so using the default
-<code class="inline">postgres</code> user is fine.</p><p>The project assumes you named the database as <code class="inline">gnawex_db</code>, which you can do
-with <code class="inline">createdb gnawex_db --user postgres</code>.</p><h3 id="applying-migrations" class="section-heading">
+You can create a user/role that matches with your OS' user so that you don't
+need to keep appending <code class="inline">psql</code>/<code class="inline">sqitch</code> commands with <code class="inline">-U postgres</code>, and
+<code class="inline">--db-user postgres</code> respectively. We'll get to what <code class="inline">sqitch</code> is in a bit.</p><p>My OS user is <code class="inline">sekun</code>. Replace <code class="inline">sekun</code> with whatever yours is.</p><pre><code class="makeup shell" translate="no"><span class="gp unselectable">$ </span><span class="">psql -U postgres
+</span><span class="">postgres# CREATE ROLE sekun SUPERUSER CREATEDB CREATEROLE LOGIN;
+</span><span class="">CREATE ROLE
+</span></code></pre><p>This creates a passwordless role <code class="inline">sekun</code>. Now you can use <code class="inline">psql</code>/<code class="inline">sqitch</code>
+without specifying the <code class="inline">postgres</code> user.</p><p>This project needs a database called <code class="inline">gnawex_db</code>. Create one with this:
+<code class="inline">createdb gnawex_db</code>.</p><h3 id="applying-migrations" class="section-heading">
   <a href="#applying-migrations" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
   <p class="sr-only">applying-migrations</p>
   </a>
   Applying migrations
 </h3>
-<p>For schema migrations, I'm using <a href="https://github.com/flyway/flyway"><code class="inline">flyway</code></a>
-since it's quite convenient.</p><p>The migration scripts can be found in <code class="inline">./sql</code> from the project root. You can
-manually load each <code class="inline">.sql</code> file with <code class="inline">\i path/to/file.sql</code> while in <code class="inline">psql</code>,
-but <code class="inline">flyway</code> makes it easier.</p><p><strong>Example</strong></p><pre><code class="makeup sh" translate="no"><span class="">sekun@nixos ~/P/gnawex (chore/use-flyway-for-schema-migrations)&gt; flyway migrate
-</span><span class="">Flyway is up to date
-</span><span class="">Flyway Community Edition 8.5.2 by Redgate
-</span><span class="">See what&#39;s new here: https://flywaydb.org/documentation/learnmore/releaseNotes#8.5.2
-</span><span class="">
-</span><span class="">Database: jdbc:postgresql://localhost:5432/gnawex_db (PostgreSQL 14.1)
-</span><span class="">Successfully validated 6 migrations (execution time 00:00.017s)
-</span><span class="">Current version of schema &quot;public&quot;: &lt;&lt; Empty Schema &gt;&gt;
-</span><span class="">Migrating schema &quot;public&quot; to version &quot;20220222233600 - create users&quot;
-</span><span class="">Migrating schema &quot;public&quot; to version &quot;20220222234200 - create items&quot;
-</span><span class="">Migrating schema &quot;public&quot; to version &quot;20220222234300 - create listings&quot;
-</span><span class="">Migrating schema &quot;public&quot; to version &quot;20220228153327 - create match listing&quot;
-</span><span class="">Migrating schema &quot;public&quot; to version &quot;20220301143724 - create role&quot;
-</span><span class="">Migrating schema &quot;public&quot; to version &quot;20220307020011 - create listings view&quot;
-</span><span class="">Successfully applied 6 migrations to schema &quot;public&quot;, now at version v20220307020011 (execution time 00:00.149s)
-</span><span class="">sekun@nixos ~/P/gnawex (chore/use-flyway-for-schema-migrations)&gt; psql gnawex_db -U postgres
-</span><span class="">psql (14.1)
-</span><span class="">Type &quot;help&quot; for help.
-</span><span class="">
-</span><span class="">gnawex_db=# \d
-</span><span class="">                  List of relations
-</span><span class=""> Schema |         Name          |   Type   |  Owner   
-</span><span class="">--------+-----------------------+----------+----------
-</span><span class=""> public | flyway_schema_history | table    | postgres
-</span><span class=""> public | item_listings         | view     | postgres
-</span><span class=""> public | items                 | table    | postgres
-</span><span class=""> public | items_id_seq          | sequence | postgres
-</span><span class=""> public | listings              | table    | postgres
-</span><span class=""> public | listings_id_seq       | sequence | postgres
-</span><span class=""> public | listings_item_id_seq  | sequence | postgres
-</span><span class=""> public | listings_user_id_seq  | sequence | postgres
-</span><span class=""> public | transactions          | table    | postgres
-</span><span class=""> public | users                 | table    | postgres
-</span><span class=""> public | users_hunter_id_seq   | sequence | postgres
-</span><span class=""> public | users_id_seq          | sequence | postgres
-</span><span class="">(12 rows)
-</span></code></pre><blockquote><p><strong>Note:</strong> I'm no longer maintaining the old scripts in <code class="inline">bin/functions.fish</code>.
-So don't bother using them! All but the seeding script.</p></blockquote><h3 id="viewing-migration-statuses" class="section-heading">
+<p>For schema migrations, I'm using <a href="https://sqitch.org"><code class="inline">sqitch</code></a> out of
+convenience. If you're using <code class="inline">nix</code>, it should already be a part of the nix
+dev shell environment (how convenienit). If you're using something else, check
+out their website for installation instructions.</p><p><code class="inline">sqitch</code> is interested in 3 folders: <code class="inline">deploy</code>, <code class="inline">revert</code>, and <code class="inline">verify</code>. <code class="inline">deploy</code>
+contains the migration scripts that you want to apply. <code class="inline">revert</code> when you want
+to rollback, and <code class="inline">verify</code> checks if things were applied as you expect them to
+be. These scripts are just plain SQL. Whatever is considered valid by
+PostgreSQL is fine.</p><blockquote><p>By this stage, it is assumed that you've setup PostgreSQL 14.1, created
+<code class="inline">gnawex_db</code>, and have <code class="inline">sqitch</code> installed.</p></blockquote><p><strong>Example</strong></p><pre><code class="makeup sh" translate="no"><span class="">[sekun@nixos:~/Projects/gnawex]$ sqitch deploy
+</span><span class="">Deploying changes to db:pg:gnawex_db
+</span><span class="">  + pgcrypto .......... ok
+</span><span class="">  + citext ............ ok
+</span><span class="">  + pgtap ............. ok
+</span><span class="">  + app_schema ........ ok
+</span><span class="">  + users ............. ok
+</span><span class="">  + items ............. ok
+</span><span class="">  + listings .......... ok
+</span><span class="">  + transactions ...... ok
+</span><span class="">  + match_listings .... ok
+</span><span class="">  + roles ............. ok
+</span><span class="">  + role_permissions .. ok
+</span></code></pre><p>If ever something goes wrong, it'll revert it to the last change that succeeded.
+But that's what it looks like if all goes well.</p><h3 id="viewing-migration-statuses" class="section-heading">
   <a href="#viewing-migration-statuses" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
   <p class="sr-only">viewing-migration-statuses</p>
   </a>
   Viewing migration statuses
 </h3>
-<p>If you're curious which migrations have been applied, you can use
-<code class="inline">flyway info</code>, and the output would look something like this:</p><pre><code class="makeup elixir" translate="no"><span class="n">sekun</span><span class="na">@nixos</span><span class="w"> </span><span class="err">~</span><span class="o">/</span><span class="nc">P</span><span class="o">/</span><span class="n">gnawex</span><span class="w"> </span><span class="p" data-group-id="4790290430-1">(</span><span class="n">chore</span><span class="o">/</span><span class="kn">use</span><span class="o">-</span><span class="n">flyway</span><span class="o">-</span><span class="k">for</span><span class="o">-</span><span class="n">schema</span><span class="o">-</span><span class="n">migrations</span><span class="p" data-group-id="4790290430-1">)</span><span class="o">&gt;</span><span class="w"> </span><span class="n">flyway</span><span class="w"> </span><span class="n">info</span><span class="w">
-</span><span class="nc">Flyway</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">up</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">date</span><span class="w">
-</span><span class="nc">Flyway</span><span class="w"> </span><span class="nc">Community</span><span class="w"> </span><span class="nc">Edition</span><span class="w"> </span><span class="mf">8.5</span><span class="o">.</span><span class="mi">2</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="nc">Redgate</span><span class="w">
-</span><span class="nc">See</span><span class="w"> </span><span class="n">what</span><span class="err">&#39;</span><span class="n">s</span><span class="w"> </span><span class="n">new</span><span class="w"> </span><span class="ss">here</span><span class="p">:</span><span class="w"> </span><span class="n">https</span><span class="ss">://</span><span class="n">flywaydb</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="n">documentation</span><span class="o">/</span><span class="n">learnmore</span><span class="o">/</span><span class="n">releaseNotes</span><span class="c1">#8.5.2</span><span class="w">
+<p>To see what migration <code class="inline">sqitch</code> has applied, you can use <code class="inline">sqitch status</code>:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="2671022538-1">[</span><span class="n">sekun</span><span class="na">@nixos</span><span class="p">:</span><span class="err">~</span><span class="o">/</span><span class="nc">Projects</span><span class="o">/</span><span class="n">gnawex</span><span class="p" data-group-id="2671022538-1">]</span><span class="err">$</span><span class="w"> </span><span class="n">sqitch</span><span class="w"> </span><span class="n">status</span><span class="w">
+</span><span class="c1"># On database db:pg:gnawex_db</span><span class="w">
+</span><span class="c1"># Project:  gnawex</span><span class="w">
+</span><span class="c1"># Change:   117b3847f4e26b654dcd925378ef7ff4810fd641</span><span class="w">
+</span><span class="c1"># Name:     role_permissions</span><span class="w">
+</span><span class="c1"># Deployed: 2022-03-08 16:20:32 +0800</span><span class="w">
+</span><span class="c1"># By:       sekun &lt;sekun@nixos&gt;</span><span class="w">
+</span><span class="c1">#</span><span class="w">
+</span><span class="nc">Nothing</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">deploy</span><span class="w"> </span><span class="p" data-group-id="2671022538-2">(</span><span class="n">up</span><span class="o">-</span><span class="n">to</span><span class="o">-</span><span class="n">date</span><span class="p" data-group-id="2671022538-2">)</span></code></pre><p>Here it tells you that the latest change is <code class="inline">role_permissions</code>. Which is good
+because at the time of writing, this is the latest migration we want. If you
+want to see the list of migrations planned, you can use <code class="inline">sqitch plan</code>:</p><pre><code class="makeup elixir" translate="no"><span class="c1"># Project: gnawex</span><span class="w">
+</span><span class="c1"># File:    sqitch.plan</span><span class="w">
 
-</span><span class="ss">Database</span><span class="p">:</span><span class="w"> </span><span class="n">jdbc</span><span class="ss">:postgresql</span><span class="ss">://</span><span class="n">localhost</span><span class="p">:</span><span class="mi">5432</span><span class="o">/</span><span class="n">gnawex_db</span><span class="w"> </span><span class="p" data-group-id="4790290430-2">(</span><span class="nc">PostgreSQL</span><span class="w"> </span><span class="mf">14.1</span><span class="p" data-group-id="4790290430-2">)</span><span class="w">
-</span><span class="nc">Schema</span><span class="w"> </span><span class="ss">version</span><span class="p">:</span><span class="w"> </span><span class="mi">20220307020011</span><span class="w">
+</span><span class="nc">Deploy</span><span class="w"> </span><span class="mi">3</span><span class="n">d07e4afe1abd5eb6fbd5e350650da0535f89ccc</span><span class="w">
+</span><span class="ss">Name</span><span class="p">:</span><span class="w">      </span><span class="n">pgcrypto</span><span class="w">
+</span><span class="ss">Planner</span><span class="p">:</span><span class="w">   </span><span class="n">sekun</span><span class="w"> </span><span class="o">&lt;</span><span class="n">sekun</span><span class="na">@nixos</span><span class="o">&gt;</span><span class="w">
+</span><span class="ss">Date</span><span class="p">:</span><span class="w">      </span><span class="mi">2022</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">08</span><span class="w"> </span><span class="mi">11</span><span class="p">:</span><span class="mi">53</span><span class="p">:</span><span class="mi">13</span><span class="w"> </span><span class="o">+</span><span class="mi">0800</span><span class="w">
 
-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="w">
-</span><span class="o">|</span><span class="w"> </span><span class="nc">Category</span><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="nc">Version</span><span class="w">        </span><span class="o">|</span><span class="w"> </span><span class="nc">Description</span><span class="w">          </span><span class="o">|</span><span class="w"> </span><span class="nc">Type</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">Installed</span><span class="w"> </span><span class="nc">On</span><span class="w">        </span><span class="o">|</span><span class="w"> </span><span class="nc">State</span><span class="w">   </span><span class="o">|</span><span class="w">
-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="w">
-</span><span class="o">|</span><span class="w"> </span><span class="nc">Versioned</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">20220222233600</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">create</span><span class="w"> </span><span class="n">users</span><span class="w">         </span><span class="o">|</span><span class="w"> </span><span class="nc">SQL</span><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="mi">2022</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">07</span><span class="w"> </span><span class="mi">14</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">29</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">Success</span><span class="w"> </span><span class="o">|</span><span class="w">
-</span><span class="o">|</span><span class="w"> </span><span class="nc">Versioned</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">20220222234200</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">create</span><span class="w"> </span><span class="n">items</span><span class="w">         </span><span class="o">|</span><span class="w"> </span><span class="nc">SQL</span><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="mi">2022</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">07</span><span class="w"> </span><span class="mi">14</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">29</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">Success</span><span class="w"> </span><span class="o">|</span><span class="w">
-</span><span class="o">|</span><span class="w"> </span><span class="nc">Versioned</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">20220222234300</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">create</span><span class="w"> </span><span class="n">listings</span><span class="w">      </span><span class="o">|</span><span class="w"> </span><span class="nc">SQL</span><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="mi">2022</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">07</span><span class="w"> </span><span class="mi">14</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">29</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">Success</span><span class="w"> </span><span class="o">|</span><span class="w">
-</span><span class="o">|</span><span class="w"> </span><span class="nc">Versioned</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">20220228153327</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">create</span><span class="w"> </span><span class="n">match</span><span class="w"> </span><span class="n">listing</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">SQL</span><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="mi">2022</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">07</span><span class="w"> </span><span class="mi">14</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">29</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">Success</span><span class="w"> </span><span class="o">|</span><span class="w">
-</span><span class="o">|</span><span class="w"> </span><span class="nc">Versioned</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">20220301143724</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">create</span><span class="w"> </span><span class="n">role</span><span class="w">          </span><span class="o">|</span><span class="w"> </span><span class="nc">SQL</span><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="mi">2022</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">07</span><span class="w"> </span><span class="mi">14</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">29</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">Success</span><span class="w"> </span><span class="o">|</span><span class="w">
-</span><span class="o">|</span><span class="w"> </span><span class="nc">Versioned</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="mi">20220307020011</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">create</span><span class="w"> </span><span class="n">listings</span><span class="w"> </span><span class="n">view</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">SQL</span><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="mi">2022</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">07</span><span class="w"> </span><span class="mi">14</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">29</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nc">Success</span><span class="w"> </span><span class="o">|</span><span class="w">
-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">--</span><span class="o">-</span><span class="o">+</span></code></pre><p>The <code class="inline">State</code> column tells you which migrations have been successfully applied.</p><h3 id="pgadmin" class="section-heading">
+    </span><span class="nc">For</span><span class="w"> </span><span class="n">encryption</span><span class="w">
+
+</span><span class="nc">Deploy</span><span class="w"> </span><span class="mi">895451</span><span class="n">e8c444a571ae42a040d6496c14be5e6240</span><span class="w">
+</span><span class="ss">Name</span><span class="p">:</span><span class="w">      </span><span class="n">citext</span><span class="w">
+</span><span class="ss">Planner</span><span class="p">:</span><span class="w">   </span><span class="n">sekun</span><span class="w"> </span><span class="o">&lt;</span><span class="n">sekun</span><span class="na">@nixos</span><span class="o">&gt;</span><span class="w">
+</span><span class="ss">Date</span><span class="p">:</span><span class="w">      </span><span class="mi">2022</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">08</span><span class="w"> </span><span class="mi">11</span><span class="p">:</span><span class="mi">53</span><span class="p">:</span><span class="mi">41</span><span class="w"> </span><span class="o">+</span><span class="mi">0800</span><span class="w">
+
+    </span><span class="nc">For</span><span class="w"> </span><span class="k">case</span><span class="o">-</span><span class="n">insensitive</span><span class="w"> </span><span class="n">text</span><span class="w">
+
+</span><span class="nc">Deploy</span><span class="w"> </span><span class="mi">66</span><span class="n">bda001775a8d943894a15e9745a1cd985cfdbd</span><span class="w">
+</span><span class="ss">Name</span><span class="p">:</span><span class="w">      </span><span class="n">pgtap</span><span class="w">
+</span><span class="ss">Planner</span><span class="p">:</span><span class="w">   </span><span class="n">sekun</span><span class="w"> </span><span class="o">&lt;</span><span class="n">sekun</span><span class="na">@nixos</span><span class="o">&gt;</span><span class="w">
+</span><span class="ss">Date</span><span class="p">:</span><span class="w">      </span><span class="mi">2022</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">08</span><span class="w"> </span><span class="mi">11</span><span class="p">:</span><span class="mi">54</span><span class="p">:</span><span class="mi">07</span><span class="w"> </span><span class="o">+</span><span class="mi">0800</span><span class="w">
+
+    </span><span class="nc">For</span><span class="w"> </span><span class="n">pg</span><span class="w"> </span><span class="n">unit</span><span class="w"> </span><span class="n">tests</span><span class="w">
+
+</span><span class="nc">Deploy</span><span class="w"> </span><span class="n">ea57600af26c2141dd329660db853152453ff934</span><span class="w">
+</span><span class="ss">Name</span><span class="p">:</span><span class="w">      </span><span class="n">app_schema</span><span class="w">
+</span><span class="ss">Planner</span><span class="p">:</span><span class="w">   </span><span class="n">sekun</span><span class="w"> </span><span class="o">&lt;</span><span class="n">sekun</span><span class="na">@nixos</span><span class="o">&gt;</span><span class="w">
+</span><span class="ss">Date</span><span class="p">:</span><span class="w">      </span><span class="mi">2022</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">08</span><span class="w"> </span><span class="mi">12</span><span class="p">:</span><span class="mi">02</span><span class="p">:</span><span class="mi">39</span><span class="w"> </span><span class="o">+</span><span class="mi">0800</span><span class="w">
+
+    </span><span class="nc">GNAWEX</span><span class="w"> </span><span class="n">app</span><span class="w"> </span><span class="n">schema</span><span class="w">
+
+</span><span class="nc">Deploy</span><span class="w"> </span><span class="n">cc0ce225344b889bcb8d42db3b501b8cca714f0e</span><span class="w">
+</span><span class="ss">Name</span><span class="p">:</span><span class="w">      </span><span class="n">users</span><span class="w">
+</span><span class="ss">Planner</span><span class="p">:</span><span class="w">   </span><span class="n">sekun</span><span class="w"> </span><span class="o">&lt;</span><span class="n">sekun</span><span class="na">@nixos</span><span class="o">&gt;</span><span class="w">
+</span><span class="ss">Date</span><span class="p">:</span><span class="w">      </span><span class="mi">2022</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">08</span><span class="w"> </span><span class="mi">12</span><span class="p">:</span><span class="mi">04</span><span class="p">:</span><span class="mi">23</span><span class="w"> </span><span class="o">+</span><span class="mi">0800</span><span class="w">
+
+    </span><span class="nc">GNAWEX</span><span class="w"> </span><span class="n">users</span><span class="w">
+
+</span><span class="nc">Deploy</span><span class="w"> </span><span class="n">afb388906019a2959b671c76f625e939077a5848</span><span class="w">
+</span><span class="ss">Name</span><span class="p">:</span><span class="w">      </span><span class="n">items</span><span class="w">
+</span><span class="ss">Planner</span><span class="p">:</span><span class="w">   </span><span class="n">sekun</span><span class="w"> </span><span class="o">&lt;</span><span class="n">sekun</span><span class="na">@nixos</span><span class="o">&gt;</span><span class="w">
+</span><span class="ss">Date</span><span class="p">:</span><span class="w">      </span><span class="mi">2022</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">08</span><span class="w"> </span><span class="mi">14</span><span class="p">:</span><span class="mi">56</span><span class="p">:</span><span class="mi">21</span><span class="w"> </span><span class="o">+</span><span class="mi">0800</span><span class="w">
+
+    </span><span class="nc">Items</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">can</span><span class="w"> </span><span class="n">be</span><span class="w"> </span><span class="n">traded</span><span class="w">
+
+</span><span class="nc">Deploy</span><span class="w"> </span><span class="n">dbd0e796eacee0ef094baa45ffee698f760e541f</span><span class="w">
+</span><span class="ss">Name</span><span class="p">:</span><span class="w">      </span><span class="n">listings</span><span class="w">
+
+</span><span class="n">...</span></code></pre><h3 id="rolling-back-migrations" class="section-heading">
+  <a href="#rolling-back-migrations" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">rolling-back-migrations</p>
+  </a>
+  Rolling back migrations
+</h3>
+<p><code class="inline">sqitch revert</code></p><p>WIP</p><h3 id="pgadmin" class="section-heading">
   <a href="#pgadmin" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
   <p class="sr-only">pgadmin</p>
   </a>
@@ -216,13 +249,13 @@ nix.</p><pre><code class="makeup sh" translate="no"><span class=""># At the proj
 <code class="inline">/var/lib/pgadmin</code>. Doing this for the first time will ask for credentials
 you want to set, it doesn't really matter since it's just for a dev env, just
 remember it.</p><p>You should see something like this:</p><pre><code class="makeup sh" translate="no"><span class="">sekun@nixos ~/P/gnawex (main) [1]&gt; doas pgadmin4
-</span><span class="">doas (sekun@nixos) password: 
+</span><span class="">doas (sekun@nixos) password:
 </span><span class="">NOTE: Configuring authentication for SERVER mode.
 </span><span class="">
 </span><span class="">Enter the email address and password to use for the initial pgAdmin user account:
 </span><span class="">
 </span><span class="">Email address: postgres@example.com
-</span><span class="">Password: 
+</span><span class="">Password:
 </span><span class="">Retype password:
 </span><span class="">Starting pgAdmin 4. Please navigate to http://127.0.0.1:5050 in your browser.
 </span><span class="">2022-03-01 12:12:37,060: WARNING    werkzeug:   WebSocket transport not available. Install eventlet or gevent and gevent-websocket for improved performance.
