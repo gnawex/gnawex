@@ -28,177 +28,138 @@ services.postgresql = {
 ```
 
 This sets up a PostgreSQL server with a default user `postgres` (no password).
-Currently, I'm not utilizing permissions and policies so using the default
-`postgres` user is fine.
+You can create a user/role that matches with your OS' user so that you don't
+need to keep appending `psql`/`sqitch` commands with `-U postgres`, and
+`--db-user postgres` respectively. We'll get to what `sqitch` is in a bit.
 
-The project assumes you named the database as `gnawex_db`, which you can do
-with `mix ecto.create`.
+My OS user is `sekun`. Replace `sekun` with whatever yours is.
+
+```
+$ psql -U postgres
+postgres# CREATE ROLE sekun SUPERUSER CREATEDB CREATEROLE LOGIN;
+CREATE ROLE
+```
+
+This creates a passwordless role `sekun`. Now you can use `psql`/`sqitch`
+without specifying the `postgres` user.
+
+This project needs a database called `gnawex_db`. Create one with this:
+`createdb gnawex_db`.
 
 ### Applying migrations
 
-For schema migrations, I'm using [`ecto`](https://github.com/elixir-ecto/ecto)
-since it's quite convenient to rely on its migrations feature, and I can
-execute SQL scripts with `execute/1` if I parse it properly.
+For schema migrations, I'm using [`sqitch`](https://sqitch.org) out of
+convenience. If you're using `nix`, it should already be a part of the nix
+dev shell environment (how convenienit). If you're using something else, check
+out their website for installation instructions.
 
-The migration scripts can be found in `migrations/priv/repo/migrations` from
-the project root. You can manually load each `.sql` file with
-`\i path/to/file.sql` while in `psql`, but `ecto` helps make it more convenient.
+`sqitch` is interested in 3 folders: `deploy`, `revert`, and `verify`. `deploy`
+contains the migration scripts that you want to apply. `revert` when you want
+to rollback, and `verify` checks if things were applied as you expect them to
+be. These scripts are just plain SQL. Whatever is considered valid by
+PostgreSQL is fine.
 
-> **NOTE:** You'll need `elixir` and `erlang` setup for this. If you're using
-> `nix-direnv`, and have nix flakes enabled, you don't have to worry about
-> getting the right dependencies since I already set things up.
+> By this stage, it is assumed that you've setup PostgreSQL 14.1, created
+> `gnawex_db`, and have `sqitch` installed.
 
 **Example**
 
 ```sh
-[sekun@nixos:~/Projects/gnawex]$ cd migrations
-direnv: loading ~/Projects/gnawex/migrations/.envrc
-direnv: using flake
-direnv: using cached dev shell
-direnv: export +AR +AS +CC +CONFIG_SHELL +CXX +HOST_PATH +IN_NIX_SHELL +LD +NIX_BINTOOLS +NIX_BINTOOLS_WRAPPER_TAR
-GET_HOST_x86_64_unknown_linux_gnu +NIX_BUILD_CORES +NIX_CC +NIX_CC_WRAPPER_TARGET_HOST_x86_64_unknown_linux_gnu +N
-IX_CFLAGS_COMPILE +NIX_ENFORCE_NO_NATIVE +NIX_HARDENING_ENABLE +NIX_INDENT_MAKE +NIX_LDFLAGS +NIX_STORE +NM +OBJCO
-PY +OBJDUMP +RANLIB +READELF +SIZE +SOURCE_DATE_EPOCH +STRINGS +STRIP +buildInputs +buildPhase +builder +configure
-Flags +depsBuildBuild +depsBuildBuildPropagated +depsBuildTarget +depsBuildTargetPropagated +depsHostHost +depsHos
-tHostPropagated +depsTargetTarget +depsTargetTargetPropagated +doCheck +doInstallCheck +dontAddDisableDepTrack +na
-me +nativeBuildInputs +out +outputs +patches +phases +propagatedBuildInputs +propagatedNativeBuildInputs +shell +s
-hellHook +stdenv +strictDeps +system ~PATH ~XDG_DATA_DIRS
-
-# You should probably run `mix deps.get` first before this line if it's your
-# first time running it.
-[sekun@nixos:~/Projects/gnawex/migrations]$ mix do ecto.create, ecto.migrate
-The database for Migrations.Repo has already been created
-
-19:38:03.252 [info]  == Running 20220305031642 Migrations.Repo.Migrations.CreateUsers.up/0 forward
-
-19:38:03.255 [info]  execute "--------------------------------------------------------------------------------\n--
- `anon` permissions\n-- NOTE: `anon` is pretty much public"
-
-19:38:03.256 [info]  execute "CREATE ROLE anon;"
-
-19:38:03.256 [info]  execute "GRANT USAGE ON SCHEMA public TO anon;"
-
-19:38:03.257 [info]  execute "--------------------------------------------------------------------------------\n--
- `authenticator` serves as an alternative for `postgres` with less elevated\n-- permissions. Use this to connect t
-o the database, or something."
-
-19:38:03.257 [info]  execute "-- NOTE: I don't know how to set this for prod\n-- TODO: Use passwd\nCREATE ROLE aut
-henticator NOINHERIT LOGIN PASSWORD 'foobarbaz';"
-
-19:38:03.260 [info]  execute "GRANT anon TO authenticator;"
-
-19:38:03.261 [info]  execute "--------------------------------------------------------------------------------"
-
-19:38:03.261 [info]  execute "CREATE TYPE ROLE AS ENUM ('admin', 'mod', 'user');"
-
-...
+[sekun@nixos:~/Projects/gnawex]$ sqitch deploy
+Deploying changes to db:pg:gnawex_db
+  + pgcrypto .......... ok
+  + citext ............ ok
+  + pgtap ............. ok
+  + app_schema ........ ok
+  + users ............. ok
+  + items ............. ok
+  + listings .......... ok
+  + transactions ...... ok
+  + match_listings .... ok
+  + roles ............. ok
+  + role_permissions .. ok
 ```
 
-If you take a look at one of the scripts, it would look something like this:
-
-```
-defmodule Migrations.Repo.Migrations.CreateUsers do
-  use Ecto.Migration
-
-  import Migrations
-
-  def up do
-    execute_file "./sql/20220222233600_create_users.sql"
-  end
-
-  def down do
-    execute_each """
-    DROP TABLE users;
-
-    DROP TYPE ROLE;
-
-    DROP ROLE authenticator;
-
-    REVOKE USAGE ON SCHEMA public FROM anon;
-
-    DROP ROLE anon;
-    """
-  end
-end
-```
-
-`execute_each/1` and `execute_file/1` are helper functions I wrote to handle
-executing each statement since `postgrex` cannot handle a bunch of statements
-in a single `execute/1`. So essentially, this reads the SQL script, does some
-basic parsing behind the scenes (it just splits it by double newlines), and
-runs execute on each list item.
-
-`up/0` is responsible for _applying_ changes to the schema, while `down/0`
-reverts it.
-
-> **Note:** I'm no longer maintaining the old scripts in `bin/functions.fish`.
-> So don't bother using them!
+If ever something goes wrong, it'll revert it to the last change that succeeded.
+But that's what it looks like if all goes well.
 
 ### Viewing migration statuses
 
-If you're curious which migrations have been applied, you can use
-`mix ecto.migrations`, and the output would look something like this:
+To see what migration `sqitch` has applied, you can use `sqitch status`:
 
 ```
-[sekun@nixos:~/Projects/gnawex/migrations]$ mix ecto.migrations
-
-Repo: Migrations.Repo
-
-  Status    Migration ID    Migration Name
---------------------------------------------------
-  up        20220305031642  create_users
-  up        20220305041253  create_items
-  up        20220305044710  create_listings
-  up        20220305110451  create_match_listing
-  up        20220305112208  create_role
+[sekun@nixos:~/Projects/gnawex]$ sqitch status
+# On database db:pg:gnawex_db
+# Project:  gnawex
+# Change:   117b3847f4e26b654dcd925378ef7ff4810fd641
+# Name:     role_permissions
+# Deployed: 2022-03-08 16:20:32 +0800
+# By:       sekun <sekun@nixos>
+#
+Nothing to deploy (up-to-date)
 ```
 
-The `Status` column tells you which migrations have been applied, if ever one
-is reverted, it would be `down` instead of `up`.
+Here it tells you that the latest change is `role_permissions`. Which is good
+because at the time of writing, this is the latest migration we want. If you
+want to see the list of migrations planned, you can use `sqitch plan`:
+
+```
+# Project: gnawex
+# File:    sqitch.plan
+
+Deploy 3d07e4afe1abd5eb6fbd5e350650da0535f89ccc
+Name:      pgcrypto
+Planner:   sekun <sekun@nixos>
+Date:      2022-03-08 11:53:13 +0800
+
+    For encryption
+
+Deploy 895451e8c444a571ae42a040d6496c14be5e6240
+Name:      citext
+Planner:   sekun <sekun@nixos>
+Date:      2022-03-08 11:53:41 +0800
+
+    For case-insensitive text
+
+Deploy 66bda001775a8d943894a15e9745a1cd985cfdbd
+Name:      pgtap
+Planner:   sekun <sekun@nixos>
+Date:      2022-03-08 11:54:07 +0800
+
+    For pg unit tests
+
+Deploy ea57600af26c2141dd329660db853152453ff934
+Name:      app_schema
+Planner:   sekun <sekun@nixos>
+Date:      2022-03-08 12:02:39 +0800
+
+    GNAWEX app schema
+
+Deploy cc0ce225344b889bcb8d42db3b501b8cca714f0e
+Name:      users
+Planner:   sekun <sekun@nixos>
+Date:      2022-03-08 12:04:23 +0800
+
+    GNAWEX users
+
+Deploy afb388906019a2959b671c76f625e939077a5848
+Name:      items
+Planner:   sekun <sekun@nixos>
+Date:      2022-03-08 14:56:21 +0800
+
+    Items that can be traded
+
+Deploy dbd0e796eacee0ef094baa45ffee698f760e541f
+Name:      listings
+
+...
+```
 
 ### Rolling back migrations
 
-If you made changes to how the dropping of a migration is done, or if you just
-want to drop a migration, you can use `mix ecto.rollback --to <MIGRATION_ID>`.
+`sqitch revert`
 
-Here's an example:
-
-```
-[sekun@nixos:~/Projects/gnawex/migrations]$ mix ecto.migrations
-
-Repo: Migrations.Repo
-
-  Status    Migration ID    Migration Name
---------------------------------------------------
-  up        20220305031642  create_users
-  up        20220305041253  create_items
-  up        20220305044710  create_listings
-  up        20220305110451  create_match_listing
-  up        20220305112208  create_role
-
-
-[sekun@nixos:~/Projects/gnawex/migrations]$ mix ecto.rollback --to 20220305112208
-
-19:46:31.763 [info]  == Running 20220305112208 Migrations.Repo.Migrations.CreateRole.down/0 forward
-
-19:46:31.766 [info]  execute "DROP POLICY txn_read ON transactions;"
-
-...
-
-19:46:31.772 [info]  == Migrated 20220305112208 in 0.0s
-
-[sekun@nixos:~/Projects/gnawex/migrations]$ mix ecto.migrations
-
-Repo: Migrations.Repo
-
-  Status    Migration ID    Migration Name
---------------------------------------------------
-  up        20220305031642  create_users
-  up        20220305041253  create_items
-  up        20220305044710  create_listings
-  up        20220305110451  create_match_listing
-  down      20220305112208  create_role
-```
+WIP
 
 ### `pgAdmin`
 
@@ -226,13 +187,13 @@ You should see something like this:
 
 ```sh
 sekun@nixos ~/P/gnawex (main) [1]> doas pgadmin4
-doas (sekun@nixos) password: 
+doas (sekun@nixos) password:
 NOTE: Configuring authentication for SERVER mode.
 
 Enter the email address and password to use for the initial pgAdmin user account:
 
 Email address: postgres@example.com
-Password: 
+Password:
 Retype password:
 Starting pgAdmin 4. Please navigate to http://127.0.0.1:5050 in your browser.
 2022-03-01 12:12:37,060: WARNING	werkzeug:	WebSocket transport not available. Install eventlet or gevent and gevent-websocket for improved performance.
