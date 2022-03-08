@@ -19,6 +19,7 @@
             pkgs.sqitchPg
             postgrest
             masterpkgs.legacyPackages.${system}.pgadmin4
+            pkgs.insomnia
           ];
 
           shellHook = ''

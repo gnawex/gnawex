@@ -32,4 +32,11 @@ CREATE ROLE api NOLOGIN;
 COMMENT ON ROLE api IS
   'Role that owns the `api` schema and its objects';
 
+-- Allows `authenticator` to switch to any of the ff:
+--
+-- 1. `anon`
+-- 2. `verified_user`
+-- 3. `banned_user`
+GRANT anon, verified_user, banned_user TO authenticator;
+
 COMMIT;

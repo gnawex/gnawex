@@ -5,7 +5,7 @@
 
 BEGIN;
 
-CREATE TYPE USER_ROLE AS ENUM ('valid_user', 'unverified_user', 'banned_user');
+CREATE TYPE USER_ROLE AS ENUM ('verified_user', 'unverified_user', 'banned_user');
 COMMENT ON TYPE USER_ROLE IS
   'Type of user';
 
@@ -21,6 +21,8 @@ CREATE TABLE app.users (
 
   role      USER_ROLE NOT NULL
 );
+
+ALTER TABLE app.users ENABLE ROW LEVEL SECURITY;
 
 COMMENT ON TABLE app.users IS
   'GNAWEX users';
