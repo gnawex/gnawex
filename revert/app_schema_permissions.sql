@@ -2,10 +2,6 @@
 
 BEGIN;
 
-ALTER DEFAULT PRIVILEGES GRANT EXECUTE ON functions TO public;
-ALTER DEFAULT PRIVILEGES FOR ROLE auth, api GRANT EXECUTE ON functions TO public;
-
-REVOKE anon, verified_user, banned_user FROM authenticator;
 REVOKE USAGE ON SCHEMA app FROM auth, api, anon;
 
 --------------------------------------------------------------------------------
@@ -24,6 +20,13 @@ REVOKE
 
 REVOKE ALL ON app.users_user_id_seq FROM api;
 
+REVOKE SELECT ON app.transactions FROM api;
+
+DROP POLICY authenticated_user_read_users ON app.users;
+DROP POLICY authenticated_user_update_users ON app.users;
+DROP POLICY auth_read_users ON app.users;
+DROP POLICY api_insert_users ON app.users;
+
 --------------------------------------------------------------------------------
 -- app.items table
 
@@ -39,5 +42,9 @@ REVOKE SELECT ON TABLE app.items FROM anon;
 REVOKE ALL ON TABLE app.items_item_id_seq FROM verified_user, api;
 
 --------------------------------------------------------------------------------
+-- Helper functions
+
+REVOKE EXECUTE ON FUNCTION app.current_user_id FROM api, verified_user, banned_user;
+DROP FUNCTION app.current_user_id();
 
 COMMIT;

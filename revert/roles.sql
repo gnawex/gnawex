@@ -2,6 +2,8 @@
 
 BEGIN;
 
+REVOKE anon, verified_user, banned_user FROM authenticator;
+
 DROP ROLE authenticator;
 DROP ROLE anon;
 DROP ROLE verified_user;
