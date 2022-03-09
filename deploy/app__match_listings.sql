@@ -104,7 +104,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER match_listings
+CREATE TRIGGER match_listings
   AFTER INSERT
    ON app.listings
    FOR EACH ROW

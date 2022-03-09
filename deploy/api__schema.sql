@@ -2,16 +2,27 @@
 
 BEGIN;
 
+--------------------------------------------------------------------------------
+
 CREATE SCHEMA api AUTHORIZATION api;
 
+COMMENT ON SCHEMA api IS
+  'Schema that defines what is suitable to be exposed through PostgREST';
+
+-- Everything in this transaction from this point forward will be owned by `api`
 SET LOCAL ROLE api;
 
+GRANT USAGE ON SCHEMA api TO anon, verified_user;
+
 --------------------------------------------------------------------------------
--- Auth-related endpoints
 
 CREATE VIEW api.users AS
   SELECT user_id, username
     FROM app.users;
+
+GRANT SELECT, UPDATE(username) ON api.users TO verified_user;
+
+--------------------------------------------------------------------------------
 
 CREATE TYPE api.user AS (
   user_id   BIGINT,
@@ -28,6 +39,13 @@ CREATE FUNCTION api.current_user()
       FROM app.users
       WHERE user_id = app.current_user_id();
   $$;
+
+COMMENT ON FUNCTION api.current_user IS
+  'Information about the currently authenticated user';
+
+GRANT EXECUTE ON FUNCTION api.current_user TO verified_user;
+
+--------------------------------------------------------------------------------
 
 CREATE FUNCTION api.login(username CITEXT, password TEXT)
   RETURNS VOID
@@ -53,6 +71,13 @@ CREATE FUNCTION api.login(username CITEXT, password TEXT)
     END;
   $$;
 
+COMMENT ON FUNCTION api.login IS
+  'Creates a new session given valid credentials';
+
+GRANT EXECUTE ON FUNCTION api.login TO anon;
+
+--------------------------------------------------------------------------------
+
 CREATE FUNCTION api.refresh_session()
   RETURNS VOID
   LANGUAGE plpgsql
@@ -75,6 +100,13 @@ CREATE FUNCTION api.refresh_session()
     END;
   $$;
 
+COMMENT ON FUNCTION api.refresh_session IS
+  'Reset the expiration time of the given session';
+
+GRANT EXECUTE ON FUNCTION api.refresh_session to verified_user;
+
+--------------------------------------------------------------------------------
+
 CREATE FUNCTION api.logout()
   RETURNS VOID
   LANGUAGE plpgsql
@@ -91,6 +123,13 @@ CREATE FUNCTION api.logout()
       );
     END;
   $$;
+
+COMMENT ON FUNCTION api.logout IS
+  'Expires the given session and resets the session cookie';
+
+GRANT EXECUTE ON FUNCTION api.logout TO verified_user;
+
+--------------------------------------------------------------------------------
 
 CREATE FUNCTION api.register(username CITEXT, hunter_id BIGINT, password TEXT)
   RETURNS VOID
@@ -112,34 +151,26 @@ CREATE FUNCTION api.register(username CITEXT, hunter_id BIGINT, password TEXT)
     END;
   $$;
 
+COMMENT ON FUNCTION api.register IS
+  'Registers a new user and creates a new session for that account';
+
+GRANT EXECUTE ON FUNCTION api.register TO anon;
+
 --------------------------------------------------------------------------------
--- Transactions
 
 CREATE VIEW api.transactions AS
   SELECT buy_order FROM app.transactions;
 
+GRANT SELECT ON api.transactions TO verified_user;
+
+--------------------------------------------------------------------------------
+
 CREATE VIEW api.items AS
   SELECT * FROM app.items;
 
+GRANT SELECT ON api.items TO anon, verified_user;
+
 --------------------------------------------------------------------------------
--- Comments
-
-COMMENT ON SCHEMA api IS
-  'Schema that defines what is suitable to be exposed through PostgREST';
-
-COMMENT ON FUNCTION api.current_user IS
-  'Information about the currently authenticated user';
-
-COMMENT ON FUNCTION api.login IS
-  'Creates a new session given valid credentials';
-
-COMMENT ON FUNCTION api.refresh_session IS
-  'Reset the expiration time of the given session';
-
-COMMENT ON FUNCTION api.logout IS
-  'Expires the given session and resets the session cookie';
-
-COMMENT ON FUNCTION api.register IS
-  'Registers a new user and creates a new session for that account';
 
 COMMIT;
+

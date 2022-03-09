@@ -3,6 +3,8 @@
 
 BEGIN;
 
+--------------------------------------------------------------------------------
+
 CREATE TABLE app.transactions (
   transaction_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   buy_order      BIGINT REFERENCES app.listings(listing_id),
@@ -20,4 +22,9 @@ CREATE TABLE app.transactions (
   created_at     TIMESTAMPTZ DEFAULT current_timestamp NOT NULL
 );
 
+GRANT SELECT ON TABLE app.transactions TO api;
+
+--------------------------------------------------------------------------------
+
 COMMIT;
+
