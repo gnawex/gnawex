@@ -2,6 +2,8 @@
 
 BEGIN;
 
+--------------------------------------------------------------------------------
+
 -- 1. authenticator
 CREATE ROLE authenticator NOINHERIT LOGIN;
 COMMENT ON ROLE authenticator IS
@@ -32,11 +34,22 @@ CREATE ROLE api NOLOGIN;
 COMMENT ON ROLE api IS
   'Role that owns the `api` schema and its objects';
 
+--------------------------------------------------------------------------------
+-- Permissions
+
 -- Allows `authenticator` to switch to any of the ff:
 --
 -- 1. `anon`
 -- 2. `verified_user`
 -- 3. `banned_user`
 GRANT anon, verified_user, banned_user TO authenticator;
+
+-- Removes default privileges to execute functions
+ALTER DEFAULT PRIVILEGES REVOKE EXECUTE ON functions FROM public;
+
+-- Like the previous, except for the roles `auth` and `api`
+ALTER DEFAULT PRIVILEGES FOR ROLE auth, api REVOKE EXECUTE ON functions FROM public;
+
+--------------------------------------------------------------------------------
 
 COMMIT;

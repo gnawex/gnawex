@@ -1,17 +1,11 @@
--- Deploy gnawex:role_permissions to pg
+-- Deploy gnawex:users to pg
+-- requires: extension__app_schema
+-- requires: extension__pgcrypto
+-- requires: extension__citext
 
 BEGIN;
 
-GRANT USAGE ON SCHEMA app TO auth, api, anon;
-
--- Removes default privileges to execute functions
-ALTER DEFAULT PRIVILEGES REVOKE EXECUTE ON functions FROM public;
-
--- Like the previous, except for the roles `auth` and `api`
-ALTER DEFAULT PRIVILEGES FOR ROLE auth, api REVOKE EXECUTE ON functions FROM public;
-
 --------------------------------------------------------------------------------
--- Helper functions
 
 CREATE FUNCTION app.current_user_id()
   RETURNS INTEGER
@@ -26,7 +20,26 @@ COMMENT ON FUNCTION app.current_user_id() IS
 GRANT EXECUTE ON FUNCTION app.current_user_id TO api, verified_user, banned_user;
 
 --------------------------------------------------------------------------------
--- app.users table
+
+CREATE TYPE USER_ROLE AS ENUM ('verified_user', 'unverified_user', 'banned_user');
+COMMENT ON TYPE USER_ROLE IS
+  'Type of user';
+
+--------------------------------------------------------------------------------
+
+CREATE TABLE app.users (
+  user_id   BIGSERIAL PRIMARY KEY,
+  hunter_id BIGSERIAL UNIQUE NOT NULL,
+  username  CITEXT UNIQUE NOT NULL,
+  -- 72 character limit due to 'bf' hash
+  password  TEXT NOT NULL
+            CHECK (char_length(password) <= 72 AND char_length(password) >= 10),
+
+  role      USER_ROLE NOT NULL
+);
+
+COMMENT ON TABLE app.users IS
+  'GNAWEX users';
 
 GRANT REFERENCES, SELECT (user_id, username, password)
   ON TABLE app.users
@@ -40,6 +53,8 @@ GRANT
   TO api;
 
 GRANT ALL ON app.users_user_id_seq TO api;
+
+ALTER TABLE app.users ENABLE ROW LEVEL SECURITY;
 
 -- Users can read other user data
 -- TODO: Is this too broad?
@@ -73,26 +88,25 @@ CREATE POLICY api_insert_users
   WITH CHECK (true);
 
 --------------------------------------------------------------------------------
--- app.items table
 
-GRANT
-    SELECT,
-    INSERT (name, description),
-    UPDATE (name, description),
-    DELETE
-  ON TABLE app.items
-  TO api;
+CREATE FUNCTION app.cryptpassword()
+  RETURNS TRIGGER
+  LANGUAGE plpgsql
+  AS $$
+    BEGIN
+      IF tg_op = 'INSERT' OR NEW.password <> OLD.password THEN
+        NEW.password = crypt(new.password, gen_salt('bf'));
+      END IF;
 
-GRANT SELECT ON TABLE app.items TO anon;
-GRANT ALL ON TABLE app.items_item_id_seq TO api, verified_user;
+      RETURN NEW;
+    END;
+  $$;
 
---------------------------------------------------------------------------------
--- app.transactions
-
-GRANT SELECT
-  ON TABLE app.transactions
-  TO api;
-
---------------------------------------------------------------------------------
+CREATE TRIGGER cryptpassword
+  BEFORE INSERT OR UPDATE
+  ON app.users
+  FOR EACH ROW
+    EXECUTE PROCEDURE app.cryptpassword();
 
 COMMIT;
+

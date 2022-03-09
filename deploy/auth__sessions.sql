@@ -6,7 +6,6 @@ BEGIN;
 SET LOCAL ROLE auth;
 
 --------------------------------------------------------------------------------
--- Tables
 
 CREATE TABLE auth.sessions (
   token TEXT NOT NULL PRIMARY KEY
@@ -18,10 +17,15 @@ CREATE TABLE auth.sessions (
   CHECK (expires_on > created_at)
 );
 
+COMMENT ON TABLE auth.sessions IS
+  'User sessions';
+
+COMMENT ON COLUMN auth.sessions.expires_on IS
+  'Time on which the session expires';
+
 CREATE INDEX ON auth.sessions (expires_on);
 
 --------------------------------------------------------------------------------
--- Views
 
 CREATE VIEW auth.active_sessions AS
   SELECT
@@ -33,9 +37,13 @@ CREATE VIEW auth.active_sessions AS
     WHERE expires_on > clock_timestamp()
     WITH LOCAL CHECK OPTION;
 
+COMMENT ON VIEW auth.active_sessions IS
+  'A view for the sessions that are currently active';
+
 --------------------------------------------------------------------------------
 -- Functions
 
+-- TODO: pgcron or some cron job
 CREATE FUNCTION auth.clean_sessions()
   RETURNS VOID
   LANGUAGE sql
@@ -44,6 +52,11 @@ CREATE FUNCTION auth.clean_sessions()
     DELETE FROM auth.sessions
       WHERE expires_on < clock_timestamp() - '1day' :: INTERVAL;
   $$;
+
+COMMENT ON FUNCTION auth.clean_sessions IS
+  'Cleans up sessions that have expired longer than a day ago';
+
+--------------------------------------------------------------------------------
 
 CREATE FUNCTION auth.login(username CITEXT, password TEXT)
   RETURNS TEXT
@@ -58,6 +71,13 @@ CREATE FUNCTION auth.login(username CITEXT, password TEXT)
       RETURNING token;
   $$;
 
+COMMENT ON FUNCTION auth.login IS
+  'Returns the token for a newly created session, or NULL on failure';
+
+GRANT EXECUTE ON FUNCTION auth.login TO anon, api;
+
+--------------------------------------------------------------------------------
+
 CREATE FUNCTION auth.refresh_session(session_token TEXT)
   RETURNS VOID
   LANGUAGE sql
@@ -67,6 +87,13 @@ CREATE FUNCTION auth.refresh_session(session_token TEXT)
     SET expires_on = DEFAULT
     WHERE token = session_token AND expires_on > clock_timestamp();
   $$;
+
+COMMENT ON FUNCTION auth.refresh_session IS
+  'Extend the expiration time of the given session';
+
+GRANT EXECUTE ON FUNCTION auth.refresh_session TO verified_user;
+
+--------------------------------------------------------------------------------
 
 CREATE FUNCTION auth.logout(session_token TEXT)
   RETURNS VOID
@@ -78,6 +105,10 @@ CREATE FUNCTION auth.logout(session_token TEXT)
     WHERE token = session_token;
   $$;
 
+GRANT EXECUTE ON FUNCTION auth.logout TO verified_user;
+
+--------------------------------------------------------------------------------
+
 CREATE FUNCTION auth.session_user_id(session_token TEXT)
   RETURNS BIGINT
   LANGUAGE sql
@@ -87,6 +118,10 @@ CREATE FUNCTION auth.session_user_id(session_token TEXT)
     FROM auth.active_sessions
     WHERE token = session_token;
   $$;
+
+GRANT EXECUTE ON FUNCTION auth.session_user_id TO anon;
+
+--------------------------------------------------------------------------------
 
 CREATE FUNCTION auth.authenticate()
   RETURNS VOID
@@ -114,26 +149,10 @@ CREATE FUNCTION auth.authenticate()
     END;
   $$;
 
---------------------------------------------------------------------------------
--- Comments
-
-COMMENT ON TABLE auth.sessions IS
-  'User sessions';
-
-COMMENT ON COLUMN auth.sessions.expires_on IS
-  'Time on which the session expires';
-
-COMMENT ON FUNCTION auth.clean_sessions IS
-  'Cleans up sessions that have expired longer than a day ago';
-
-COMMENT ON FUNCTION auth.login IS
-  'Returns the token for a newly created session, or NULL on failure';
-
-COMMENT ON FUNCTION auth.refresh_session IS
-  'Extend the expiration time of the given session';
-
 COMMENT ON FUNCTION auth.authenticate IS
   'Sets the role and user ID for the current transaction based on the cookie';
+
+GRANT EXECUTE ON FUNCTION auth.authenticate TO anon;
 
 --------------------------------------------------------------------------------
 
