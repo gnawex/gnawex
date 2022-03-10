@@ -5,8 +5,8 @@
 extension__pgcrypto 2022-03-08T03:53:13Z sekun <sekun@nixos> # For encryption
 extension__citext 2022-03-08T03:53:41Z sekun <sekun@nixos> # For case-insensitive text
 extension__pgtap 2022-03-08T03:54:07Z sekun <sekun@nixos> # For pg unit tests
-app__schema 2022-03-08T04:02:39Z sekun <sekun@nixos> # GNAWEX app schema
 roles 2022-03-08T07:29:35Z sekun <sekun@nixos> # GNAWEX roles/users
+app__schema 2022-03-08T04:02:39Z sekun <sekun@nixos> # GNAWEX app schema
 app__users 2022-03-08T04:04:23Z sekun <sekun@nixos> # GNAWEX users
 auth__schema 2022-03-08T10:44:19Z sekun <sekun@nixos> # Schema that handles sessions and authentication
 auth__sessions 2022-03-08T10:51:07Z sekun <sekun@nixos> # User sessions

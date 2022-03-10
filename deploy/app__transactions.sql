@@ -23,6 +23,7 @@ CREATE TABLE app.transactions (
 );
 
 GRANT SELECT ON TABLE app.transactions TO api;
+GRANT INSERT ON TABLE app.transactions TO gnawex_merchant;
 
 --------------------------------------------------------------------------------
 

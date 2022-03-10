@@ -34,6 +34,11 @@ CREATE ROLE api NOLOGIN;
 COMMENT ON ROLE api IS
   'Role that owns the `api` schema and its objects';
 
+-- 6. gnawex_merchant
+CREATE ROLE gnawex_merchant NOLOGIN;
+COMMENT ON ROLE gnawex_merchant IS
+  'Role to manage listings, and insert transactions.';
+
 --------------------------------------------------------------------------------
 -- Permissions
 

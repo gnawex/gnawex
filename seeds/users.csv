@@ -1,8 +1,8 @@
-id,hunter_id,username,password,email,role,is_banned,is_verified
-1,1001,sekun,hunter2,sekun@example.com,admin,f,t
-2,1002,harlexces,hunter2,harlexces@example.com,mod,f,t
-3,1003,badperson,hunter2,badperson@example.com,user,t,t
-4,1004,karl,hunter2,karl@example.com,mod,f,t
-5,1005,john,hunter2,john@example.com,user,f,f
-6,1006,betterjohn,hunter2,betterjohn@example.com,user,f,t
-7,1007,steve,hunter2,steve@example.com,user,f,t
+id,hunter_id,username,password,role
+1,1001,sekun,hunter2,verified_user
+2,1002,harlexces,hunter2,verified_user
+3,1003,badperson,hunter2,banned_user
+4,1004,karl,hunter2,verified_user
+5,1005,john,hunter2,verified_user
+6,1006,betterjohn,hunter2,verified_user
+7,1007,steve,hunter2,verified_user

@@ -26,5 +26,7 @@ COMMENT ON TABLE app.listings IS
 
 CREATE INDEX active_id ON app.listings (item_id) WHERE is_active = true;
 
+GRANT SELECT, UPDATE ON TABLE app.listings TO gnawex_merchant;
+
 COMMIT;
 

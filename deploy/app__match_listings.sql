@@ -26,7 +26,13 @@ BEGIN
     -- 3. Listings not created by the matchee's user
     -- 4. Same `cost`
     -- 5. If it's active (`is_active`)
-    SELECT listing_id, quantity, item_id, user_id, sum(quantity) OVER (ORDER BY id ASC) AS running_amount
+    -- 6. Batch size
+    SELECT
+        listing_id,
+        quantity,
+        item_id,
+        user_id,
+        sum(quantity) OVER (ORDER BY listing_id ASC) AS running_amount
       FROM app.listings
       WHERE item_id = NEW.item_id
         AND is_active = TRUE
@@ -34,12 +40,12 @@ BEGIN
           CASE WHEN NEW.type = 'buy' THEN 'sell'
                ELSE 'buy'
           END
-        ) :: LISTING_TYPE
+        ) :: app.LISTING_TYPE
         AND user_id != NEW.user_id
         AND cost = NEW.cost
   ), total_cte AS (
     -- Further filters the matches to fulfill the matchee's quantity.
-    SELECT id, quantity, user_id, running_amount, sum(quantity) OVER (partition BY item_id) AS total_quantity
+    SELECT listing_id, quantity, user_id, running_amount, sum(quantity) OVER (partition BY item_id) AS total_quantity
       FROM matches_cte
       WHERE running_amount - quantity <= NEW.quantity
   ), update_matchee AS (
@@ -48,7 +54,7 @@ BEGIN
     UPDATE app.listings
       SET quantity = GREATEST(total_cte.running_amount - total_cte.total_quantity, 0) :: INT
       FROM total_cte
-      WHERE listing_id = NEW.listing_id
+      WHERE listings.listing_id = NEW.listing_id
   ), update_matches AS (
    -- Updates the matches after being matched with the matchee.
     UPDATE app.listings
@@ -85,19 +91,21 @@ BEGIN
           END
         )
         FROM total_cte
-        WHERE listing_id = total_cte.id
+        WHERE listings.listing_id = total_cte.listing_id
   )
-  INSERT INTO app.transactions (buy_order, sell_order, buyer_id, seller_id)
+  INSERT
+    INTO app.transactions (buy_order, sell_order, buyer_id, seller_id, quantity)
     (
       SELECT
-        CASE WHEN NEW.type = 'buy' THEN NEW.id ELSE total_cte.id
+        CASE WHEN NEW.type = 'buy' THEN NEW.listing_id ELSE total_cte.listing_id
         END AS buy_order,
-        CASE WHEN NEW.type = 'buy' THEN total_cte.id ELSE NEW.id
+        CASE WHEN NEW.type = 'buy' THEN total_cte.listing_id ELSE NEW.listing_id
         END AS sell_order,
         CASE WHEN NEW.type = 'buy' THEN NEW.user_id ELSE total_cte.user_id
         END AS buyer_id,
         CASE WHEN NEW.type = 'buy' THEN total_cte.user_id ELSE NEW.user_id
-        END AS seller_id
+        END AS seller_id,
+        least(total_cte.quantity, NEW.quantity) AS quantity
         FROM total_cte
     );
   RETURN NULL;
