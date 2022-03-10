@@ -17,12 +17,12 @@ CREATE FUNCTION app.current_user_id()
 COMMENT ON FUNCTION app.current_user_id() IS
   'Is either NULL (if unauthenticated), or an integer (user_id of authenticated user)';
 
-GRANT EXECUTE ON FUNCTION app.current_user_id TO api, verified_user, banned_user;
+GRANT EXECUTE ON FUNCTION app.current_user_id TO api, verified_user;
 
 --------------------------------------------------------------------------------
 
-CREATE TYPE USER_ROLE AS ENUM ('verified_user', 'unverified_user', 'banned_user');
-COMMENT ON TYPE USER_ROLE IS
+CREATE TYPE app.USER_ROLE AS ENUM ('verified_user', 'unverified_user', 'banned_user');
+COMMENT ON TYPE app.USER_ROLE IS
   'Type of user';
 
 --------------------------------------------------------------------------------
@@ -35,7 +35,7 @@ CREATE TABLE app.users (
   password  TEXT NOT NULL
             CHECK (char_length(password) <= 72 AND char_length(password) >= 10),
 
-  role      USER_ROLE NOT NULL
+  role      app.USER_ROLE NOT NULL
 );
 
 COMMENT ON TABLE app.users IS

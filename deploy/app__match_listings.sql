@@ -30,12 +30,14 @@ BEGIN
     SELECT
         listing_id,
         quantity,
+        batch,
         item_id,
         user_id,
         sum(quantity) OVER (ORDER BY listing_id ASC) AS running_amount
       FROM app.listings
       WHERE item_id = NEW.item_id
         AND is_active = TRUE
+        AND batch = NEW.batch
         AND type = (
           CASE WHEN NEW.type = 'buy' THEN 'sell'
                ELSE 'buy'
@@ -52,7 +54,7 @@ BEGIN
     -- Updates the matchee with the new quantity after it got matched with
     -- other listing(s).
     UPDATE app.listings
-      SET quantity = GREATEST(total_cte.running_amount - total_cte.total_quantity, 0) :: INT
+      SET quantity = greatest(total_cte.running_amount - total_cte.total_quantity, 0) :: INT
       FROM total_cte
       WHERE listings.listing_id = NEW.listing_id
   ), update_matches AS (
@@ -87,7 +89,7 @@ BEGIN
                 total_cte.total_quantity > NEW.quantity
             THEN total_cte.total_quantity - NEW.quantity
             ELSE
-              GREATEST(total_cte.running_amount - total_cte.total_quantity, 0) :: INT
+              greatest(total_cte.running_amount - total_cte.total_quantity, 0) :: INT
           END
         )
         FROM total_cte
@@ -117,5 +119,7 @@ CREATE TRIGGER match_listings
    ON app.listings
    FOR EACH ROW
     EXECUTE PROCEDURE app.match();
+
+--------------------------------------------------------------------------------
 
 COMMIT;

@@ -47,7 +47,7 @@ COMMENT ON ROLE gnawex_merchant IS
 -- 1. `anon`
 -- 2. `verified_user`
 -- 3. `banned_user`
-GRANT anon, verified_user, banned_user TO authenticator;
+GRANT anon, verified_user, banned_user, gnawex_merchant TO authenticator;
 
 -- Removes default privileges to execute functions
 ALTER DEFAULT PRIVILEGES REVOKE EXECUTE ON functions FROM public;

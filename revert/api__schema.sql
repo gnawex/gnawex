@@ -10,18 +10,10 @@ REVOKE EXECUTE ON FUNCTION api.refresh_session FROM verified_user;
 REVOKE EXECUTE ON FUNCTION api.login FROM anon;
 REVOKE EXECUTE ON FUNCTION api.current_user FROM verified_user;
 REVOKE SELECT, UPDATE(username) ON api.users FROM verified_user;
+REVOKE SELECT ON api.listings FROM anon, verified_user;
+REVOKE INSERT (item_id, quantity, cost, type, batch, is_active) ON api.listings FROM verified_user;
 REVOKE USAGE ON SCHEMA api FROM anon, verified_user;
 
-DROP VIEW api.transactions;
-DROP FUNCTION api.register;
-DROP FUNCTION api.logout;
-DROP FUNCTION api.refresh_session;
-DROP FUNCTION api.login;
-DROP FUNCTION api.current_user;
-DROP TYPE api.user;
-DROP VIEW api.users;
-DROP VIEW api.items;
-
-DROP SCHEMA api;
+DROP SCHEMA api CASCADE;
 
 COMMIT;

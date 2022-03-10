@@ -172,5 +172,21 @@ GRANT SELECT ON api.items TO anon, verified_user;
 
 --------------------------------------------------------------------------------
 
+CREATE VIEW api.listings AS
+  SELECT
+      item_id,
+      user_id,
+      quantity,
+      cost,
+      type,
+      batch,
+      is_active
+    FROM app.listings;
+
+GRANT SELECT ON api.listings TO anon, verified_user;
+GRANT INSERT (item_id, quantity, cost, type, batch, is_active) ON api.listings TO verified_user;
+
+--------------------------------------------------------------------------------
+
 COMMIT;
 
