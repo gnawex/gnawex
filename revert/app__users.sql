@@ -29,6 +29,6 @@ REVOKE REFERENCES, SELECT (user_id, username, password)
   FROM auth;
 
 DROP TABLE app.users;
-DROP TYPE USER_ROLE;
+DROP TYPE app.USER_ROLE;
 
 COMMIT;

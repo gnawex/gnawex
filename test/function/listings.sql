@@ -126,3 +126,4 @@ SELECT row_eq(
 SELECT * FROM finish();
 
 ROLLBACK;
+

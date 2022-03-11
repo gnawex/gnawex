@@ -10,7 +10,7 @@ REVOKE
   ON TABLE app.items
   FROM api;
 
-REVOKE SELECT ON TABLE app.items FROM anon;
+REVOKE SELECT ON TABLE app.items FROM anon, verified_user;
 REVOKE ALL ON TABLE app.items_item_id_seq FROM api, verified_user;
 
 DROP TABLE app.items;

@@ -26,6 +26,7 @@ COMMENT ON TABLE app.listings IS
 
 CREATE INDEX active_id ON app.listings (item_id) WHERE is_active = true;
 
+GRANT SELECT ON TABLE app.listings TO anon, verified_user;
 GRANT SELECT, UPDATE ON TABLE app.listings TO gnawex_merchant;
 GRANT SELECT, INSERT, UPDATE (is_active) ON TABLE app.listings TO api;
 GRANT ALL ON app.listings_listing_id_seq TO verified_user;
