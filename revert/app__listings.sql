@@ -9,6 +9,7 @@ REVOKE EXECUTE ON FUNCTION app.adjust_listing FROM verified_user;
 DROP TRIGGER adjust_listing ON app.listings;
 DROP FUNCTION app.adjust_listing();
 
+REVOKE SELECT ON TABLE app.listings FROM anon, verified_user;
 REVOKE SELECT, INSERT, UPDATE (is_active) ON TABLE app.listings FROM api;
 REVOKE ALL ON TABLE app.listings_listing_id_seq FROM verified_user;
 REVOKE SELECT, UPDATE ON TABLE app.listings FROM gnawex_merchant;

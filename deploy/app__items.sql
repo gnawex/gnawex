@@ -19,7 +19,7 @@ GRANT
   ON TABLE app.items
   TO api;
 
-GRANT SELECT ON TABLE app.items TO anon;
+GRANT SELECT ON TABLE app.items TO anon, verified_user;
 GRANT ALL ON TABLE app.items_item_id_seq TO api, verified_user;
 
 --------------------------------------------------------------------------------

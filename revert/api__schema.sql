@@ -2,6 +2,7 @@
 
 BEGIN;
 
+REVOKE EXECUTE ON FUNCTION api.get_item FROM anon, verified_user;
 REVOKE SELECT ON api.items FROM anon, verified_user;
 REVOKE SELECT ON api.transactions FROM verified_user;
 REVOKE EXECUTE ON FUNCTION api.register FROM anon;

@@ -165,8 +165,7 @@ GRANT SELECT ON api.transactions TO verified_user;
 
 --------------------------------------------------------------------------------
 
-CREATE VIEW api.items AS
-  SELECT * FROM app.items;
+CREATE VIEW api.items AS SELECT item_id, name, description FROM app.items;
 
 GRANT SELECT ON api.items TO anon, verified_user;
 
@@ -185,6 +184,62 @@ CREATE VIEW api.listings AS
 
 GRANT SELECT ON api.listings TO anon, verified_user;
 GRANT INSERT (item_id, quantity, cost, type, batch, is_active) ON api.listings TO verified_user;
+
+--------------------------------------------------------------------------------
+
+CREATE FUNCTION api.get_item(item_id BIGINT)
+  RETURNS TABLE (
+    name TEXT,
+    description TEXT,
+    buy_listings JSONB,
+    sell_listings JSONB
+  )
+  LANGUAGE sql IMMUTABLE
+  AS $$
+    WITH buy_listings AS (
+      WITH grouped_buy_orders AS (
+        SELECT listings.cost, sum(listings.quantity) AS quantity, listings.batch, listings.type
+          FROM app.listings
+          WHERE type = 'buy'
+            AND is_active = true
+            AND item_id = get_item.item_id
+            GROUP BY listings.batch, listings.cost, listings.type
+            ORDER BY
+              listings.cost DESC,
+              listings.batch ASC
+        FETCH FIRST 5 ROWS ONLY
+     )
+     -- JSON? Nah. Me, and my homies love JSONB.
+     -- https://stackoverflow.com/a/70629577
+     SELECT coalesce(jsonb_agg(row_to_json(grouped_buy_orders)), '[]' :: JSONB)
+       FROM grouped_buy_orders
+    ), sell_listings AS (
+      WITH grouped_sell_orders AS (
+        SELECT listings.cost, sum(listings.quantity) AS quantity, listings.batch, listings.type
+          FROM app.listings
+          WHERE type = 'sell'
+            AND is_active = true
+            AND item_id = get_item.item_id
+            GROUP BY listings.batch, listings.cost, listings.type
+            ORDER BY
+              listings.cost ASC,
+              listings.batch ASC
+        FETCH FIRST 5 ROWS ONLY
+     )
+     SELECT coalesce(jsonb_agg(row_to_json(grouped_sell_orders)), '[]' :: JSONB)
+       FROM grouped_sell_orders
+    )
+    SELECT
+        name,
+        description,
+        buy_listings.coalesce AS buy_listings,
+        sell_listings.coalesce AS sell_listings
+      FROM app.items, buy_listings, sell_listings
+      WHERE items.item_id = get_item.item_id
+      GROUP BY name, description, buy_listings, sell_listings;
+  $$;
+
+GRANT EXECUTE ON FUNCTION api.get_item TO anon, verified_user;
 
 --------------------------------------------------------------------------------
 
