@@ -20,6 +20,7 @@
             postgrest
             masterpkgs.legacyPackages.${system}.pgadmin4
             pkgs.insomnia
+            pkgs.perl534Packages.TAPParserSourceHandlerpgTAP
           ];
 
           shellHook = ''
