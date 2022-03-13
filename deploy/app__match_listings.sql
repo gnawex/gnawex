@@ -110,6 +110,7 @@ BEGIN
         least(total_cte.quantity, NEW.quantity) AS quantity
         FROM total_cte
     );
+
   RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;

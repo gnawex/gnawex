@@ -1,6 +1,6 @@
 BEGIN;
 
-SELECT plan(8);
+SELECT plan(10);
 
 --------------------------------------------------------------------------------
 
@@ -36,7 +36,6 @@ SELECT row_eq(
   ROW(20, 7 :: BIGINT, 2)
 );
 
-
 -- This is here since the match listing sets the transaction's role to
 -- gnawex_merchant, and this is all in one transaction still. I think.
 SET LOCAL ROLE sekun;
@@ -51,8 +50,6 @@ SELECT row_eq(
   ROW(20, 7 :: BIGINT, 2)
 );
 
--- This is here since the match listing sets the transaction's role to
--- gnawex_merchant, and this is all in one transaction still. I think.
 SET LOCAL ROLE sekun;
 
 SELECT row_eq(
@@ -65,8 +62,6 @@ SELECT row_eq(
   ROW(20, 1 :: BIGINT, 2)
 );
 
--- This is here since the match listing sets the transaction's role to
--- gnawex_merchant, and this is all in one transaction still. I think.
 SET LOCAL ROLE sekun;
 
 SELECT row_eq(
@@ -79,8 +74,6 @@ SELECT row_eq(
   ROW(40, 1 :: BIGINT, 10)
 );
 
--- This is here since the match listing sets the transaction's role to
--- gnawex_merchant, and this is all in one transaction still. I think.
 SET LOCAL ROLE sekun;
 
 SELECT row_eq(
@@ -93,8 +86,6 @@ SELECT row_eq(
   ROW(20, 2 :: BIGINT, 5)
 );
 
--- This is here since the match listing sets the transaction's role to
--- gnawex_merchant, and this is all in one transaction still. I think.
 SET LOCAL ROLE sekun;
 
 SELECT row_eq(
@@ -107,8 +98,6 @@ SELECT row_eq(
   ROW(60, 1 :: BIGINT, 3)
 );
 
--- This is here since the match listing sets the transaction's role to
--- gnawex_merchant, and this is all in one transaction still. I think.
 SET LOCAL ROLE sekun;
 
 SELECT row_eq(
@@ -120,6 +109,32 @@ SELECT row_eq(
   $$,
   ROW(40, 1 :: BIGINT, 1)
 );
+
+SET LOCAL ROLE sekun;
+
+SELECT row_eq(
+  $$
+    INSERT
+      INTO app.listings (item_id, user_id, quantity, cost, batch, type)
+      VALUES (99999, 99999, 5, 6, 4, 'sell')
+      RETURNING quantity, cost, batch;
+  $$,
+  ROW(10, 3 :: BIGINT, 2)
+);
+
+SET LOCAL ROLE sekun;
+
+SELECT row_eq(
+  $$
+    INSERT
+      INTO app.listings (item_id, user_id, quantity, cost, batch, type)
+      VALUES (99999, 99999, 5, 4, 6, 'sell')
+      RETURNING quantity, cost, batch;
+  $$,
+  ROW(10, 2 :: BIGINT, 3)
+);
+
+
 
 --------------------------------------------------------------------------------
 

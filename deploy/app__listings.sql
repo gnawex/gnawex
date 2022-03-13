@@ -68,29 +68,15 @@ CREATE FUNCTION app.adjust_listing()
   LANGUAGE plpgsql
   AS $$
     DECLARE
-      listing_remainder INTEGER;
+      divisor INTEGER;
     BEGIN
-      IF NEW.cost > NEW.batch THEN
-        SELECT mod(NEW.cost, NEW.batch) INTO listing_remainder;
+      SELECT gcd(NEW.cost, NEW.batch) INTO divisor;
 
-        IF listing_remainder = 0 THEN
-          NEW.quantity := NEW.quantity * NEW.batch;
-          NEW.cost := NEW.cost / NEW.batch;
-          NEW.batch := 1;
-        END IF;
+      NEW.quantity := NEW.quantity * divisor;
+      NEW.cost := NEW.cost / divisor;
+      NEW.batch := NEW.batch / divisor;
 
-        RETURN NEW;
-      ELSE
-        SELECT mod(NEW.batch, NEW.cost) INTO listing_remainder;
-
-        IF listing_remainder = 0 THEN
-          NEW.batch := NEW.batch / NEW.cost;
-          NEW.quantity := NEW.quantity * NEW.cost;
-          NEW.cost := 1;
-        END IF;
-
-        RETURN NEW;
-      END IF;
+      RETURN NEW;
     END;
   $$;
 
