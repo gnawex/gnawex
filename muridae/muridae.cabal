@@ -1,0 +1,94 @@
+cabal-version:      3.0
+name:               muridae
+version:            0.1.0.0
+
+-- A short (one-line) description of the package.
+-- synopsis:
+
+-- A longer description of the package.
+-- description:
+
+-- A URL where users can report bugs.
+bug-reports: https://github.com/gnawex/gnawex
+
+license:            AGPL-3.0-only
+author:             SEKUN
+maintainer:         software@sekun.net
+
+-- A copyright notice.
+-- copyright:
+-- category:
+
+extra-source-files: CHANGELOG.md
+
+common common-default-language
+    default-language: Haskell2010
+
+common common-base
+    build-depends:
+        base          ^>=4.16
+
+common common-database
+    build-depends:
+        beam-core     ^>=0.10,
+        beam-postgres ^>= 0.5,
+
+common common-deps
+    build-depends:
+        text ^>=2.0
+
+library
+    import:
+        common-base,
+        common-default-language,
+
+    exposed-modules:  MyLib
+
+    -- Modules included in this library but not exported.
+    -- other-modules:
+
+    -- LANGUAGE extensions used by modules in this package.
+    -- other-extensions:
+
+    hs-source-dirs:   muridae
+
+library muridae-db
+    import:
+        common-base,
+        common-default-language,
+        common-deps,
+        common-database,
+
+    exposed-modules:
+        Muridae.DB
+
+    -- other-modules:
+
+    hs-source-dirs:   muridae-db
+
+executable muridae-server
+    import:
+        common-base,
+        common-default-language,
+
+    main-is:          Main.hs
+
+    -- Modules included in this executable, other than Main.
+    -- other-modules:
+
+    -- LANGUAGE extensions used by modules in this package.
+    -- other-extensions:
+    build-depends:
+        muridae-db,
+
+        unliftio ^>=0.2,
+        exceptions ^>=0.10,
+
+        -- Data types
+        text ^>=2.0,
+
+        -- Effects
+        effectful ^>=2.2,
+        effectful-core ^>=2.2,
+
+    hs-source-dirs:   muridae-server
