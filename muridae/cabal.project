@@ -1,0 +1,31 @@
+packages: .
+
+index-state: 2022-12-22T00:00:00Z
+
+source-repository-package
+  type: git
+  location: https://github.com/haskell-beam/beam.git
+  tag: 6b3e4c91ebabafc79878a35648d7f78d378ce445
+  subdir: beam-core
+  --sha256: h4zvjiAHtkLQ7JyJEOWro/s33P8OG1SKXSr0L+pni7I=
+
+source-repository-package
+  type: git
+  location: https://github.com/haskell-beam/beam.git
+  tag: 6b3e4c91ebabafc79878a35648d7f78d378ce445
+  subdir: beam-postgres
+  --sha256: h4zvjiAHtkLQ7JyJEOWro/s33P8OG1SKXSr0L+pni7I=
+
+source-repository-package
+  type: git
+  location: https://github.com/haskell-beam/beam.git
+  tag: 6b3e4c91ebabafc79878a35648d7f78d378ce445
+  subdir: beam-migrate
+  --sha256: h4zvjiAHtkLQ7JyJEOWro/s33P8OG1SKXSr0L+pni7I=
+
+source-repository-package
+  type: git
+  location: https://github.com/haskell-beam/beam.git
+  tag: 6b3e4c91ebabafc79878a35648d7f78d378ce445
+  subdir: beam-migrate-cli
+  --sha256: h4zvjiAHtkLQ7JyJEOWro/s33P8OG1SKXSr0L+pni7I=
