@@ -13,10 +13,17 @@
           lib =  nixpkgs.lib;
       in {
         devShell = pkgs.mkShell rec {
-          buildInputs = [
-            pkgs.sqitchPg
-            pkgs.insomnia
-            pkgs.perl534Packages.TAPParserSourceHandlerpgTAP
+          buildInputs = with pkgs; [
+            sqitchPg
+            insomnia
+            perl534Packages.TAPParserSourceHandlerpgTAP
+
+            cabal-install
+            haskell.compiler.ghc8107
+            haskell-language-server
+
+            # Code formatters
+            pgformatter
           ];
         };
       });
