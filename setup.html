@@ -165,7 +165,7 @@ But that's what it looks like if all goes well.</p><h3 id="viewing-migration-sta
   </a>
   Viewing migration statuses
 </h3>
-<p>To see what migration <code class="inline">sqitch</code> has applied, you can use <code class="inline">sqitch status</code>:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="1182492114-1">[</span><span class="n">sekun</span><span class="na">@nixos</span><span class="p">:</span><span class="err">~</span><span class="o">/</span><span class="nc">Projects</span><span class="o">/</span><span class="n">gnawex</span><span class="p" data-group-id="1182492114-1">]</span><span class="err">$</span><span class="w"> </span><span class="n">sqitch</span><span class="w"> </span><span class="n">status</span><span class="w">
+<p>To see what migration <code class="inline">sqitch</code> has applied, you can use <code class="inline">sqitch status</code>:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="6743976576-1">[</span><span class="n">sekun</span><span class="na">@nixos</span><span class="p">:</span><span class="err">~</span><span class="o">/</span><span class="nc">Projects</span><span class="o">/</span><span class="n">gnawex</span><span class="p" data-group-id="6743976576-1">]</span><span class="err">$</span><span class="w"> </span><span class="n">sqitch</span><span class="w"> </span><span class="n">status</span><span class="w">
 </span><span class="c1"># On database db:pg:gnawex_db</span><span class="w">
 </span><span class="c1"># Project:  gnawex</span><span class="w">
 </span><span class="c1"># Change:   117b3847f4e26b654dcd925378ef7ff4810fd641</span><span class="w">
@@ -173,7 +173,7 @@ But that's what it looks like if all goes well.</p><h3 id="viewing-migration-sta
 </span><span class="c1"># Deployed: 2022-03-08 16:20:32 +0800</span><span class="w">
 </span><span class="c1"># By:       sekun &lt;sekun@nixos&gt;</span><span class="w">
 </span><span class="c1">#</span><span class="w">
-</span><span class="nc">Nothing</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">deploy</span><span class="w"> </span><span class="p" data-group-id="1182492114-2">(</span><span class="n">up</span><span class="o">-</span><span class="n">to</span><span class="o">-</span><span class="n">date</span><span class="p" data-group-id="1182492114-2">)</span></code></pre><p>Here it tells you that the latest change is <code class="inline">role_permissions</code>. Which is good
+</span><span class="nc">Nothing</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">deploy</span><span class="w"> </span><span class="p" data-group-id="6743976576-2">(</span><span class="n">up</span><span class="o">-</span><span class="n">to</span><span class="o">-</span><span class="n">date</span><span class="p" data-group-id="6743976576-2">)</span></code></pre><p>Here it tells you that the latest change is <code class="inline">role_permissions</code>. Which is good
 because at the time of writing, this is the latest migration we want. If you
 want to see the list of migrations planned, you can use <code class="inline">sqitch plan</code>:</p><pre><code class="makeup elixir" translate="no"><span class="c1"># Project: gnawex</span><span class="w">
 </span><span class="c1"># File:    sqitch.plan</span><span class="w">
