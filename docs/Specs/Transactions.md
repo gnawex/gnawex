@@ -1,3 +1,5 @@
+# Transactions (TXNs)
+
 A transaction (TXN) is a proof that a match occurred between a BUY and a SELL listing. It also details the quantity of an item that was transacted along with other metadata such as timestamps. 
 
 ## Multiple TXNs of the same listing

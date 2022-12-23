@@ -1,4 +1,4 @@
-#muridae-backend
+# Item Listings
 
 Users may create listings for [[Tradable Items]] if they wish to exchange it. Item listings have two types: 1) BUY, and 2) SELL. A user may have more than one listing for the same item, as well as listings of opposite types.
 
