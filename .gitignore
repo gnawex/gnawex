@@ -34,4 +34,6 @@ cabal.project.local~
 **/_build/**/*
 **/deps/**/*
 
+## mkdocs-material
 .cache/**/*
+site/**/*
