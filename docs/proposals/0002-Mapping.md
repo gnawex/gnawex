@@ -1,4 +1,4 @@
-# Mapping
+# 0002 - Mapping
 
 Most treasure maps cannot be traded normally, like an item (except for any
 gilded scroll case). For the ones that can, please check [Items](../Items). Instead, a user would have to open a map scroll, then invite whoever they would like to invite into the map, or if a user wants to join a map, then they would have to request an invite.
