@@ -12,11 +12,6 @@ copyright: Copyright &copy; 2022 SEKUN
 
 theme:
   name: material
-
-  # font:
-  #   text: Roboto
-  #   code: Roboto Mono
-
   favicon: favicon-32x32.png
 
   features:
@@ -90,6 +85,7 @@ plugins:
       separator: '[\s\u200b\-,:!=\[\]()"/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - social
   - typeset
+  - privacy
   - git-revision-date-localized:
       enabled: !ENV [CI, false]
       enable_creation_date: true

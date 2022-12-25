@@ -49,10 +49,15 @@
       };
     in flake // {
       packages = rec {
+        default = muridae-server;
         muridae-server = flake.packages."muridae:exe:muridae-server";
         muridae-db = flake.packages."muridae:lib:muridae-db";
         muridae = flake.packages."muridae:lib:muridae";
-        default = muridae-server;
+
+        devShells.${system} = {
+          default = flake.devShells.default;
+          ci = pkgs.mkShell { buildInputs = [ mkdocs-material-insiders ]; };
+        };
       };
     });
 }
