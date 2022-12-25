@@ -1,4 +1,4 @@
-# Items
+# 0001 - Items
 
 Items that are allowed to be exchanged are ones (including gilded treasure maps)
 that may be traded via the _Send Supplies_ option in a MouseHunt profile. These
