@@ -33,3 +33,5 @@ cabal.project.local~
 
 **/_build/**/*
 **/deps/**/*
+
+.cache/**/*

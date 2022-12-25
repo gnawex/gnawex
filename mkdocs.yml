@@ -1,0 +1,113 @@
+site_name: GNAWEX
+site_url: https://docs.gnawex.com
+site_author: SEKUN
+site_description: >-
+  An independent, and third-party marketplace for MouseHunt.
+
+repo_name: gnawex/gnawex
+repo_url: https://github.com/gnawex/gnawex
+
+# Copyright
+copyright: Copyright &copy; 2022 SEKUN
+
+theme:
+  name: material
+
+  # font:
+  #   text: Roboto
+  #   code: Roboto Mono
+
+  favicon: favicon-32x32.png
+
+  features:
+    - content.tooltips
+    - content.code.annotate
+
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: amber
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: amber
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:materialx.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: squidfunk
+      repo: mkdocs-material
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+plugins:
+  - search:
+      separator: '[\s\u200b\-,:!=\[\]()"/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - social
+  - typeset
+  - git-revision-date-localized:
+      enabled: !ENV [CI, false]
+      enable_creation_date: true
+      type: timeago
+  - git-committers:
+      enabled: !ENV [CI, false]
+      repository: gnawex/gnawex
+  - minify:
+      minify_html: !ENV [CI, false]
+
+extra:
+  status:
+    experimental: New
+
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/gnawex
+    - icon: fontawesome/brands/mastodon
+      link: https://mastodon.social/@gnawex
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/gnawex

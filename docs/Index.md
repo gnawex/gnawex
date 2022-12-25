@@ -1,1 +1,0 @@
-The documentation follows [RFC2219](https://www.ietf.org/rfc/rfc2119.txt).

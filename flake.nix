@@ -1,13 +1,18 @@
 {
   description = "An independent marketplate for MouseHunt";
 
-  inputs.haskellNix.url = "github:input-output-hk/haskell.nix";
-  inputs.nixpkgs.follows = "haskellNix/nixpkgs-unstable";
-  inputs.flake-utils.url = "github:numtide/flake-utils";
+  inputs = {
+    haskellNix.url      = "github:input-output-hk/haskell.nix";
+    nixpkgs.follows     = "haskellNix/nixpkgs-unstable";
+    mkdocs-material.url = "github:sekunho/mkdocs-material";
+    flake-utils.url     = "github:numtide/flake-utils";
+  };
 
-  outputs = { self, nixpkgs, flake-utils, haskellNix }:
+  outputs = { self, nixpkgs, flake-utils, mkdocs-material, haskellNix }:
     flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
     let
+      mkdocs-material-insiders = mkdocs-material.packages.${system}.mkdocs-material-insiders;
+
       overlays = [ haskellNix.overlay
         (final: prev: {
           # This overlay adds our project to pkgs
@@ -30,6 +35,7 @@
                 pgformatter
                 sqitchPg
                 perl534Packages.TAPParserSourceHandlerpgTAP
+                mkdocs-material-insiders
               ];
             };
         })
