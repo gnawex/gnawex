@@ -6,32 +6,37 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.gnawex.com/Specs/Items/</loc>
+         <loc>https://docs.gnawex.com/api/</loc>
          <lastmod>1980-01-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.gnawex.com/Specs/Mapping/</loc>
+         <loc>https://docs.gnawex.com/development/auth/roles/</loc>
          <lastmod>1980-01-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.gnawex.com/guides/gnawex/</loc>
+         <loc>https://docs.gnawex.com/development/introduction/available-scripts/</loc>
          <lastmod>1980-01-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.gnawex.com/guides/auth/roles/</loc>
+         <loc>https://docs.gnawex.com/development/introduction/setup/</loc>
          <lastmod>1980-01-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.gnawex.com/guides/introduction/available-scripts/</loc>
+         <loc>https://docs.gnawex.com/proposals/</loc>
          <lastmod>1980-01-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.gnawex.com/guides/introduction/setup/</loc>
+         <loc>https://docs.gnawex.com/proposals/0001-Items/</loc>
+         <lastmod>1980-01-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docs.gnawex.com/proposals/0002-Mapping/</loc>
          <lastmod>1980-01-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
