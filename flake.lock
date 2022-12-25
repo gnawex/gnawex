@@ -444,6 +444,24 @@
         "type": "github"
       }
     },
+    "mkdocs-material": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_5"
+      },
+      "locked": {
+        "lastModified": 1671950284,
+        "narHash": "sha256-vB5ZS8dBOk14tIwoYRG6dzrbYtFVbS39VK/Cx0ZrHpg=",
+        "owner": "sekunho",
+        "repo": "mkdocs-material",
+        "rev": "f011bf256dbe54463db3b555edb8209443b03430",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sekunho",
+        "repo": "mkdocs-material",
+        "type": "github"
+      }
+    },
     "n2c": {
       "inputs": {
         "flake-utils": "flake-utils_5",
@@ -751,6 +769,21 @@
         "type": "github"
       }
     },
+    "nixpkgs_5": {
+      "locked": {
+        "lastModified": 1671888073,
+        "narHash": "sha256-/oCjvbzr/5X6/Lxet9UzDYiwC53XOTmAnfmWRL3Zo4c=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "a5b85eb4aaf2d9b1bd98bd1d7a0b6197c93b39ab",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "old-ghc-nix": {
       "flake": false,
       "locked": {
@@ -772,6 +805,7 @@
       "inputs": {
         "flake-utils": "flake-utils",
         "haskellNix": "haskellNix",
+        "mkdocs-material": "mkdocs-material",
         "nixpkgs": [
           "haskellNix",
           "nixpkgs-unstable"

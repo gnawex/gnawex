@@ -1,32 +1,58 @@
 # Mapping
 
-#wip
-
-Most treasure maps cannot be traded normally, like an item (except for any gilded scroll case). For the ones that can, please check [[Items#^91e5f9]]. Instead, a user would have to open a map scroll, then invite whoever they would like to invite into the map, or if a user wants to join a map, then they would have to request an invite.
+Most treasure maps cannot be traded normally, like an item (except for any
+gilded scroll case). For the ones that can, please check [Items](../Items). Instead, a user would have to open a map scroll, then invite whoever they would like to invite into the map, or if a user wants to join a map, then they would have to request an invite.
 
 ## Map instances
 
-GNAWEX must have a record of all treasure maps, which we may refer to as such. If a user opens it, then it's an **instance** of the treasure map, or a treasure map instance. The instance must contain all the relevant details needed to distinguish it from other instances. 
+GNAWEX must have a record of all treasure maps, which we may refer to as such.
+If a user opens it, then it's an **instance** of the treasure map, or a treasure
+map instance. The instance must contain all the relevant details needed to
+distinguish it from other instances.
 
-![[1.png]]
-<div style="text-align: center;">An opened map scroll with 5 out of 5 user slots filled. This is a map instance.</div>
+<figure markdown>
+  ![A screenshot of a map instance](../../images/1.png)
+  <figcaption>An opened map scroll with 5 out of 5 user slots filled. This is a map instance.</figcaption>
+</figure>
+
+!!! note
+
+    Ideally, GNAWEX must automatically verify if the map even exists, and if the
+    user creating the listing for it truly is the current maptain. But this might
+    not be possible because of the restrictions around MH's API. Up for discussion.
 
 An instance's MH map ID must be unique. One can get their MH map ID under Active Maps -> Map they want to check -> Hunters -> Share. It looks something like this: https://www.mousehuntgame.com/tm.php?map_id=000000 wherein the sequence of 0s is the MH map ID.
 
-> [!note] 
-> Ideally, GNAWEX must automatically verify if the map even exists, and if the user creating the listing for it truly is the current maptain. But this might not be possible because of the restrictions around MH's API. Up for discussion.
-
 So, an instance must have the ff details:
 
-ID | Map Record ID | MH Map ID
--- | -- | --
-The GNAWEX instance ID | The ID of a GNAWEX map record | Map ID of the instance in MouseHunt
+ID | Map Record ID | MH Map ID | Delisted
+-- | -- | -- | --
+The GNAWEX instance ID | The ID of a GNAWEX map record | Map ID of the instance in MouseHunt | `true` \| `false`
+
+Once delisted, they must not be able to reverse this action.
+
+### Restrictions
+
+There are two types of maps: an event map, and a normal map. Since a user may
+have one active instance per type, the restriction follows as well. A user must
+only have at most two map instances, if one of it is a normal instance, and the
+other is an event instance. They must not be able to have more than one active
+normal instance, for example.
+
+If the user wishes to create another instance, they must delist their
+active instance first.
 
 ## Instance roles
 
-In an instance, the maptain must specify what role(s) they would like to invite. The number of roles that they may invite depends on the number of available slots that the map has.
+In an instance, the maptain must specify what role(s) they would like to invite.
+The number of roles that they may invite depends on the number of available
+slots that the map has.
 
-These roles that the maptain may look for have specific duties to fulfill (the who invites). Others may also look for maps that have these roles available for invite (the joiner). The roles are best described by Aardwolf's [mapping 103 guide](https://discord.com/channels/275500976662773761/1008902458313019484/1009446840913121351). In short: a user may invite in at least one role, or join as only one role.
+These roles that the maptain may look for have specific duties to fulfill
+(the who invites). Others may also look for maps that have these roles available
+for invite (the joiner). The roles are best described by Aardwolf's
+[mapping 103 guide](https://discord.com/channels/275500976662773761/1008902458313019484/1009446840913121351).
+In short: a user may invite in at least one role, or join as only one role.
 
 These are the supported roles that may be invited to an instance:
 
@@ -41,26 +67,33 @@ Closer | Like leecher but catches <span title="Last mouse to be caught in a map"
 
 ## Role listings
 
-A role listing describes a user's intent to invite others to/participate in a map instance. Hence, these can be categorized into two types: an invite listing, and a join request listing.
+A role listing describes a user's intent to invite others to/participate in a
+map instance. Hence, these can be categorized into two types: an invite listing,
+and a join request listing.
 
-Depending on the role, certain columns may be set; for others, maybe not. But here's what all role listings must have recorded:
+Depending on the role, certain columns may be set; for others, maybe not. But
+here's what all role listings must have recorded:
 
 Listing ID | Role | Type
--- | -- | -- | --
+-- | -- | --
 Role listing ID | Any role under [[Mapping#Instance roles]] | `INVITE` or `JOIN`
 
 ### Roles, in-depth
 
 #### Maptain
 
-Giving away a maptain role means that you're going to give the entirety of an already-opened map. You cannot sell a maptain alongside other roles because there are no other slots/roles that can be added.
+Giving away a maptain role means that you're going to give the entirety of an
+already-opened map. You cannot sell a maptain alongside other roles because
+there are no other slots/roles that can be added.
 
 Listing ID | Instance ID | Role | Type | Cost
 -- | -- | -- | -- | --
 Role listing ID | ID of the map instance in GNAWEX | `MAPTAIN` | `INVITE` | If `INVITE`, current maptain is asking for this much for the other maptain to take over. If `JOIN`, user who wants to become the new maptain would pay the current one this much.
 
-> [!question] When to complete transaction? 
-> The old and new maptain must mark the transaction as complete as soon as the old maptain invites the new one, AND \[the old maptain\] leaves the map.
+!!! note
+
+    The old and new maptain must mark the transaction as complete as soon as the
+    old maptain invites the new one, AND \[the old maptain\] leaves the map.
 
 #### Sniper/Looter
 
@@ -92,8 +125,10 @@ Here's what the flow looks like:
 
 With this, the maptain may look for a new role to invite.
 
-> [!question] When to complete transaction?
-> The maptain and sniper/looter must both mark the transaction as `COMPLETE` when as soon as the sniper/looter completes their job and gets paid.
+!!! note
+
+    The maptain and sniper/looter must both mark the transaction as `COMPLETE`
+    when as soon as the sniper/looter completes their job and gets paid.
 
 #### Helpers
 
@@ -111,11 +146,14 @@ Listing ID | Map ID | Role | Type
 -- | -- | -- | --
 Role listing ID | ID of the map record in GNAWEX | `HELPER` | `JOIN`
 
-The helper must specify what kind of map they would like to help out with, but must not need to specify a particular instance because the matching is done by GNAWEX.
+The helper must specify what kind of map they would like to help out with, but
+must not need to specify a particular instance because the matching is done by
+GNAWEX.
 
 #### Leechers
 
-Leechers are not expected to help out with the map, and they need to pay the maptain to join.
+Leechers are not expected to help out with the map, and they need to pay the
+maptain to join.
 
 For the maptain:
 
@@ -131,7 +169,9 @@ Role listing ID | ID of the map record in GNAWEX | `LEECHER` | `JOIN` | Amount t
 
 #### Dusters
 
-Dusters are like leechers, but must dust the map. So they either get charged much less, or even get paid. If the maptain will pay the duster, then they must not set how much they \[the maptain\] will get paid.
+Dusters are like leechers, but must dust the map. So they either get charged
+much less, or even get paid. If the maptain will pay the duster, then they must
+not set how much they \[the maptain\] will get paid.
 
 For the maptain:
 
@@ -147,7 +187,8 @@ Role listing ID | ID of the map record in GNAWEX | `DUSTER` | `JOIN` | How much 
 
 #### Closers
 
-Closers are like leechers. Except they must get the LM/LL, and they must pay the maptain to join. But a discount is usually provided.
+Closers are like leechers. Except they must get the LM/LL, and they must pay
+the maptain to join. But a discount is usually provided.
 
 For the maptain:
 
@@ -161,8 +202,10 @@ Listing ID | Map ID | Role | Type | Cost
 -- | -- | -- | -- | --
 Role listing ID | ID of the map record in GNAWEX | `CLOSER` | `JOIN` | Amount the closer will pay the maptain to join
 
-> [!question] When to complete transaction for helpers/leechers/dusters/closers?
-> When the map is closed/complete. Then all parties involved must mark the transaction as `COMPLETED`.
+!!! note
+
+    When the map is closed/complete for the helpers/leechers/dusters/closers,
+    all parties involved must mark the transaction as `COMPLETED`.
 
 ### Role restrictions
 
@@ -177,31 +220,47 @@ Duster | 0 | 1
 Leecher | 0 | Max slots - 1
 Closer | 0 | 1
 
-> [!info]
-> While the minimums are 0, the listing **must** have one role per slot to be sold.
+!!! info
+
+    While the minimums are 0, the listing **must** have one role per slot to be
+    sold.
 
 ### Create a join request listing
 
-A user may create a join request listing but must only be allowed to pick **one** role to join as. If they want to be two roles for the same kind of map (e.g Nice List), then they must create two join request listings. If their listing gets matched with another, all of their other join request listings will be temporarily delisted until the transaction is complete.
+A user may create a join request listing but must only be allowed to pick
+**one** role to join as. If they want to be two roles for the same kind of map
+(e.g Nice List), then they must create two join request listings. If their
+listing gets matched with another, all of their other join request listings
+will be temporarily delisted until the transaction is complete.
 
-They may also choose their preferred LM, or select a group of mice that they would like to have as the LM. If they do not choose a LM, then this means anything goes.
+They may also choose their preferred LM, or select a group of mice that they
+would like to have as the LM. If they do not choose a LM, then this means
+anything goes.
 
 ### Create an invite listing
 
-> [!warning] You **must** be the current maptain to be able to create an invite listing.
+!!! warning inline end
 
-An invite listing means the maptain is looking to invite others to the map to fulfill certain roles. A maptain must only have one active listing at a time. They must not be allowed to create another listing while they have an active one that hasn't concluded yet.
+    You **must** be the current maptain to be able to create an invite listing.
 
-> [!question] When has a listing 'concluded'? 
-> A listing must be considered as 'concluded' when all of the roles it's looking for have been filled, and when all of the transactions of those roles have been completed. This will be done automatically.
+An invite listing means the maptain is looking to invite others to the map to
+fulfill a single role. A maptain may have multiple role invite listnings if they
+need to look for multiple roles.
 
 ### Updating a listing
 
-Like the [[Items#Listings]], a listing may be updated but restrictions apply. Generally speaking, a listing must not be updated if it has already concluded.
+A role listing may be updated but restrictions apply. Generally speaking, a
+listing must not be updated if it has already concluded.
 
 #### Invite listing
 
-- A maptain may add new roles, or remove unfilled roles. They must not remove roles that are involved in a `PENDING` or `COMPLETED` transaction.
+A maptain may add new roles, or remove unfilled roles. They must not remove
+roles that are involved in a `PENDING` or `COMPLETED` transaction.
+
+### Concluding a listing
+
+A role listing must be considered concluded if it was `CANCELLED`, or
+`COMPLETED`.
 
 ## Transactions
 
