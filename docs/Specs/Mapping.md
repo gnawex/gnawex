@@ -76,15 +76,17 @@ here's what all role listings must have recorded:
 
 Listing ID | Role | Type
 -- | -- | --
-Role listing ID | Any role under [[Mapping#Instance roles]] | `INVITE` or `JOIN`
+Role listing ID | Any supported role | `INVITE` or `JOIN`
 
 ### Roles, in-depth
 
 #### Maptain
 
 Giving away a maptain role means that you're going to give the entirety of an
-already-opened map. You cannot sell a maptain alongside other roles because
-there are no other slots/roles that can be added.
+already-opened map. A user must not be able to sell a maptain alongside other
+roles because there are no other slots/roles that can be added. A user also must
+not be able to pick the maptain role to both invite/join for scroll cases that
+can be traded. But their dusted counterparts are eligible.
 
 Listing ID | Instance ID | Role | Type | Cost
 -- | -- | -- | -- | --
@@ -97,7 +99,9 @@ Role listing ID | ID of the map instance in GNAWEX | `MAPTAIN` | `INVITE` | If `
 
 #### Sniper/Looter
 
-Sniper/looter roles are considered temporary roles in a map instance because they do not stick around when it's complete (for the map chest). GNAWEX must also keep a record of all possible mice for the snipers and maptains to select.
+Sniper/looter roles are considered temporary roles in a map instance because
+they do not stick around when it's complete (for the map chest). GNAWEX must
+also keep a record of all possible mice for the snipers and maptains to select.
 
 For the maptain:
 
@@ -111,11 +115,13 @@ Listing ID | Role | Type | Cost | Mouse ID
 -- | -- | -- | -- | --
 Role listing ID | `SNIPER` | `JOIN` | Amount the sniper wants to be paid by the maptain for their service | Mouse to snipe
 
-The sniper must not need to specify the instance, nor the map because all they're concerned with is dealing with the mouse/loot, nothing else.
+The sniper must not need to specify the instance, nor the map because all
+they're concerned with is dealing with the mouse/loot, nothing else.
 
 Here's what the flow looks like:
 
-1. Maptain creates an invite listing with one available role: a sniper role and chooses the mouse/item to snipe/loot
+1. Maptain creates an invite listing with one available role: a sniper role and
+chooses the mouse/item to snipe/loot
 2. Match happens
 3. Sniper/looter clicks link and requests to join
 4. Maptain accepts invite
