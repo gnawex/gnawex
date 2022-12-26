@@ -28,7 +28,7 @@ In the following diagram, we'll assume that all listings:
 
 ``` mermaid
 graph LR
-  LIST_ONE[/User: Larry<br/>Quantity: 25<br/>Batch: 4<br/>Type: Sell/] --> TXN_ONE[Transact#1<br/><br/>Quantity: 4];
+  LIST_ONE[/User: Larry<br/>Quantity: 25<br/>Batch: 4<br/>Type: Sell/] --> TXN_ONE[Transact#1<br/><br/>Quantity: 2];
   LIST_TWO[/User: Bob<br/>Quantity: 2<br/>Batch: 4<br/>Type: Buy/] --> TXN_ONE;
   TXN_ONE --> LIST_ONE_A[/User: Larry<br/>Quantity: 23<br/>Batch: 4<br/>Type: Sell/]
   TXN_ONE --> LIST_TWO_A[/User: Bob<br/>Quantity: 0<br/>Batch: 4<br/>Type: Buy/]
