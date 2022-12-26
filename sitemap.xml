@@ -26,12 +26,37 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://docs.gnawex.com/projects/</loc>
+         <lastmod>1980-01-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docs.gnawex.com/projects/0001-Tradable%20Items/</loc>
+         <lastmod>1980-01-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docs.gnawex.com/projects/0002-Manage%20Tradable%20Item%20Listings/</loc>
+         <lastmod>1980-01-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docs.gnawex.com/projects/0003-Automated%20Matching/</loc>
+         <lastmod>1980-01-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docs.gnawex.com/projects/0004-Proof%20of%20Item%20Listing%20Match/</loc>
+         <lastmod>1980-01-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://docs.gnawex.com/proposals/</loc>
          <lastmod>1980-01-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.gnawex.com/proposals/0001-Items/</loc>
+         <loc>https://docs.gnawex.com/proposals/0001-Trade%20Items/</loc>
          <lastmod>1980-01-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
