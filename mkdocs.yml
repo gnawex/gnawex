@@ -116,9 +116,17 @@ extra:
 
 nav:
   - Home: index.md
-  - Proposals:
-      - proposals/index.md
-      - 0001 - Items: proposals/0001-Items.md
-      - 0002 - Mapping: proposals/0002-Mapping.md
+  - Guides:
+      - bruh.md
   - API Reference:
       - api/index.md
+  - Proposals:
+      - proposals/index.md
+      - 0001 - Trade Items: proposals/0001-Trade Items.md
+      - 0002 - Mapping: proposals/0002-Mapping.md
+  - Projects:
+      - projects/index.md
+      - 0001 - Tradable Items: projects/0001-Tradable Items.md
+      - 0002 - Manage Tradable Item Listings: projects/0002-Manage Tradable Item Listings.md
+      - 0003 - Automated Item Listings Matching: projects/0003-Automated Matching.md
+      - 0004 - Proof of Item Listing Match: projects/0004-Proof of Item Listing Match.md

@@ -1,4 +1,4 @@
-# 0001 - Items
+# 0001 - Trade Items
 
 Items that are allowed to be exchanged are ones (including gilded treasure maps)
 that may be traded via the _Send Supplies_ option in a MouseHunt profile. These
@@ -196,3 +196,9 @@ in future transactions.
 
     No. Besides the transaction status, all of the other information must be
     handled by GNAWEX.
+
+*[DB]: Database
+*[SB]: super|BRIE+ cheese
+*[CRM]: Calcified Rift Mist (an MH item)
+*[TXN]: Item listing transaction
+*[TXNs]: Item listing transactions
