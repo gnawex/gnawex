@@ -2,6 +2,6 @@
 
 BEGIN;
 
-CREATE EXTENSION pgtap;
+-- CREATE EXTENSION pgtap;
 
 COMMIT;

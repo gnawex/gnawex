@@ -2,6 +2,6 @@
 
 BEGIN;
 
-DROP EXTENSION pgtap;
+-- DROP EXTENSION pgtap;
 
 COMMIT;
