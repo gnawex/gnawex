@@ -8,7 +8,7 @@ CREATE TYPE app.LISTING_TYPE AS ENUM ('buy', 'sell');
 
 CREATE TABLE app.listings (
   listing_id BIGSERIAL PRIMARY KEY,
-  item_id    BIGINT REFERENCES app.items (item_id),
+  item_id    BIGINT REFERENCES app.tradable_items (id),
   user_id    BIGINT REFERENCES app.users (user_id),
 
   quantity   INT NOT NULL,

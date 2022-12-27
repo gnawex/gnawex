@@ -2,8 +2,8 @@
 
 BEGIN;
 
-SELECT item_id, name, description, created_at
-  FROM app.items
+SELECT id, name, description, created_at
+  FROM app.tradable_items
   WHERE false;
 
 ROLLBACK;
