@@ -57,6 +57,13 @@
         devShells.${system} = {
           default = flake.devShells.default;
           ci = pkgs.mkShell { buildInputs = [ mkdocs-material-insiders ]; };
+
+          ci-db = pkgs.mkShell {
+            buildInputs = with pkgs; [
+              sqitchPg
+              perl534Packages.TAPParserSourceHandlerpgTAP
+            ];
+          };
         };
       };
     });

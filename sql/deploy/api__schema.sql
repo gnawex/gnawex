@@ -227,13 +227,13 @@ CREATE FUNCTION api.get_item(item_id BIGINT)
        FROM grouped_sell_orders
     )
     SELECT
-        items.name,
-        items.description,
+        tradable_items.name,
+        tradable_items.description,
         buy_listings.coalesce AS buy_listings,
         sell_listings.coalesce AS sell_listings
-      FROM app.items, buy_listings, sell_listings
-      WHERE items.item_id = get_item.item_id
-      GROUP BY items.name, items.description, buy_listings, sell_listings;
+      FROM app.tradable_items, buy_listings, sell_listings
+      WHERE tradable_items.id = get_item.item_id
+      GROUP BY tradable_items.name, tradable_items.description, buy_listings, sell_listings;
   $$;
 
 GRANT EXECUTE ON FUNCTION api.get_item TO anon, verified_user;
