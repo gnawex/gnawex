@@ -26,13 +26,11 @@ common common-base
 
 common common-database
     build-depends:
-        beam-core          ^>=0.10
-      , beam-postgres      ^>=0.5
 
 common common-deps
     build-depends:
-        text              ^>=2.0
-      , time              ^>=1.11
+        text               ^>=2.0
+      , time               ^>=1.11
 
 common common-warnings
     ghc-options:
@@ -51,12 +49,22 @@ library
     other-modules:
         Muridae.Environment
 
-      -- Web
+      -- DB
+      , Muridae.DB
+      , Muridae.DB.TradableItem
+      , Muridae.DB.Types
+
+      -- Routes
       , MuridaeWeb.Routes
       , MuridaeWeb.Routes.Items
-      , MuridaeWeb.Handlers.Items.Index
-      , MuridaeWeb.Types
+      , MuridaeWeb.Routes.Admin.Items
 
+      -- Handlers
+      , MuridaeWeb.Handlers.Items.Create
+      , MuridaeWeb.Handlers.Items.Index
+      , MuridaeWeb.Handlers.Items.Types
+
+      , MuridaeWeb.Types
 
     build-depends:
         unliftio          ^>=0.2
@@ -81,30 +89,10 @@ library
       -- Database
       , postgresql-simple  ^>=0.6
       , resource-pool      ^>=0.3
+      , beam-core          ^>=0.10
       , beam-postgres      ^>=0.5
 
-      -- Internal
-      , muridae-db
-
     hs-source-dirs:   muridae
-
-library muridae-db
-    import:
-        common-base,
-        common-default-language,
-        common-deps,
-        common-database,
-        common-warnings
-
-    exposed-modules:
-        Muridae.DB
-      , Muridae.DB.TradableItem
-
-    -- other-modules:
-
-    build-depends:
-
-    hs-source-dirs:   muridae-db
 
 executable muridae-server
     import:
@@ -121,7 +109,6 @@ executable muridae-server
     -- other-extensions:
     build-depends:
         muridae,
-        muridae-db,
 
         wai  ^>=3.2,
         warp ^>=3.3,

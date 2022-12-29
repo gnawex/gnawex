@@ -7,7 +7,7 @@
 module MuridaeWeb.Routes.Items where
 
 import GHC.Generics (Generic)
-import MuridaeWeb.Handlers.Items.Index (Item)
+import MuridaeWeb.Handlers.Items.Types (TradableItem)
 import Servant (JSON)
 import Servant.API.Generic (type (:-))
 import Servant.API.NamedRoutes (NamedRoutes)
@@ -17,6 +17,6 @@ type Routes = NamedRoutes Routes'
 
 data Routes' mode = Routes'
   { -- GET /
-    index :: mode :- Get '[JSON] [Item]
+    index :: mode :- Get '[JSON] [TradableItem]
   }
   deriving stock (Generic)

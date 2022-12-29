@@ -13,45 +13,29 @@
 module MuridaeWeb.Handlers.Items.Index where
 
 import Control.Monad.IO.Class (liftIO)
-import Data.Aeson (ToJSON)
 import Data.Coerce (coerce)
-import Data.Int (Int32)
+import Data.Functor.Identity (Identity)
 import Data.Pool (withResource)
-import Data.Text (Text)
-import Data.Time (UTCTime)
 import qualified Database.Beam.Postgres as Beam
 import Effectful.Reader.Static (asks)
-import GHC.Generics (Generic)
-import qualified Muridae.DB.TradableItem as TradableItem
+import qualified Muridae.DB.TradableItem as DB.TradableItem
+import qualified Muridae.DB.Types as DB
 import Muridae.Environment (pool)
+import qualified MuridaeWeb.Handlers.Items.Types as Handler
 import MuridaeWeb.Types (Handler')
 
-newtype ItemId = ItemId Int32
-  deriving (ToJSON) via Int32
-
-data Item = Item
-  { id :: ItemId
-  , name :: Text
-  , description :: Text
-  , wiki_link :: Text
-  , created_at :: UTCTime
-  , updated_at :: Maybe UTCTime
-  , deleted_at :: Maybe UTCTime
-  }
-  deriving stock (Generic)
-  deriving anyclass (ToJSON)
-
-indexItems :: Handler' [Item]
+indexItems :: Handler' [Handler.TradableItem]
 indexItems = do
   connPool <- asks pool
 
   liftIO $ withResource connPool $ \conn -> do
-    items <- Beam.runBeamPostgresDebug print conn TradableItem.getTradableItems
+    items <- Beam.runBeamPostgresDebug print conn DB.TradableItem.all
 
     pure $ parseDBItem <$> items
  where
+  parseDBItem :: DB.TradableItem Identity -> Handler.TradableItem
   parseDBItem dbItem =
-    Item
+    Handler.TradableItem
       { id = coerce dbItem._id
       , name = dbItem._name
       , description = dbItem._description
