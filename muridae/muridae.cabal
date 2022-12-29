@@ -31,7 +31,8 @@ common common-database
 
 common common-deps
     build-depends:
-        text ^>=2.0
+        text              ^>=2.0
+      , time              ^>=1.11
 
 common common-warnings
     ghc-options:
@@ -41,6 +42,7 @@ library
     import:
         common-base
       , common-default-language
+      , common-deps
       , common-warnings
 
     exposed-modules:
@@ -64,8 +66,6 @@ library
       -- Data types
       , aeson             ^>=2.1
       , bytestring        ^>=0.11
-      , text              ^>=2.0
-      , time              ^>=1.11
 
       -- Effects
       , effectful         ^>=2.2
@@ -81,6 +81,7 @@ library
       -- Database
       , postgresql-simple  ^>=0.6
       , resource-pool      ^>=0.3
+      , beam-postgres      ^>=0.5
 
       -- Internal
       , muridae-db
@@ -97,6 +98,7 @@ library muridae-db
 
     exposed-modules:
         Muridae.DB
+      , Muridae.DB.TradableItem
 
     -- other-modules:
 

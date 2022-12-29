@@ -4,18 +4,26 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module MuridaeWeb.Handlers.Items.Index where
 
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson (ToJSON)
+import Data.Coerce (coerce)
 import Data.Int (Int32)
+import Data.Pool (withResource)
 import Data.Text (Text)
 import Data.Time (UTCTime)
-import Data.Time.Clock (getCurrentTime)
+import qualified Database.Beam.Postgres as Beam
+import Effectful.Reader.Static (asks)
 import GHC.Generics (Generic)
+import qualified Muridae.DB.TradableItem as TradableItem
+import Muridae.Environment (pool)
 import MuridaeWeb.Types (Handler')
 
 newtype ItemId = ItemId Int32
@@ -27,22 +35,28 @@ data Item = Item
   , description :: Text
   , wiki_link :: Text
   , created_at :: UTCTime
-  , updated_at :: UTCTime
+  , updated_at :: Maybe UTCTime
+  , deleted_at :: Maybe UTCTime
   }
   deriving stock (Generic)
   deriving anyclass (ToJSON)
 
 indexItems :: Handler' [Item]
 indexItems = do
-  timeNow <- liftIO getCurrentTime
+  connPool <- asks pool
 
-  pure
-    [ Item
-        { id = ItemId 1
-        , name = "Hey"
-        , description = "Bruh"
-        , wiki_link = "https://mousehuntgame.com"
-        , created_at = timeNow
-        , updated_at = timeNow
-        }
-    ]
+  liftIO $ withResource connPool $ \conn -> do
+    items <- Beam.runBeamPostgresDebug print conn TradableItem.getTradableItems
+
+    pure $ parseDBItem <$> items
+ where
+  parseDBItem dbItem =
+    Item
+      { id = coerce dbItem._id
+      , name = dbItem._name
+      , description = dbItem._description
+      , wiki_link = dbItem._wiki_link
+      , created_at = dbItem._created_at
+      , updated_at = dbItem._updated_at
+      , deleted_at = dbItem._deleted_at
+      }
