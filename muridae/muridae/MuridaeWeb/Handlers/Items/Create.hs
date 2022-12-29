@@ -5,6 +5,7 @@ module MuridaeWeb.Handlers.Items.Create where
 
 import Data.Pool (withResource)
 import qualified Database.Beam.Postgres as Beam
+import Database.PostgreSQL.Simple.Transaction (withTransactionSerializable)
 import Effectful (liftIO)
 import Effectful.Reader.Static (asks)
 import qualified Muridae.DB.TradableItem as DB.TradableItem
@@ -17,7 +18,10 @@ create :: Handler.ReqTradableItem -> Handler' NoContent
 create reqItem = do
   connPool <- asks pool
 
-  liftIO $ withResource connPool $ \conn -> do
-    Beam.runBeamPostgresDebug print conn (DB.TradableItem.create reqItem)
+  liftIO $
+    withResource connPool $
+      \conn ->
+        withTransactionSerializable conn $ do
+          Beam.runBeamPostgresDebug print conn (DB.TradableItem.create reqItem)
 
   pure NoContent

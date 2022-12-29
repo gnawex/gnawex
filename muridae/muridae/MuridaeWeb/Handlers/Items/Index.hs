@@ -17,6 +17,7 @@ import Data.Coerce (coerce)
 import Data.Functor.Identity (Identity)
 import Data.Pool (withResource)
 import qualified Database.Beam.Postgres as Beam
+import Database.PostgreSQL.Simple.Transaction (withTransactionSerializable)
 import Effectful.Reader.Static (asks)
 import qualified Muridae.DB.TradableItem as DB.TradableItem
 import qualified Muridae.DB.Types as DB
@@ -28,10 +29,12 @@ indexItems :: Handler' [Handler.TradableItem]
 indexItems = do
   connPool <- asks pool
 
-  liftIO $ withResource connPool $ \conn -> do
-    items <- Beam.runBeamPostgresDebug print conn DB.TradableItem.all
+  liftIO $
+    withResource connPool $
+      \conn -> withTransactionSerializable conn $ do
+        items <- Beam.runBeamPostgresDebug print conn DB.TradableItem.all
 
-    pure $ parseDBItem <$> items
+        pure $ parseDBItem <$> items
  where
   parseDBItem :: DB.TradableItem Identity -> Handler.TradableItem
   parseDBItem dbItem =
