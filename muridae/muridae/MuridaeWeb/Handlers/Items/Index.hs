@@ -12,29 +12,16 @@
 
 module MuridaeWeb.Handlers.Items.Index where
 
-import Control.Monad.IO.Class (liftIO)
 import Data.Coerce (coerce)
 import Data.Functor.Identity (Identity)
-import Data.Pool (withResource)
-import qualified Database.Beam.Postgres as Beam
-import Database.PostgreSQL.Simple.Transaction (withTransactionSerializable)
-import Effectful.Reader.Static (asks)
+import Effectful.Beam (queryDebug)
 import qualified Muridae.DB.TradableItem as DB.TradableItem
 import qualified Muridae.DB.Types as DB
-import Muridae.Environment (pool)
 import qualified MuridaeWeb.Handlers.Items.Types as Handler
 import MuridaeWeb.Types (Handler')
 
 indexItems :: Handler' [Handler.TradableItem]
-indexItems = do
-  connPool <- asks pool
-
-  liftIO $
-    withResource connPool $
-      \conn -> withTransactionSerializable conn $ do
-        items <- Beam.runBeamPostgresDebug print conn DB.TradableItem.all
-
-        pure $ parseDBItem <$> items
+indexItems = queryDebug print DB.TradableItem.all >>= pure . (fmap parseDBItem)
  where
   parseDBItem :: DB.TradableItem Identity -> Handler.TradableItem
   parseDBItem dbItem =

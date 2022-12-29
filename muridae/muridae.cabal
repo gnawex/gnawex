@@ -47,7 +47,8 @@ library
         MuridaeWeb.Server
 
     other-modules:
-        Muridae.Environment
+        Effectful.Beam
+      , Muridae.Environment
 
       -- DB
       , Muridae.DB

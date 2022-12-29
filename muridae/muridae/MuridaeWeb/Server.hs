@@ -16,9 +16,10 @@ import Control.Monad.IO.Class (liftIO)
 import Data.Kind (Type)
 import qualified Data.Pool as Pool
 import Effectful (Eff, IOE, runEff)
+import Effectful.Beam (runDB)
 import Effectful.Error.Static (Error, runErrorNoCallStack)
 import Effectful.Reader.Static (runReader)
-import Muridae.Environment (MuridaeEnv (MuridaeEnv), getMuridaeEnv)
+import Muridae.Environment (MuridaeEnv (MuridaeEnv), getMuridaeEnv, pool)
 import qualified MuridaeWeb.Handlers.Items.Create as ItemHandler
 import MuridaeWeb.Handlers.Items.Index (indexItems)
 import MuridaeWeb.Routes (
@@ -40,7 +41,7 @@ import Servant.Server.Generic (AsServerT, genericServeT)
 mkServer :: MuridaeEnv -> Application
 mkServer muridaeEnv =
   genericServeT
-    (\app -> effToHandler $ runReader muridaeEnv $ app)
+    (\app -> effToHandler $ runDB (pool muridaeEnv) $ runReader muridaeEnv $ app)
     muridaeServer
 
 muridaeServer :: API (AsServerT Handler')
