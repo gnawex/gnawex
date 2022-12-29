@@ -3,17 +3,17 @@
 BEGIN;
 
 SELECT
-    listing_id,
-    item_id,
+    id,
+    tradable_item_id,
     user_id,
-    quantity,
+    unit_quantity,
     cost,
     type,
-    batch,
-    is_active,
+    batched_by,
+    active,
     created_at,
     updated_at
-  FROM app.listings
+  FROM app.tradable_item_listings
   WHERE false;
 
 ROLLBACK;

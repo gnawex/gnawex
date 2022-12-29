@@ -29,12 +29,12 @@ COMMENT ON TABLE app.tradable_item_listings IS
 
 CREATE INDEX active_id
   ON app.tradable_item_listings (tradable_item_id)
-  WHERE is_active = true;
+  WHERE active = true;
 
 GRANT SELECT ON TABLE app.tradable_item_listings TO anon, verified_user;
 GRANT SELECT, UPDATE ON TABLE app.tradable_item_listings TO gnawex_merchant;
 GRANT SELECT, INSERT, UPDATE (active) ON TABLE app.tradable_item_listings TO api;
-GRANT ALL ON app.tradable_item_listings_listing_id_seq TO verified_user;
+GRANT ALL ON app.tradable_item_listings_id_seq TO verified_user;
 
 --------------------------------------------------------------------------------
 

@@ -2,7 +2,7 @@
 
 BEGIN;
 
-DROP TRIGGER match_listings ON app.listings;
+DROP TRIGGER match_listings ON app.tradable_item_listings;
 DROP FUNCTION app.match();
 
 COMMIT;

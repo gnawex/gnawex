@@ -7,8 +7,9 @@ BEGIN;
 
 CREATE TABLE app.transactions (
   transaction_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  buy_order      BIGINT REFERENCES app.listings(listing_id),
-  sell_order     BIGINT REFERENCES app.listings(listing_id),
+
+  buy_order      BIGINT REFERENCES app.tradable_item_listings(id),
+  sell_order     BIGINT REFERENCES app.tradable_item_listings(id),
 
   -- Since we subtract the original `quantity` in the listing. Need this to
   -- keep a record so that we can sum all transactions which gives us the

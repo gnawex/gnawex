@@ -11,7 +11,7 @@ DROP FUNCTION app.adjust_listing();
 
 REVOKE SELECT ON TABLE app.tradable_item_listings FROM anon, verified_user;
 REVOKE SELECT, INSERT, UPDATE (active) ON TABLE app.tradable_item_listings FROM api;
-REVOKE ALL ON TABLE app.tradable_item_listings_listing_id_seq FROM verified_user;
+REVOKE ALL ON TABLE app.tradable_item_listings_id_seq FROM verified_user;
 REVOKE SELECT, UPDATE ON TABLE app.tradable_item_listings FROM gnawex_merchant;
 
 -- FIXME: This is broken for some reason. Why does dropping an index not work?
