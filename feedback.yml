@@ -1,0 +1,7 @@
+loops:
+  muridae:
+    description: Run the muridae web server
+    command: nix run
+    git: true
+    filter: ./muridae -name "*.hs"
+    filter: . -name "*.cabal" -name "cabal.project" -name "feedback.yml"

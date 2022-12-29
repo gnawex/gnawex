@@ -238,6 +238,10 @@ CREATE FUNCTION api.get_item(item_id BIGINT)
 
 GRANT EXECUTE ON FUNCTION api.get_item TO anon, verified_user;
 
+SET LOCAL ROLE postgres;
+
+ALTER DATABASE gnawex_db SET search_path TO app,api,auth,public;
+
 --------------------------------------------------------------------------------
 
 COMMIT;

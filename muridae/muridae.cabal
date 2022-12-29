@@ -15,10 +15,6 @@ license:            AGPL-3.0-only
 author:             SEKUN
 maintainer:         software@sekun.net
 
--- A copyright notice.
--- copyright:
--- category:
-
 extra-source-files: CHANGELOG.md
 
 common common-default-language
@@ -26,29 +22,69 @@ common common-default-language
 
 common common-base
     build-depends:
-        base          ^>=4.16
+        base               ^>=4.16
 
 common common-database
     build-depends:
-        beam-core     ^>=0.10,
-        beam-postgres ^>= 0.5,
+        beam-core          ^>=0.10
+      , beam-postgres      ^>=0.5
 
 common common-deps
     build-depends:
-        text ^>=2.0
+        text              ^>=2.0
+      , time              ^>=1.11
+
+common common-warnings
+    ghc-options:
+        -Wall
 
 library
     import:
-        common-base,
-        common-default-language,
+        common-base
+      , common-default-language
+      , common-deps
+      , common-warnings
 
-    exposed-modules:  MyLib
+    exposed-modules:
+        MuridaeWeb.Server
 
-    -- Modules included in this library but not exported.
-    -- other-modules:
+    other-modules:
+        Muridae.Environment
 
-    -- LANGUAGE extensions used by modules in this package.
-    -- other-extensions:
+      -- Web
+      , MuridaeWeb.Routes
+      , MuridaeWeb.Routes.Items
+      , MuridaeWeb.Handlers.Items.Index
+      , MuridaeWeb.Types
+
+
+    build-depends:
+        unliftio          ^>=0.2
+      , exceptions        ^>=0.10
+      , mtl               ^>=2.2
+
+      -- Data types
+      , aeson             ^>=2.1
+      , bytestring        ^>=0.11
+
+      -- Effects
+      , effectful         ^>=2.2
+      , effectful-core    ^>=2.2
+      , servant-effectful ^>=0.0
+
+      -- Web
+      , servant           ^>=0.19
+      , servant-server    ^>=0.19
+      , wai               ^>=3.2
+      , warp              ^>=3.3
+
+      -- Database
+      , postgresql-simple  ^>=0.6
+      , resource-pool      ^>=0.3
+      , beam-postgres      ^>=0.5
+
+      -- Internal
+      , muridae-db
 
     hs-source-dirs:   muridae
 
@@ -58,11 +94,15 @@ library muridae-db
         common-default-language,
         common-deps,
         common-database,
+        common-warnings
 
     exposed-modules:
         Muridae.DB
+      , Muridae.DB.TradableItem
 
     -- other-modules:
+
+    build-depends:
 
     hs-source-dirs:   muridae-db
 
@@ -70,6 +110,7 @@ executable muridae-server
     import:
         common-base,
         common-default-language,
+        common-warnings
 
     main-is:          Main.hs
 
@@ -79,16 +120,10 @@ executable muridae-server
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
     build-depends:
+        muridae,
         muridae-db,
 
-        unliftio ^>=0.2,
-        exceptions ^>=0.10,
-
-        -- Data types
-        text ^>=2.0,
-
-        -- Effects
-        effectful ^>=2.2,
-        effectful-core ^>=2.2,
+        wai  ^>=3.2,
+        warp ^>=3.3,
 
     hs-source-dirs:   muridae-server
