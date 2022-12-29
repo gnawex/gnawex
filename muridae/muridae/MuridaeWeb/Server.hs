@@ -31,6 +31,8 @@ import Servant.Server (Application, Handler)
 import Servant.Server.Generic (AsServerT, genericServeT)
 import qualified Network.Wai.Handler.Warp as Warp
 
+-- TODO: Generate docs
+
 mkServer :: MuridaeEnv -> Application
 mkServer muridaeEnv =
   genericServeT
