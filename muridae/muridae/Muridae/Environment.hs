@@ -1,7 +1,9 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE ExplicitForAll #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
 
@@ -31,7 +33,7 @@ data MuridaeEnv = MuridaeEnv
 getMuridaeEnv :: Eff '[IOE] MuridaeEnv
 getMuridaeEnv = do
   -- TODO: Get from environment through Reader or something. Idk.
-  let tempConnStr = "host='localhost' port=5432 dbname='market_db' user='postgres'"
+  let tempConnStr = "host='localhost' port=5432 dbname='gnawex_db' user='postgres'"
   pool <- mkPool tempConnStr 5 20
 
   pure (MuridaeEnv pool)
