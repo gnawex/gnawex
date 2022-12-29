@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE ExplicitForAll #-}
 {-# LANGUAGE ExplicitNamespaces #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -18,18 +19,21 @@ import Effectful (Eff, IOE, runEff)
 import Effectful.Error.Static (Error, runErrorNoCallStack)
 import Effectful.Reader.Static (runReader)
 import Muridae.Environment (MuridaeEnv (MuridaeEnv), getMuridaeEnv)
+import qualified MuridaeWeb.Handlers.Items.Create as ItemHandler
 import MuridaeWeb.Handlers.Items.Index (indexItems)
 import MuridaeWeb.Routes (
-  API (API, publicRoutes),
+  API (API, adminRoutes, publicRoutes),
+  AdminRoutes (AdminRoutes, items),
   PublicRoutes (PublicRoutes, items),
  )
+import qualified MuridaeWeb.Routes.Admin.Items as AdminItems
 import MuridaeWeb.Routes.Items (index)
-import qualified MuridaeWeb.Routes.Items as Item
+import qualified MuridaeWeb.Routes.Items as Items
 import MuridaeWeb.Types (Handler')
+import qualified Network.Wai.Handler.Warp as Warp
 import Servant (ServerError)
 import Servant.Server (Application, Handler)
 import Servant.Server.Generic (AsServerT, genericServeT)
-import qualified Network.Wai.Handler.Warp as Warp
 
 -- TODO: Generate docs
 
@@ -44,7 +48,15 @@ muridaeServer =
   API
     { publicRoutes =
         PublicRoutes
-          { items = Item.Routes'{index = indexItems}
+          { items = Items.Routes'{index = indexItems}
+          }
+    , adminRoutes =
+        AdminRoutes
+          { items =
+              AdminItems.Routes'
+                { index = indexItems
+                , create = ItemHandler.create
+                }
           }
     }
 

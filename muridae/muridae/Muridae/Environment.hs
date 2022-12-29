@@ -34,9 +34,9 @@ getMuridaeEnv :: Eff '[IOE] MuridaeEnv
 getMuridaeEnv = do
   -- TODO: Get from environment through Reader or something. Idk.
   let tempConnStr = "host='localhost' port=5432 dbname='gnawex_db' user='postgres'"
-  pool <- mkPool tempConnStr 5 20
+  connPool <- mkPool tempConnStr 5 20
 
-  pure (MuridaeEnv pool)
+  pure (MuridaeEnv connPool)
 
 mkPool ::
   forall (es :: [Effect]).

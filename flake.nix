@@ -53,7 +53,6 @@
       packages = rec {
         default = muridae-server;
         muridae-server = flake.packages."muridae:exe:muridae-server";
-        muridae-db = flake.packages."muridae:lib:muridae-db";
         muridae = flake.packages."muridae:lib:muridae";
 
         devShells.${system} = {
