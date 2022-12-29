@@ -6,9 +6,10 @@
     nixpkgs.follows     = "haskellNix/nixpkgs-unstable";
     mkdocs-material.url = "github:sekunho/mkdocs-material";
     flake-utils.url     = "github:numtide/flake-utils";
+    feedback.url        = "github:NorfairKing/feedback";
   };
 
-  outputs = { self, nixpkgs, flake-utils, mkdocs-material, haskellNix }:
+  outputs = { self, nixpkgs, flake-utils, mkdocs-material, haskellNix, feedback }:
     flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
     let
       mkdocs-material-insiders = mkdocs-material.packages.${system}.mkdocs-material-insiders;
@@ -36,6 +37,7 @@
                 sqitchPg
                 perl534Packages.TAPParserSourceHandlerpgTAP
                 mkdocs-material-insiders
+                feedback.packages.${system}.default
               ];
             };
         })
