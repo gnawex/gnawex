@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedRecordDot #-}
 
-module Muridae.DB.TradableItem where
+module DB.TradableItem where
 
 import Data.Functor.Identity (Identity)
 import Database.Beam.Postgres (Pg)
@@ -14,9 +14,9 @@ import Database.Beam.Query (
   select,
   val_,
  )
-import Muridae.DB (muridaeDB)
-import Muridae.DB.Types (muridaeTradableItems)
-import qualified Muridae.DB.Types as DB (TradableItem (TradableItem))
+import DB (muridaeDB)
+import DB.Types (muridaeTradableItems)
+import qualified DB.Types as DB (TradableItem (TradableItem))
 
 import qualified MuridaeWeb.Handlers.Items.Types as Handler
 

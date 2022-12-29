@@ -8,7 +8,7 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Muridae.DB.Types where
+module DB.Types where
 
 import Data.Int (Int32)
 import Data.Kind (Type)

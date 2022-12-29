@@ -15,8 +15,8 @@ module MuridaeWeb.Handlers.Items.Index where
 import Data.Coerce (coerce)
 import Data.Functor.Identity (Identity)
 import Effectful.Beam (queryDebug)
-import qualified Muridae.DB.TradableItem as DB.TradableItem
-import qualified Muridae.DB.Types as DB
+import qualified DB.TradableItem as DB.TradableItem
+import qualified DB.Types as DB
 import qualified MuridaeWeb.Handlers.Items.Types as Handler
 import MuridaeWeb.Types (Handler')
 

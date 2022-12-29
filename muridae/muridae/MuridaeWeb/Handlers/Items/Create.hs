@@ -4,7 +4,7 @@
 module MuridaeWeb.Handlers.Items.Create where
 
 import Effectful.Beam (queryDebug)
-import qualified Muridae.DB.TradableItem as DB.TradableItem
+import qualified DB.TradableItem as DB.TradableItem
 import qualified MuridaeWeb.Handlers.Items.Types as Handler
 import MuridaeWeb.Types (Handler')
 import Servant.API.ContentTypes (NoContent (NoContent))

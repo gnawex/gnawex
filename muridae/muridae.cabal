@@ -51,9 +51,9 @@ library
       , Muridae.Environment
 
       -- DB
-      , Muridae.DB
-      , Muridae.DB.TradableItem
-      , Muridae.DB.Types
+      , DB
+      , DB.TradableItem
+      , DB.Types
 
       -- Routes
       , MuridaeWeb.Routes

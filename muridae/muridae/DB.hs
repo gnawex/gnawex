@@ -1,6 +1,6 @@
-module Muridae.DB where
+module DB where
 
-import Muridae.DB.Types (MuridaeDB)
+import DB.Types (MuridaeDB)
 import Database.Beam (DatabaseSettings, defaultDbSettings)
 import Database.Beam.Postgres (Postgres)
 
