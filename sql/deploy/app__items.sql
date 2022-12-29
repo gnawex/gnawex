@@ -10,9 +10,9 @@ CREATE TABLE app.tradable_items (
   wiki_link   TEXT NOT NULL,
   description TEXT NOT NULL,
 
-  created_at  TIMESTAMP DEFAULT current_timestamp NOT NULL,
-  updated_at  TIMESTAMP DEFAULT current_timestamp,
-  deleted_at  TIMESTAMP DEFAULT current_timestamp
+  created_at  TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
+  updated_at  TIMESTAMPTZ,
+  deleted_at  TIMESTAMPTZ
 );
 
 GRANT
