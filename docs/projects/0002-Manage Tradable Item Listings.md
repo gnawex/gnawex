@@ -51,7 +51,7 @@ Guest (non-logged in user) | :white_check_mark: | :x: | :x: | :x: | :x:
 Column name | Description | Type | Required | Nullable | Default
 :-- | -- | -- | -- | -- | --
 `id` | To uniquely identify an item listing | `BIGINT GENERATED ALWAYS AS IDENTITY` | `true` | `false` | Supplied by Postgres
-`user_id` | To associate a listing to a user | `BIGINT` | `true` | `false` | -
+`user__id` | To associate a listing to a user | `BIGINT` | `true` | `false` | -
 `tradable_item__id` | To associate listing to a tradable item | `BIGINT` | `true` | `false` | -
 `type` | What the user wants to do | `app.LISTING_TYPE AS ENUM ('buy', 'sell')` | `true` | `false` | -
 `batched_by` | Batches one or more of the same item to be sold as one unit for it to cost as a whole number | `SMALLINT` | `true` | `false` | `1`
@@ -64,9 +64,29 @@ Column name | Description | Type | Required | Nullable | Default
 [^1]:
   Only for their own listings
 
+### Functions
+
+#### `app.adjust_item_listing`
+
+Normalizes a listing's `batched_by`, `cost`, and `quantity` based on their GCD.
+
+### `app.set_listing_user_id`
+
+Overrides the `user__id` field of a listing to whoever is authenticated via
+PG's settings.
+
 ### Triggers
 
 #### `app.normalize_tradable_item_listing`
 
 Before insert, `batched_by`, `cost`, and `quantity` must be normalized based on
 their GCD for GNAWEX to match item listings better.
+
+#### `app.set_listing_user_id`
+
+Before insert, it triggers `app.set_listing_user_id()` which sets the user ID
+(owner) of the listing. The user ID is fetched from via
+`current_setting('auth.user_id', TRUE)`. Hence, has to be set via
+`set_config('auth.user_id', <ID_#_AS_STRING>, TRUE)`. It doesn't matter if the
+user ID isn't provided in the insert query itself, or if it even is because
+the above function will override it.
