@@ -68,7 +68,7 @@ CREATE TRIGGER set_listing_user_id
 
 --------------------------------------------------------------------------------
 
-CREATE FUNCTION app.adjust_listing()
+CREATE FUNCTION app.adjust_item_listing()
   RETURNS TRIGGER
   LANGUAGE plpgsql
   AS $$
@@ -85,16 +85,16 @@ CREATE FUNCTION app.adjust_listing()
     END;
   $$;
 
-COMMENT ON FUNCTION app.adjust_listing IS
+COMMENT ON FUNCTION app.adjust_item_listing IS
   'Reduces needless batch sizes, and makes other adjustments accordingly.';
 
-CREATE TRIGGER adjust_listing
+CREATE TRIGGER normalize_tradable_item_listing
   BEFORE INSERT
     ON app.tradable_item_listings
     FOR EACH ROW
-      EXECUTE PROCEDURE app.adjust_listing();
+      EXECUTE PROCEDURE app.adjust_item_listing();
 
-GRANT EXECUTE ON FUNCTION app.adjust_listing TO verified_user;
+GRANT EXECUTE ON FUNCTION app.adjust_item_listing TO verified_user;
 
 --------------------------------------------------------------------------------
 
