@@ -3,10 +3,10 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE TypeOperators #-}
 
-module MuridaeWeb.Routes.Admin.Items where
+module MuridaeWeb.Route.Admin.Item where
 
 import GHC.Generics (Generic)
-import MuridaeWeb.Handlers.Items.Types (ReqTradableItem, TradableItem)
+import MuridaeWeb.Handler.Item.Types (ReqTradableItem, TradableItem)
 import Servant.API (GenericMode (type (:-)), NamedRoutes, ReqBody, type (:>))
 import Servant.API.ContentTypes (JSON)
 import Servant.API.Verbs (Get, PostCreated)

@@ -1,4 +1,4 @@
-module DB.TradableItemListings where
+module DB.TradableItemListing where
 
 import DB (muridaeDB)
 import qualified DB.Types as DB

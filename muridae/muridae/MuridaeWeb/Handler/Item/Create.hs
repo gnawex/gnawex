@@ -1,11 +1,11 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 
-module MuridaeWeb.Handlers.Items.Create where
+module MuridaeWeb.Handler.Item.Create where
 
 import Effectful.Beam (queryDebug)
 import qualified DB.TradableItem as DB.TradableItem
-import qualified MuridaeWeb.Handlers.Items.Types as Handler
+import qualified MuridaeWeb.Handler.Item.Types as Handler
 import MuridaeWeb.Types (Handler')
 import Servant.API.ContentTypes (NoContent (NoContent))
 

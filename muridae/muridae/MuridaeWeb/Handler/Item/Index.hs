@@ -10,14 +10,14 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module MuridaeWeb.Handlers.Items.Index where
+module MuridaeWeb.Handler.Item.Index where
 
 import Data.Coerce (coerce)
 import Data.Functor.Identity (Identity)
 import Effectful.Beam (queryDebug)
 import qualified DB.TradableItem as DB.TradableItem
 import qualified DB.Types as DB
-import qualified MuridaeWeb.Handlers.Items.Types as Handler
+import qualified MuridaeWeb.Handler.Item.Types as Handler
 import MuridaeWeb.Types (Handler')
 
 indexItems :: Handler' [Handler.TradableItem]

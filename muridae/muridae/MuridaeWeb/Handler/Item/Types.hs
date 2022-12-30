@@ -4,7 +4,7 @@
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 
-module MuridaeWeb.Handlers.Items.Types where
+module MuridaeWeb.Handler.Item.Types where
 
 import Data.Aeson.Types (ToJSON, FromJSON)
 import Data.Int (Int32)

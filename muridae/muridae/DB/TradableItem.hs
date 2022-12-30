@@ -18,7 +18,7 @@ import DB (muridaeDB)
 import DB.Types (muridaeTradableItems)
 import qualified DB.Types as DB (TradableItem (TradableItem))
 
-import qualified MuridaeWeb.Handlers.Items.Types as Handler
+import qualified MuridaeWeb.Handler.Item.Types as Handler
 
 all :: Pg [DB.TradableItem Identity]
 all = runSelectReturningList (select (all_ (muridaeTradableItems muridaeDB)))

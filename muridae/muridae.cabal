@@ -54,20 +54,22 @@ library
       -- DB
       , DB
       , DB.TradableItem
-      , DB.TradableItemListings
+      , DB.TradableItemListing
       , DB.Types
 
       -- Routes
-      , MuridaeWeb.Routes
-      , MuridaeWeb.Routes.Items
-      , MuridaeWeb.Routes.ItemListings
-      , MuridaeWeb.Routes.Admin.Items
+      , MuridaeWeb.Route
+      , MuridaeWeb.Route.Item
+      , MuridaeWeb.Route.ItemListing
+      , MuridaeWeb.Route.Admin.Item
 
       -- Handlers
-      , MuridaeWeb.Handlers.Items.Create
-      , MuridaeWeb.Handlers.Items.Index
-      , MuridaeWeb.Handlers.Items.Types
-      , MuridaeWeb.Handlers.Items.Listings.Index
+      , MuridaeWeb.Handler.Item.Create
+      , MuridaeWeb.Handler.Item.Index
+      , MuridaeWeb.Handler.Item.Types
+
+      , MuridaeWeb.Handler.Item.Listing
+      , MuridaeWeb.Handler.Item.Listing.Types
 
       , MuridaeWeb.Types
 

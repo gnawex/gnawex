@@ -1,47 +1,32 @@
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedRecordDot #-}
-{-# LANGUAGE TypeApplications #-}
 
-module MuridaeWeb.Handlers.Items.Listings.Index where
-
-import qualified DB.TradableItemListings as DB.TradableItemListing
+module MuridaeWeb.Handler.Item.Listing where
 
 import qualified DB.Types as DB
-import Data.Aeson.Types (ToJSON)
 import Data.Coerce (coerce)
-import Data.Functor.Identity (Identity)
-import Data.Int (Int16, Int32, Int64)
-import Data.Time (UTCTime)
+import Database.Beam (Identity)
 import Effectful (liftIO)
 import Effectful.Beam (queryDebug)
-import GHC.Generics (Generic)
-import MuridaeWeb.Handlers.Items.Types (TradableItemId (TradableItemId))
+import MuridaeWeb.Handler.Item.Listing.Types (
+  TradableItemListing (
+    TradableItemListing,
+    active,
+    batched_by,
+    cost,
+    created_at,
+    id,
+    listing_type,
+    tradable_item_id,
+    unit_quantity,
+    updated_at
+  ),
+  TradableItemListingId (TradableItemListingId),
+  TradableItemListingType (BUY, SELL),
+ )
+import MuridaeWeb.Handler.Item.Types (TradableItemId (TradableItemId))
 import MuridaeWeb.Types (Handler')
-
-newtype TradableItemListingId = TradableListingId Int32
-  deriving (ToJSON) via Int32
-
-data TradableItemListingType = BUY | SELL
-  deriving stock (Generic)
-  deriving anyclass (ToJSON)
-
-data TradableItemListing = TradableItemListing
-  { id :: TradableItemListingId
-  , tradable_item_id :: TradableItemId
-  , listing_type :: TradableItemListingType
-  , batched_by :: Int16
-  , unit_quantity :: Int32
-  , cost :: Int64
-  , active :: Bool
-  , created_at :: UTCTime
-  , updated_at :: Maybe UTCTime
-  }
-  deriving stock (Generic)
-  deriving anyclass (ToJSON)
+import qualified DB.TradableItemListing
 
 -- | Get all the listings under a tradable item
 index :: TradableItemId -> Handler' [TradableItemListing]

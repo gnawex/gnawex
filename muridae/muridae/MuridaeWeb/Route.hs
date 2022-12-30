@@ -6,7 +6,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeOperators #-}
 
-module MuridaeWeb.Routes (
+module MuridaeWeb.Route (
   NamedAPI,
   API (..),
   PublicRoutes (..),
@@ -16,8 +16,8 @@ module MuridaeWeb.Routes (
 
 import Data.Data (Proxy (Proxy))
 import GHC.Generics (Generic)
-import qualified MuridaeWeb.Routes.Admin.Items as AdminItems
-import qualified MuridaeWeb.Routes.Items as Items
+import qualified MuridaeWeb.Route.Admin.Item as AdminItem
+import qualified MuridaeWeb.Route.Item as Item
 import Servant.API (type (:-), type (:>))
 import Servant.API.Generic (ToServantApi, genericApi)
 import Servant.API.NamedRoutes (NamedRoutes)
@@ -31,12 +31,12 @@ data API mode = API
   deriving stock (Generic)
 
 data PublicRoutes mode = PublicRoutes
-  { items :: mode :- "items" :> Items.Routes
+  { items :: mode :- "items" :> Item.Routes
   }
   deriving stock (Generic)
 
 data AdminRoutes mode = AdminRoutes
-  { items :: mode :- "items" :> AdminItems.Routes
+  { items :: mode :- "items" :> AdminItem.Routes
   }
   deriving stock (Generic)
 

@@ -20,19 +20,19 @@ import Effectful.Beam (runDB)
 import Effectful.Error.Static (Error, runErrorNoCallStack)
 import Effectful.Reader.Static (runReader)
 import Muridae.Environment (MuridaeEnv, getMuridaeEnv, pool)
-import qualified MuridaeWeb.Handlers.Items.Create as ItemHandler
-import qualified MuridaeWeb.Handlers.Items.Index as ItemHandler
-import qualified MuridaeWeb.Handlers.Items.Listings.Index as ListingHandler
-import MuridaeWeb.Routes (
+import qualified MuridaeWeb.Handler.Item.Create as ItemHandler
+import qualified MuridaeWeb.Handler.Item.Index as ItemHandler
+import qualified MuridaeWeb.Handler.Item.Listing as ListingHandler
+import MuridaeWeb.Route (
   API (API, adminRoutes, publicRoutes),
   AdminRoutes (AdminRoutes, items),
   PublicRoutes (PublicRoutes, items),
  )
-import qualified MuridaeWeb.Routes.Admin.Items as AdminItems
-import MuridaeWeb.Routes.ItemListings (index)
-import qualified MuridaeWeb.Routes.ItemListings as ItemListings
-import MuridaeWeb.Routes.Items (indexItems)
-import qualified MuridaeWeb.Routes.Items as Items
+import qualified MuridaeWeb.Route.Admin.Item as AdminItem
+import MuridaeWeb.Route.ItemListing (index)
+import qualified MuridaeWeb.Route.ItemListing as ItemListing
+import MuridaeWeb.Route.Item (indexItems)
+import qualified MuridaeWeb.Route.Item as Items
 import MuridaeWeb.Types (Handler')
 import qualified Network.Wai.Handler.Warp as Warp
 import Servant (ServerError)
@@ -44,7 +44,12 @@ import Servant.Server.Generic (AsServerT, genericServeT)
 mkServer :: MuridaeEnv -> Application
 mkServer muridaeEnv =
   genericServeT
-    (\app -> effToHandler $ runDB (pool muridaeEnv) $ runReader muridaeEnv $ app)
+    ( \app ->
+        effToHandler $
+          runDB (pool muridaeEnv) $
+            runReader muridaeEnv $
+              app
+    )
     muridaeServer
 
 muridaeServer :: API (AsServerT Handler')
@@ -55,13 +60,13 @@ muridaeServer =
           { items =
               Items.Routes'
                 { indexItems = ItemHandler.indexItems
-                , listings = ItemListings.Routes'{index = ListingHandler.index}
+                , listings = ItemListing.Routes'{index = ListingHandler.index}
                 }
           }
     , adminRoutes =
         AdminRoutes
           { items =
-              AdminItems.Routes'
+              AdminItem.Routes'
                 { index = ItemHandler.indexItems
                 , create = ItemHandler.create
                 }
