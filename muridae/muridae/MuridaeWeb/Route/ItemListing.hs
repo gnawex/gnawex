@@ -1,9 +1,3 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE ExplicitNamespaces #-}
-{-# LANGUAGE TypeOperators #-}
-
 module MuridaeWeb.Route.ItemListing where
 
 import GHC.Generics (Generic)

@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module DB where
 
 import DB.Types (MuridaeDB)

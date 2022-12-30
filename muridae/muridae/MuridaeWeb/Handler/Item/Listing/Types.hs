@@ -1,8 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE DerivingVia #-}
-
 module MuridaeWeb.Handler.Item.Listing.Types where
 
 import Data.Aeson.Types (ToJSON)

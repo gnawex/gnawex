@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedRecordDot #-}
-
 module DB.TradableItem where
 
 import Data.Functor.Identity (Identity)

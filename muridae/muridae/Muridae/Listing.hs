@@ -1,15 +1,9 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE ExplicitForAll #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE TypeOperators #-}
-
 module Muridae.Listing where
 
 import Effectful (Eff, Effect, type (:>))
 import Effectful.Beam (DB, queryDebug)
 import qualified DB.Types as DB
-import qualified DB.TradableItemListings as TradableItemListing
+import qualified DB.TradableItemListing as TradableItemListing
 import Data.Functor.Identity (Identity)
 
 all :: forall (es :: [Effect]). (DB :> es) => Eff es [DB.TradableItemListing Identity]

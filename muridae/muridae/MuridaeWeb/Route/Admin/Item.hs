@@ -1,8 +1,3 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE TypeOperators #-}
-
 module MuridaeWeb.Route.Admin.Item where
 
 import GHC.Generics (Generic)

@@ -1,6 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE OverloadedRecordDot #-}
-
 module MuridaeWeb.Handler.Item.Create where
 
 import Effectful.Beam (queryDebug)

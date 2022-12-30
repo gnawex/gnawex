@@ -1,7 +1,3 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE StandaloneKindSignatures #-}
-
 module MuridaeWeb.Types where
 
 import Data.Kind (Type)

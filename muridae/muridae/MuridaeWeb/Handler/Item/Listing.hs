@@ -1,6 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE OverloadedRecordDot #-}
-
 module MuridaeWeb.Handler.Item.Listing where
 
 import qualified DB.Types as DB

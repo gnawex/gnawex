@@ -1,22 +1,10 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE DerivingVia #-}
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE OverloadedRecordDot #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE TypeFamilies #-}
-
 module MuridaeWeb.Handler.Item.Index where
 
+import qualified DB.TradableItem as DB.TradableItem
+import qualified DB.Types as DB
 import Data.Coerce (coerce)
 import Data.Functor.Identity (Identity)
 import Effectful.Beam (queryDebug)
-import qualified DB.TradableItem as DB.TradableItem
-import qualified DB.Types as DB
 import qualified MuridaeWeb.Handler.Item.Types as Handler
 import MuridaeWeb.Types (Handler')
 

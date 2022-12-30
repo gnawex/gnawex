@@ -1,9 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE DerivingVia #-}
-{-# LANGUAGE DuplicateRecordFields #-}
-
 module MuridaeWeb.Handler.Item.Types where
 
 import Data.Aeson.Types (ToJSON, FromJSON)
