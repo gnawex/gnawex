@@ -1,20 +1,11 @@
-module MuridaeWeb.Route (
-  NamedAPI,
-  API (..),
-  PublicRoutes (..),
-  AdminRoutes (..),
-  api,
-) where
+module MuridaeWeb.Route where
 
-import Data.Data (Proxy (Proxy))
 import GHC.Generics (Generic)
-import qualified MuridaeWeb.Route.Admin.Item as AdminItem
-import qualified MuridaeWeb.Route.Item as Item
+import MuridaeWeb.Route.Admin.Item qualified as AdminItem
+import MuridaeWeb.Route.Item qualified as Item
+import MuridaeWeb.Route.ItemListing qualified as ItemListing
 import Servant.API (type (:-), type (:>))
-import Servant.API.Generic (ToServantApi, genericApi)
 import Servant.API.NamedRoutes (NamedRoutes)
-
-type NamedAPI = NamedRoutes API
 
 data API mode = API
   { publicRoutes :: mode :- "api" :> NamedRoutes PublicRoutes
@@ -22,15 +13,15 @@ data API mode = API
   }
   deriving stock (Generic)
 
+-- | Contains guest and user routes
 data PublicRoutes mode = PublicRoutes
   { items :: mode :- "items" :> Item.Routes
+  , itemListings :: mode :- "listings" :> ItemListing.Routes
   }
   deriving stock (Generic)
 
+-- | Contains admin-specific routes
 data AdminRoutes mode = AdminRoutes
   { items :: mode :- "items" :> AdminItem.Routes
   }
   deriving stock (Generic)
-
-api :: Proxy (ToServantApi API)
-api = genericApi (Proxy :: Proxy API)

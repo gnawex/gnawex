@@ -200,10 +200,10 @@ CREATE FUNCTION api.get_item(item_id BIGINT)
           WHERE type = 'buy'
             AND active = true
             AND tradable_item_listings.tradable_item__id = get_item.item_id
-            GROUP BY tradable_item_listings.batched_by, tradable_item_listings.cost
-            ORDER BY
-              tradable_item_listings.cost DESC,
-              tradable_item_listings.batched_by ASC
+          GROUP BY tradable_item_listings.batched_by, tradable_item_listings.cost
+          ORDER BY
+            tradable_item_listings.cost DESC,
+            tradable_item_listings.batched_by ASC
         FETCH FIRST 5 ROWS ONLY
      )
      -- JSON? Nah. Me, and my homies love JSONB.

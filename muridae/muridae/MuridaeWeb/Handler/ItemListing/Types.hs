@@ -1,7 +1,7 @@
-module MuridaeWeb.Handler.Item.Listing.Types where
+module MuridaeWeb.Handler.ItemListing.Types where
 
 import Data.Aeson.Types (FromJSON, ToJSON)
-import Data.Int (Int16, Int32, Int64)
+import Data.Int (Int16, Int32)
 import Data.Time (UTCTime)
 import GHC.Generics (Generic)
 import MuridaeWeb.Handler.Item.Types (TradableItemId)
@@ -21,7 +21,7 @@ data TradableItemListing = TradableItemListing
   , listing_type :: TradableItemListingType
   , batched_by :: Int16
   , unit_quantity :: Int32
-  , cost :: Int64
+  , cost :: Int32
   , active :: Bool
   , created_at :: UTCTime
   , updated_at :: Maybe UTCTime
@@ -30,10 +30,26 @@ data TradableItemListing = TradableItemListing
   deriving anyclass (ToJSON)
 
 data CreateTradableItemListing = CreateTradableItemListing
-  { listing_type :: TradableItemListingType
+  { item_id :: TradableItemId
+  , listing_type :: TradableItemListingType
   , batched_by :: Int16
   , unit_quantity :: Int32
-  , cost :: Int64
+  , cost :: Int32
   }
   deriving stock (Generic)
   deriving anyclass (FromJSON)
+
+data PooledListing = PooledListing
+  { cost :: Int32
+  , batched_by :: Int16
+  , unit_quantity :: Int32
+  }
+  deriving stock (Generic)
+  deriving anyclass (ToJSON)
+
+data ResListingsUnderItem = ResListingsUnderItem
+  { buy :: [PooledListing]
+  , sell :: [PooledListing]
+  }
+  deriving stock (Generic)
+  deriving anyclass (ToJSON)

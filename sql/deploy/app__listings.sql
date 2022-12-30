@@ -16,7 +16,7 @@ CREATE TABLE app.tradable_item_listings (
   type               app.LISTING_TYPE NOT NULL,
   batched_by         SMALLINT NOT NULL,
   unit_quantity      INT NOT NULL,
-  cost               BIGINT NOT NULL CHECK (cost >= 0),
+  cost               INT NOT NULL CHECK (cost >= 0),
   active             BOOLEAN DEFAULT true NOT NULL,
 
   -- Timestamps

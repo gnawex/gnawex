@@ -4,27 +4,26 @@ import Control.Exception (bracket)
 import Control.Monad.Except (throwError)
 import Control.Monad.IO.Class (liftIO)
 import Data.Kind (Type)
-import qualified Data.Pool as Pool
+import Data.Pool qualified as Pool
 import Effectful (Eff, IOE, runEff)
 import Effectful.Beam (runDB)
 import Effectful.Error.Static (Error, runErrorNoCallStack)
 import Effectful.Reader.Static (runReader)
 import Muridae.Environment (MuridaeEnv, getMuridaeEnv, pool)
-import qualified MuridaeWeb.Handler.Item.Create as ItemHandler
-import qualified MuridaeWeb.Handler.Item.Index as ItemHandler
-import qualified MuridaeWeb.Handler.Item.Listing as ListingHandler
+import MuridaeWeb.Handler.Item.Create qualified as ItemHandler
+import MuridaeWeb.Handler.Item.Index qualified as ItemHandler
+import MuridaeWeb.Handler.ItemListing qualified as ItemListingHandler
 import MuridaeWeb.Route (
   API (API, adminRoutes, publicRoutes),
   AdminRoutes (AdminRoutes, items),
-  PublicRoutes (PublicRoutes, items),
+  PublicRoutes (PublicRoutes, itemListings, items),
  )
-import qualified MuridaeWeb.Route.Admin.Item as AdminItem
+import MuridaeWeb.Route.Admin.Item qualified as AdminItem
+import MuridaeWeb.Route.Item qualified as ItemRoute
 import MuridaeWeb.Route.ItemListing (index)
-import qualified MuridaeWeb.Route.ItemListing as ItemListing
-import MuridaeWeb.Route.Item (indexItems)
-import qualified MuridaeWeb.Route.Item as Items
+import MuridaeWeb.Route.ItemListing qualified as ItemListingRoute
 import MuridaeWeb.Types (Handler')
-import qualified Network.Wai.Handler.Warp as Warp
+import Network.Wai.Handler.Warp qualified as Warp
 import Servant (ServerError)
 import Servant.Server (Application, Handler)
 import Servant.Server.Generic (AsServerT, genericServeT)
@@ -44,28 +43,35 @@ mkServer muridaeEnv =
 
 muridaeServer :: API (AsServerT Handler')
 muridaeServer =
-  API
-    { publicRoutes =
-        PublicRoutes
-          { items =
-              Items.Routes'
-                { indexItems = ItemHandler.indexItems
-                , listings =
-                    ItemListing.Routes'
-                      { index = ListingHandler.index
-                      , create = ListingHandler.create
-                      }
-                }
+  let itemRoutes =
+        ItemRoute.Routes'
+          { index = ItemHandler.indexItems
+          , getItemListings = ItemListingHandler.getListingsOfItem
           }
-    , adminRoutes =
-        AdminRoutes
-          { items =
-              AdminItem.Routes'
-                { index = ItemHandler.indexItems
-                , create = ItemHandler.create
-                }
+
+      itemListingRoutes =
+        -- TODO: Remove undefined for actual handlers
+        ItemListingRoute.Routes'
+          { index = undefined
+          , create = ItemListingHandler.create
           }
-    }
+
+      adminItemRoutes =
+        AdminItem.Routes'
+          { index = ItemHandler.indexItems
+          , create = ItemHandler.create
+          }
+   in API
+        { publicRoutes =
+            PublicRoutes
+              { items = itemRoutes
+              , itemListings = itemListingRoutes
+              }
+        , adminRoutes =
+            AdminRoutes
+              { items = adminItemRoutes
+              }
+        }
 
 runMuridae :: IO ()
 runMuridae =

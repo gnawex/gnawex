@@ -1,17 +1,29 @@
 module DB.Types where
 
 import Data.Functor.Identity (Identity)
-import Data.Int (Int16, Int32, Int64)
+import Data.Int (Int16, Int32)
 import Data.Kind (Type)
 import Data.Text (Text)
 import Data.Time (UTCTime)
-import Database.Beam (Database, FromBackendRow, TableEntity)
+import Database.Beam (Database, FromBackendRow, HasSqlEqualityCheck, TableEntity)
 import Database.Beam.Backend.SQL (HasSqlValueSyntax, sqlValueSyntax)
-import Database.Beam.Postgres (Postgres, ResultError (ConversionFailed, Incompatible, UnexpectedNull))
+import Database.Beam.Postgres (
+  Postgres,
+  ResultError (ConversionFailed, Incompatible, UnexpectedNull),
+ )
 import Database.Beam.Postgres.CustomTypes (pgEnumValueSyntax)
 import Database.Beam.Postgres.Syntax (PgValueSyntax)
-import Database.Beam.Schema (Beamable, Columnar, Table (PrimaryKey, primaryKey))
-import Database.PostgreSQL.Simple.FromField (FromField, fromField, returnError, typename)
+import Database.Beam.Schema (
+  Beamable,
+  Columnar,
+  Table (PrimaryKey, primaryKey),
+ )
+import Database.PostgreSQL.Simple.FromField (
+  FromField,
+  fromField,
+  returnError,
+  typename,
+ )
 import GHC.Generics (Generic)
 
 -------------------------------------------------------------------------------
@@ -41,7 +53,12 @@ data TradableItem f = TradableItem
 
 newtype TradableItemId = TradableItemId Int32
   deriving stock (Generic, Show)
-  deriving (FromBackendRow Postgres, HasSqlValueSyntax PgValueSyntax) via Int32
+  deriving
+    ( FromBackendRow Postgres
+    , HasSqlValueSyntax PgValueSyntax
+    , HasSqlEqualityCheck Postgres
+    )
+    via Int32
 
 deriving instance Show (TradableItem Identity)
 
@@ -63,6 +80,7 @@ instance Beamable (PrimaryKey TradableItem)
 
 data ListingType = Buy | Sell
   deriving stock (Generic, Show)
+  deriving anyclass (HasSqlEqualityCheck Postgres)
 
 data TradableItemListing f = TradableItemListing
   { _id :: Columnar f TradableItemListingId
@@ -71,7 +89,7 @@ data TradableItemListing f = TradableItemListing
   , _type :: Columnar f ListingType
   , _batched_by :: Columnar f Int16
   , _unit_quantity :: Columnar f Int32
-  , _cost :: Columnar f Int64
+  , _cost :: Columnar f Int32
   , _active :: Columnar f Bool
   , _created_at :: Columnar f UTCTime
   , _updated_at :: Columnar f (Maybe UTCTime)

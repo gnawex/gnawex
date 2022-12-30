@@ -83,8 +83,8 @@ library
       , MuridaeWeb.Handler.Item.Index
       , MuridaeWeb.Handler.Item.Types
 
-      , MuridaeWeb.Handler.Item.Listing
-      , MuridaeWeb.Handler.Item.Listing.Types
+      , MuridaeWeb.Handler.ItemListing
+      , MuridaeWeb.Handler.ItemListing.Types
 
       , MuridaeWeb.Handler.User
 
