@@ -52,7 +52,7 @@ Column name | Description | Type | Required | Nullable | Default
 :-- | -- | -- | -- | -- | --
 `id` | To uniquely identify an item listing | `BIGINT GENERATED ALWAYS AS IDENTITY` | `true` | `false` | Supplied by Postgres
 `user_id` | To associate a listing to a user | `BIGINT` | `true` | `false` | -
-`tradable_item_id` | To associate listing to a tradable item | `BIGINT` | `true` | `false` | -
+`tradable_item__id` | To associate listing to a tradable item | `BIGINT` | `true` | `false` | -
 `type` | What the user wants to do | `app.LISTING_TYPE AS ENUM ('buy', 'sell')` | `true` | `false` | -
 `batched_by` | Batches one or more of the same item to be sold as one unit for it to cost as a whole number | `SMALLINT` | `true` | `false` | `1`
 `unit_quantity` | Amount of units to be exchanged | `INT` | `true` | `false` | -

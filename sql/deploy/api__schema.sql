@@ -167,7 +167,7 @@ GRANT SELECT ON api.transactions TO verified_user;
 
 CREATE VIEW api.tradable_item_listings AS
   SELECT
-      tradable_item_id,
+      tradable_item__id,
       user_id,
       unit_quantity,
       cost,
@@ -177,7 +177,7 @@ CREATE VIEW api.tradable_item_listings AS
     FROM app.tradable_item_listings;
 
 GRANT SELECT ON api.tradable_item_listings TO anon, verified_user;
-GRANT INSERT (tradable_item_id, unit_quantity, cost, type, batched_by, active) ON api.tradable_item_listings TO verified_user;
+GRANT INSERT (tradable_item__id, unit_quantity, cost, type, batched_by, active) ON api.tradable_item_listings TO verified_user;
 
 --------------------------------------------------------------------------------
 
@@ -199,7 +199,7 @@ CREATE FUNCTION api.get_item(item_id BIGINT)
           FROM app.tradable_item_listings
           WHERE type = 'buy'
             AND active = true
-            AND tradable_item_listings.tradable_item_id = get_item.item_id
+            AND tradable_item_listings.tradable_item__id = get_item.item_id
             GROUP BY tradable_item_listings.batched_by, tradable_item_listings.cost
             ORDER BY
               tradable_item_listings.cost DESC,
@@ -216,7 +216,7 @@ CREATE FUNCTION api.get_item(item_id BIGINT)
           FROM app.tradable_item_listings
           WHERE type = 'sell'
             AND active = true
-            AND tradable_item_listings.tradable_item_id = get_item.item_id
+            AND tradable_item_listings.tradable_item__id = get_item.item_id
             GROUP BY tradable_item_listings.batched_by, tradable_item_listings.cost
             ORDER BY
               tradable_item_listings.cost ASC,

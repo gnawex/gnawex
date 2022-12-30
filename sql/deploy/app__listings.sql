@@ -7,28 +7,28 @@ BEGIN;
 CREATE TYPE app.LISTING_TYPE AS ENUM ('buy', 'sell');
 
 CREATE TABLE app.tradable_item_listings (
-  id               BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  id                 BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 
   -- Foreign Keys
-  tradable_item_id BIGINT REFERENCES app.tradable_items (id),
-  user_id          BIGINT REFERENCES app.users (user_id),
+  tradable_item__id  BIGINT REFERENCES app.tradable_items (id),
+  user_id            BIGINT REFERENCES app.users (user_id),
 
-  type             app.LISTING_TYPE NOT NULL,
-  batched_by       SMALLINT NOT NULL,
-  unit_quantity    INT NOT NULL,
-  cost             BIGINT NOT NULL CHECK (cost >= 0),
-  active           BOOLEAN DEFAULT true NOT NULL,
+  type               app.LISTING_TYPE NOT NULL,
+  batched_by         SMALLINT NOT NULL,
+  unit_quantity      INT NOT NULL,
+  cost               BIGINT NOT NULL CHECK (cost >= 0),
+  active             BOOLEAN DEFAULT true NOT NULL,
 
   -- Timestamps
-  created_at       TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
-  updated_at       TIMESTAMPTZ DEFAULT current_timestamp NOT NULL
+  created_at         TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
+  updated_at         TIMESTAMPTZ
 );
 
 COMMENT ON TABLE app.tradable_item_listings IS
   'A buy/sell listing to be matched by with another by GNAWEX';
 
 CREATE INDEX active_id
-  ON app.tradable_item_listings (tradable_item_id)
+  ON app.tradable_item_listings (tradable_item__id)
   WHERE active = true;
 
 GRANT SELECT ON TABLE app.tradable_item_listings TO anon, verified_user;

@@ -4,7 +4,7 @@ BEGIN;
 
 SELECT
     id,
-    tradable_item_id,
+    tradable_item__id,
     user_id,
     unit_quantity,
     cost,

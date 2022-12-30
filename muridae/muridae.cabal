@@ -35,6 +35,7 @@ common common-deps
 common common-warnings
     ghc-options:
         -Wall
+        -Werror
 
 library
     import:
@@ -53,17 +54,20 @@ library
       -- DB
       , DB
       , DB.TradableItem
+      , DB.TradableItemListings
       , DB.Types
 
       -- Routes
       , MuridaeWeb.Routes
       , MuridaeWeb.Routes.Items
+      , MuridaeWeb.Routes.ItemListings
       , MuridaeWeb.Routes.Admin.Items
 
       -- Handlers
       , MuridaeWeb.Handlers.Items.Create
       , MuridaeWeb.Handlers.Items.Index
       , MuridaeWeb.Handlers.Items.Types
+      , MuridaeWeb.Handlers.Items.Listings.Index
 
       , MuridaeWeb.Types
 

@@ -4,20 +4,25 @@
 {-# LANGUAGE ExplicitNamespaces #-}
 {-# LANGUAGE TypeOperators #-}
 
-module MuridaeWeb.Routes.Items where
+module MuridaeWeb.Routes.ItemListings where
 
 import GHC.Generics (Generic)
-import MuridaeWeb.Handlers.Items.Types (TradableItem)
-import qualified MuridaeWeb.Routes.ItemListings as ItemListings
 import Servant (JSON)
 import Servant.API.Generic (type (:-))
 import Servant.API.NamedRoutes (NamedRoutes)
 import Servant.API.Verbs (Get)
+import MuridaeWeb.Handlers.Items.Listings.Index (TradableItemListing)
+import Servant.API.Capture (Capture)
+import MuridaeWeb.Handlers.Items.Types (TradableItemId)
+import Servant.API (type (:>))
 
 type Routes = NamedRoutes Routes'
 
 data Routes' mode = Routes'
-  { indexItems :: mode :- Get '[JSON] [TradableItem]
-  , listings :: mode :- ItemListings.Routes
+  { index ::
+      mode
+        :- Capture "item_id" TradableItemId
+        :> "listings"
+        :> Get '[JSON] [TradableItemListing]
   }
   deriving stock (Generic)

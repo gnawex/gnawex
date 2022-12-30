@@ -11,12 +11,13 @@ import Data.Int (Int32)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import GHC.Generics (Generic)
+import Servant.API (FromHttpApiData)
 
-newtype ItemId = ItemId Int32
-  deriving (ToJSON) via Int32
+newtype TradableItemId = TradableItemId Int32
+  deriving (ToJSON, FromHttpApiData) via Int32
 
 data TradableItem = TradableItem
-  { id :: ItemId
+  { id :: TradableItemId
   , name :: Text
   , description :: Text
   , wiki_link :: Text

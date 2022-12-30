@@ -19,16 +19,19 @@ import Effectful (Eff, IOE, runEff)
 import Effectful.Beam (runDB)
 import Effectful.Error.Static (Error, runErrorNoCallStack)
 import Effectful.Reader.Static (runReader)
-import Muridae.Environment (MuridaeEnv (MuridaeEnv), getMuridaeEnv, pool)
+import Muridae.Environment (MuridaeEnv, getMuridaeEnv, pool)
 import qualified MuridaeWeb.Handlers.Items.Create as ItemHandler
-import MuridaeWeb.Handlers.Items.Index (indexItems)
+import qualified MuridaeWeb.Handlers.Items.Index as ItemHandler
+import qualified MuridaeWeb.Handlers.Items.Listings.Index as ListingHandler
 import MuridaeWeb.Routes (
   API (API, adminRoutes, publicRoutes),
   AdminRoutes (AdminRoutes, items),
   PublicRoutes (PublicRoutes, items),
  )
 import qualified MuridaeWeb.Routes.Admin.Items as AdminItems
-import MuridaeWeb.Routes.Items (index)
+import MuridaeWeb.Routes.ItemListings (index)
+import qualified MuridaeWeb.Routes.ItemListings as ItemListings
+import MuridaeWeb.Routes.Items (indexItems)
 import qualified MuridaeWeb.Routes.Items as Items
 import MuridaeWeb.Types (Handler')
 import qualified Network.Wai.Handler.Warp as Warp
@@ -49,13 +52,17 @@ muridaeServer =
   API
     { publicRoutes =
         PublicRoutes
-          { items = Items.Routes'{index = indexItems}
+          { items =
+              Items.Routes'
+                { indexItems = ItemHandler.indexItems
+                , listings = ItemListings.Routes'{index = ListingHandler.index}
+                }
           }
     , adminRoutes =
         AdminRoutes
           { items =
               AdminItems.Routes'
-                { index = indexItems
+                { index = ItemHandler.indexItems
                 , create = ItemHandler.create
                 }
           }
@@ -69,8 +76,7 @@ runMuridae =
     (Warp.run 8080 . mkServer)
 
 shutdownMuridae :: MuridaeEnv -> Eff '[IOE] ()
-shutdownMuridae (MuridaeEnv pool) =
-  liftIO $ Pool.destroyAllResources pool
+shutdownMuridae = liftIO . Pool.destroyAllResources . pool
 
 effToHandler :: forall (a :: Type). Eff '[Error ServerError, IOE] a -> Handler a
 effToHandler computation = do

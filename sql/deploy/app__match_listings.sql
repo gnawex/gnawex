@@ -20,7 +20,7 @@ BEGIN
   -- Ok I know this word doesn't exist but I don't know what else to call it.
   WITH matches_cte AS (
     -- Looks for matching listing(s) based on the following:
-    -- 1. Same `item_id`
+    -- 1. Same `tradable_item__id`
     -- 2. Opposite listing type. e.g if the matchee is BUY, it'll look for SELL
     --    and vice versa.
     -- 3. Listings not created by the matchee's user
@@ -31,11 +31,11 @@ BEGIN
         id,
         unit_quantity,
         batched_by,
-        item_id,
+        tradable_item__id,
         user_id,
         sum(unit_quantity) OVER (ORDER BY id ASC) AS running_amount
       FROM app.tradable_item_listings
-      WHERE item_id = NEW.item_id
+      WHERE tradable_item__id = NEW.tradable_item__id
         AND active = TRUE
         AND batched_by = NEW.batched_by
         AND type = (
@@ -47,7 +47,7 @@ BEGIN
         AND cost = NEW.cost
   ), total_cte AS (
     -- Further filters the matches to fulfill the matchee's unit_quantity.
-    SELECT id, unit_quantity, user_id, running_amount, sum(unit_quantity) OVER (partition BY item_id) AS total_unit_quantity
+    SELECT id, unit_quantity, user_id, running_amount, sum(unit_quantity) OVER (partition BY tradable_item__id) AS total_unit_quantity
       FROM matches_cte
       WHERE running_amount - unit_quantity <= NEW.unit_quantity
   ), update_matchee AS (
@@ -56,7 +56,7 @@ BEGIN
     UPDATE app.tradable_item_listings
       SET unit_quantity = greatest(total_cte.running_amount - total_cte.total_unit_quantity, 0) :: INT
       FROM total_cte
-      WHERE listings.id = NEW.id
+      WHERE tradable_item_listings.id = NEW.id
   ), update_matches AS (
    -- Updates the matches after being matched with the matchee.
     UPDATE app.tradable_item_listings
@@ -93,10 +93,10 @@ BEGIN
           END
         )
         FROM total_cte
-        WHERE listings.id = total_cte.id
+        WHERE tradable_item_listings.id = total_cte.id
   )
   INSERT
-    INTO app.transactions (buy_order, sell_order, buyer_id, seller_id, unit_quantity)
+    INTO app.transactions (buy_order, sell_order, buyer_id, seller_id, quantity)
     (
       SELECT
         CASE WHEN NEW.type = 'buy' THEN NEW.id ELSE total_cte.id
