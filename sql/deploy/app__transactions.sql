@@ -17,8 +17,8 @@ CREATE TABLE app.transactions (
   quantity       BIGINT NOT NULL,
 
   -- This is here for convenience
-  buyer_id       BIGINT REFERENCES app.users (user_id),
-  seller_id      BIGINT REFERENCES app.users (user_id),
+  buyer_id       BIGINT REFERENCES app.users (id),
+  seller_id      BIGINT REFERENCES app.users (id),
 
   created_at     TIMESTAMPTZ DEFAULT current_timestamp NOT NULL
 );

@@ -11,7 +11,7 @@ CREATE TABLE app.tradable_item_listings (
 
   -- Foreign Keys
   tradable_item__id  BIGINT REFERENCES app.tradable_items (id),
-  user_id            BIGINT REFERENCES app.users (user_id),
+  user__id           BIGINT REFERENCES app.users (id),
 
   type               app.LISTING_TYPE NOT NULL,
   batched_by         SMALLINT NOT NULL,
@@ -50,7 +50,7 @@ CREATE FUNCTION app.set_listing_user_id()
       SELECT app.current_user_id() INTO current_user_id;
 
       IF current_user_id IS NOT NULL THEN
-        NEW.user_id := current_user_id;
+        NEW.user__id := current_user_id;
 
         RETURN NEW;
       ELSE

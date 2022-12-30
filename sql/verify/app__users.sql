@@ -2,7 +2,7 @@
 
 BEGIN;
 
-SELECT user_id, hunter_id, username, password, role
+SELECT id, hunter_id, username, password, role
   FROM app.users
   WHERE false;
 

@@ -50,7 +50,11 @@ muridaeServer =
           { items =
               Items.Routes'
                 { indexItems = ItemHandler.indexItems
-                , listings = ItemListing.Routes'{index = ListingHandler.index}
+                , listings =
+                    ItemListing.Routes'
+                      { index = ListingHandler.index
+                      , create = ListingHandler.create
+                      }
                 }
           }
     , adminRoutes =

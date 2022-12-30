@@ -32,7 +32,7 @@ BEGIN
         unit_quantity,
         batched_by,
         tradable_item__id,
-        user_id,
+        user__id,
         sum(unit_quantity) OVER (ORDER BY id ASC) AS running_amount
       FROM app.tradable_item_listings
       WHERE tradable_item__id = NEW.tradable_item__id
@@ -43,11 +43,11 @@ BEGIN
                ELSE 'buy'
           END
         ) :: app.LISTING_TYPE
-        AND user_id != NEW.user_id
+        AND user__id != NEW.user__id
         AND cost = NEW.cost
   ), total_cte AS (
     -- Further filters the matches to fulfill the matchee's unit_quantity.
-    SELECT id, unit_quantity, user_id, running_amount, sum(unit_quantity) OVER (partition BY tradable_item__id) AS total_unit_quantity
+    SELECT id, unit_quantity, user__id, running_amount, sum(unit_quantity) OVER (partition BY tradable_item__id) AS total_unit_quantity
       FROM matches_cte
       WHERE running_amount - unit_quantity <= NEW.unit_quantity
   ), update_matchee AS (
@@ -103,9 +103,9 @@ BEGIN
         END AS buy_order,
         CASE WHEN NEW.type = 'buy' THEN total_cte.id ELSE NEW.id
         END AS sell_order,
-        CASE WHEN NEW.type = 'buy' THEN NEW.user_id ELSE total_cte.user_id
+        CASE WHEN NEW.type = 'buy' THEN NEW.user__id ELSE total_cte.user__id
         END AS buyer_id,
-        CASE WHEN NEW.type = 'buy' THEN total_cte.user_id ELSE NEW.user_id
+        CASE WHEN NEW.type = 'buy' THEN total_cte.user__id ELSE NEW.user__id
         END AS seller_id,
         least(total_cte.unit_quantity, NEW.unit_quantity) AS unit_quantity
         FROM total_cte

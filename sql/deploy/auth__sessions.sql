@@ -10,7 +10,7 @@ SET LOCAL ROLE auth;
 CREATE TABLE auth.sessions (
   token TEXT NOT NULL PRIMARY KEY
         DEFAULT encode(gen_random_bytes(32), 'base64'),
-  user_id INTEGER REFERENCES app.users (user_id),
+  user_id INTEGER REFERENCES app.users (id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
   expires_on TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp() + '15min' :: INTERVAL,
 
@@ -64,7 +64,7 @@ CREATE FUNCTION auth.login(username CITEXT, password TEXT)
   SECURITY DEFINER
   AS $$
     INSERT INTO auth.active_sessions(user_id)
-      SELECT user_id
+      SELECT id
       FROM app.users
       WHERE username = login.username
         AND password = crypt(login.password, password)

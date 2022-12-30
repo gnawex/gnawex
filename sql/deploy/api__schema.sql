@@ -17,7 +17,7 @@ GRANT USAGE ON SCHEMA api TO anon, verified_user;
 --------------------------------------------------------------------------------
 
 CREATE VIEW api.users AS
-  SELECT user_id, username
+  SELECT id, username
     FROM app.users;
 
 GRANT SELECT, UPDATE(username) ON api.users TO verified_user;
@@ -25,7 +25,7 @@ GRANT SELECT, UPDATE(username) ON api.users TO verified_user;
 --------------------------------------------------------------------------------
 
 CREATE TYPE api.user AS (
-  user_id   BIGINT,
+  id   BIGINT,
   hunter_id BIGINT,
   username  TEXT
 );
@@ -35,9 +35,9 @@ CREATE FUNCTION api.current_user()
   LANGUAGE sql
   SECURITY DEFINER
   AS $$
-    SELECT user_id, hunter_id, username
+    SELECT id, hunter_id, username
       FROM app.users
-      WHERE user_id = app.current_user_id();
+      WHERE id = app.current_user_id();
   $$;
 
 COMMENT ON FUNCTION api.current_user IS
@@ -168,7 +168,7 @@ GRANT SELECT ON api.transactions TO verified_user;
 CREATE VIEW api.tradable_item_listings AS
   SELECT
       tradable_item__id,
-      user_id,
+      user__id,
       unit_quantity,
       cost,
       type,

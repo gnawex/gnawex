@@ -16,15 +16,15 @@ DROP FUNCTION app.current_user_id;
 
 ALTER TABLE app.users DISABLE ROW LEVEL SECURITY;
 
-REVOKE ALL ON app.users_user_id_seq FROM api;
+REVOKE ALL ON app.users_id_seq FROM api;
 REVOKE
-    SELECT (user_id, username, hunter_id, role),
+    SELECT (id, username, hunter_id, role),
     INSERT (username, password, hunter_id, role),
     UPDATE (username, password)
   ON TABLE app.users
   FROM api;
 
-REVOKE REFERENCES, SELECT (user_id, username, password)
+REVOKE REFERENCES, SELECT (id, username, password)
   ON TABLE app.users
   FROM auth;
 
