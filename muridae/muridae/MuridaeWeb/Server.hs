@@ -10,8 +10,6 @@ import Effectful.Beam (runDB)
 import Effectful.Error.Static (Error, runErrorNoCallStack)
 import Effectful.Reader.Static (runReader)
 import Muridae.Environment (MuridaeEnv, getMuridaeEnv, pool)
-import MuridaeWeb.Handler.Item.Create qualified as ItemHandler
-import MuridaeWeb.Handler.Item.Index qualified as ItemHandler
 import MuridaeWeb.Handler.ItemListing qualified as ItemListingHandler
 import MuridaeWeb.Route (
   API (API, adminRoutes, publicRoutes),
@@ -27,6 +25,7 @@ import Network.Wai.Handler.Warp qualified as Warp
 import Servant (ServerError)
 import Servant.Server (Application, Handler)
 import Servant.Server.Generic (AsServerT, genericServeT)
+import qualified MuridaeWeb.Handler.Item as ItemHandler
 
 -- TODO: Generate docs
 
