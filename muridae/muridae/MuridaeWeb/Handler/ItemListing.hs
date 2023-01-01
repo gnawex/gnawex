@@ -5,13 +5,16 @@ module MuridaeWeb.Handler.ItemListing (
   index,
 ) where
 
-import DB.Types qualified as DB
 import Data.Coerce (coerce)
 import Data.Functor.Identity
 import Effectful (liftIO)
 import Effectful.Beam (queryDebug)
 import Effectful.Error.Static (throwError)
-import Muridae.Model.TradableItemListing qualified as Model.ItemListing
+import Muridae.User.Types (UserId (UserId), PrimaryKey (UserPk))
+import Muridae.Item.Types (ItemId (ItemId), PrimaryKey (ItemPk))
+import Muridae.ItemListing.Model qualified as ItemListingModel
+import Muridae.ItemListing.Types (ItemListing, ListingType (Buy, Sell))
+import Muridae.ItemListing.Types qualified as ItemListingModel
 import MuridaeWeb.Handler.Item.Types (TradableItemId (TradableItemId))
 import MuridaeWeb.Handler.ItemListing.Types (
   CreateTradableItemListing,
@@ -34,7 +37,7 @@ import MuridaeWeb.Handler.ItemListing.Types (
   TradableItemListingId (TradableItemListingId),
   TradableItemListingType (BUY, SELL),
  )
-import MuridaeWeb.Handler.User (UserId (UserId))
+import MuridaeWeb.Handler.User qualified as UserHandler (UserId (UserId))
 import MuridaeWeb.Types (Handler')
 import Servant (ServerError (ServerError))
 import Servant.API.ContentTypes (NoContent (NoContent))
@@ -44,14 +47,14 @@ import Servant.API.ContentTypes (NoContent (NoContent))
 
 index :: Handler' [TradableItemListing]
 index =
-  queryDebug putStrLn Model.ItemListing.all
+  queryDebug putStrLn ItemListingModel.all
     >>= pure . (fmap parseDBItemListing)
 
 -- | Get all the listings under a tradable item
 getListingsOfItem :: TradableItemId -> Handler' ResListingsUnderItem
 getListingsOfItem itemId =
   queryDebug putStrLn $ do
-    (pooledBuy, pooledSell) <- Model.ItemListing.getListingsUnderItem (coerce itemId)
+    (pooledBuy, pooledSell) <- ItemListingModel.getListingsUnderItem (coerce itemId)
 
     let pooledBuy' = toPooledListing <$> pooledBuy
         pooledSell' = toPooledListing <$> pooledSell
@@ -62,19 +65,19 @@ getListingsOfItem itemId =
 
 -- TODO: Use auth context
 create ::
-  Maybe UserId ->
+  Maybe UserHandler.UserId ->
   CreateTradableItemListing ->
   Handler' NoContent
 create userId params =
   case userId of
     Just userId' ->
-      queryDebug print (Model.ItemListing.create userId' params)
+      queryDebug print (ItemListingModel.create userId' params)
         >>= liftIO . print
         >> pure NoContent
     Nothing -> pure NoContent
 
 updateStatus ::
-  Maybe UserId ->
+  Maybe UserHandler.UserId ->
   TradableItemListingId ->
   ReqStatus ->
   Handler' TradableItemListing
@@ -84,7 +87,7 @@ updateStatus userId listingId params =
       dbListing <-
         queryDebug
           putStrLn
-          (Model.ItemListing.updateStatus userId' listingId params)
+          (ItemListingModel.updateStatus userId' listingId params)
 
       case dbListing of
         Just dbListing' -> pure $ parseDBItemListing dbListing'
@@ -95,7 +98,7 @@ updateStatus userId listingId params =
 -------------------------------------------------------------------------------
 -- Helper functions
 
-parseDBItemListing :: DB.TradableItemListing Identity -> TradableItemListing
+parseDBItemListing :: ItemListing Identity -> TradableItemListing
 parseDBItemListing dbItemListing =
   TradableItemListing
     { id = coerce dbItemListing._id
@@ -110,8 +113,8 @@ parseDBItemListing dbItemListing =
     , updated_at = dbItemListing._updated_at
     }
 
-fromDbListingType :: DB.ListingType -> TradableItemListingType
+fromDbListingType :: ListingType -> TradableItemListingType
 fromDbListingType dbListingType =
   case dbListingType of
-    DB.Buy -> BUY
-    DB.Sell -> SELL
+    Buy -> BUY
+    Sell -> SELL

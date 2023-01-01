@@ -70,9 +70,20 @@ library
       , DB
       , DB.Types
 
-      -- Models
-      , Muridae.Model.TradableItem
-      , Muridae.Model.TradableItemListing
+      -- Item Listings
+      , Muridae.ItemListing
+      , Muridae.ItemListing.Model
+      , Muridae.ItemListing.Types
+
+      -- Items
+      , Muridae.Item
+      , Muridae.Item.Model
+      , Muridae.Item.Types
+
+      -- Users
+      , Muridae.User
+      , Muridae.User.Model
+      , Muridae.User.Types
 
       -- Routes
       , MuridaeWeb.Route

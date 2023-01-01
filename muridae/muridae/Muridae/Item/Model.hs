@@ -1,8 +1,7 @@
-module Muridae.Model.TradableItem where
+module Muridae.Item.Model where
 
 import DB (muridaeDB)
 import DB.Types (muridaeTradableItems)
-import DB.Types qualified as DB (TradableItem (TradableItem))
 import Data.Functor.Identity (Identity)
 import Database.Beam.Postgres (Pg)
 import Database.Beam.Query (
@@ -17,15 +16,16 @@ import Database.Beam.Query (
  )
 
 import MuridaeWeb.Handler.Item.Types qualified as Handler
+import Muridae.Item.Types (Item (Item))
 
-all :: Pg [DB.TradableItem Identity]
+all :: Pg [Item Identity]
 all = runSelectReturningList (select (all_ (muridaeTradableItems muridaeDB)))
 
 create :: Handler.ReqTradableItem -> Pg ()
 create tradableItem = do
     runInsert . insert (muridaeTradableItems muridaeDB) $
         insertExpressions
-            [ DB.TradableItem
+            [ Item
                 default_
                 (val_ tradableItem.name)
                 (val_ tradableItem.description)
