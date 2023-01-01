@@ -70,9 +70,20 @@ library
       , DB
       , DB.Types
 
-      -- Models
-      , Muridae.Model.TradableItem
-      , Muridae.Model.TradableItemListing
+      -- Item Listings
+      , Muridae.ItemListing
+      , Muridae.ItemListing.Model
+      , Muridae.ItemListing.Types
+
+      -- Items
+      , Muridae.Item
+      , Muridae.Item.Model
+      , Muridae.Item.Types
+
+      -- Users
+      , Muridae.User
+      , Muridae.User.Model
+      , Muridae.User.Types
 
       -- Routes
       , MuridaeWeb.Route
@@ -81,9 +92,9 @@ library
       , MuridaeWeb.Route.Admin.Item
 
       -- Handlers
-      , MuridaeWeb.Handler.Item.Create
-      , MuridaeWeb.Handler.Item.Index
+      , MuridaeWeb.Handler.Item
       , MuridaeWeb.Handler.Item.Types
+
       , MuridaeWeb.Handler.ItemListing
       , MuridaeWeb.Handler.ItemListing.Types
       , MuridaeWeb.Handler.User

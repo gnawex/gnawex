@@ -1,9 +1,10 @@
-module Muridae.Model.TradableItemListing where
+module Muridae.ItemListing.Model where
 
 import DB (muridaeDB)
 import DB.Types qualified as DB
 import Data.Coerce (coerce)
 import Data.Functor.Identity (Identity)
+import Data.Int (Int16, Int32)
 import Database.Beam.Postgres (Pg, Postgres)
 import Database.Beam.Query (
   SqlEq ((==?.)),
@@ -32,25 +33,27 @@ import Database.Beam.Query (
   (<-.),
   (==.),
  )
+import Database.Beam.Schema (primaryKey)
+import Muridae.Item.Types (ItemId (ItemId), PrimaryKey (ItemPk))
+import Muridae.ItemListing.Types (
+  ItemListing (ItemListing, _active, _batched_by, _cost, _tradable_item, _type, _unit_quantity),
+  ItemListingId (ItemListingId),
+  ListingType (Buy, Sell),
+  PrimaryKey (ItemListingPk),
+ )
+import Muridae.User.Types (PrimaryKey (UserPk), UserId (UserId))
 import MuridaeWeb.Handler.Item.Types qualified as Handler
 import MuridaeWeb.Handler.ItemListing.Types qualified as Handler
 import MuridaeWeb.Handler.User qualified as Handler
 
-import DB.Types (
-  ListingType (Buy, Sell),
-  TradableItemId (TradableItemId),
- )
-import Data.Int (Int16, Int32)
-import Database.Beam.Schema (primaryKey)
-
 -------------------------------------------------------------------------------
 -- Item listing DB functions
 
-all :: Pg [DB.TradableItemListing Identity]
+all :: Pg [ItemListing Identity]
 all = runSelectReturningList (select (all_ (DB.muridaeTradableItemListings muridaeDB)))
 
 getListingsUnderItem ::
-  TradableItemId ->
+  ItemId ->
   Pg
     ( [(ListingType, Int32, Int16, Int32)]
     , [(ListingType, Int32, Int16, Int32)]
@@ -68,15 +71,15 @@ create ::
 create userId handlerParams = do
   runInsert . insert (DB.muridaeTradableItemListings muridaeDB) $
     insertExpressions
-      [ DB.TradableItemListing
+      [ ItemListing
           default_
           -- TODO: Maybe get rid of this, and look for the item first via query
-          ( DB.TradableItemIdPk
+          ( ItemPk
               . val_
-              . coerce @Handler.TradableItemId @TradableItemId
+              . coerce @Handler.TradableItemId @ItemId
               $ handlerParams.item_id
           )
-          (DB.UserIdPk . val_ . coerce $ userId)
+          (UserPk . val_ . coerce $ userId)
           (val_ . fromHandlerListingType $ handlerParams.listing_type)
           (val_ handlerParams.batched_by)
           (val_ handlerParams.unit_quantity)
@@ -91,12 +94,8 @@ updateStatus ::
   Handler.UserId ->
   Handler.TradableItemListingId ->
   Handler.ReqStatus ->
-  Pg (Maybe (DB.TradableItemListing Identity))
+  Pg (Maybe (ItemListing Identity))
 updateStatus _userId listingId params = do
-  -- listing <-
-  --   runSelectReturningOne $
-  --     lookup_ (DB.muridaeTradableItemListings muridaeDB) (toListingPk listingId)
-
   runUpdate $
     update
       (DB.muridaeTradableItemListings muridaeDB)
@@ -111,9 +110,9 @@ updateStatus _userId listingId params = do
   pure updatedListing
  where
   toListingPk listingId' =
-    DB.TradableItemListingIdPk
+    ItemListingPk
       . val_
-      . coerce @Handler.TradableItemListingId @DB.TradableItemListingId
+      . coerce @Handler.TradableItemListingId @ItemListingId
       $ listingId'
 
 -------------------------------------------------------------------------------
@@ -125,7 +124,7 @@ updateStatus _userId listingId params = do
 -}
 groupListings ::
   ListingType ->
-  TradableItemId ->
+  ItemId ->
   SqlSelect
     Postgres
     (ListingType, Int32, Int16, Int32)
@@ -155,7 +154,7 @@ groupListings listingType itemId =
     $ filter_'
       ( \listing ->
           (listing._type ==?. (val_ listingType))
-            &&?. (listing._tradable_item ==?. (DB.TradableItemIdPk . val_ . coerce $ itemId))
+            &&?. (listing._tradable_item ==?. (ItemPk . val_ . coerce $ itemId))
             &&?. (sqlBool_ listing._active)
       )
     $ all_ (DB.muridaeTradableItemListings muridaeDB)
@@ -163,7 +162,7 @@ groupListings listingType itemId =
 -------------------------------------------------------------------------------
 -- Non-query helper functions
 
-fromHandlerListingType :: Handler.TradableItemListingType -> DB.ListingType
+fromHandlerListingType :: Handler.TradableItemListingType -> ListingType
 fromHandlerListingType = \case
-  Handler.BUY -> DB.Buy
-  Handler.SELL -> DB.Sell
+  Handler.BUY -> Buy
+  Handler.SELL -> Sell
