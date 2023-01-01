@@ -1,6 +1,6 @@
 module Main where
 
-import qualified MuridaeWeb.Server as Server
+import MuridaeWeb.Server qualified as Server
 
 main :: IO ()
 main = Server.runMuridae

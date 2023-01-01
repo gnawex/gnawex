@@ -81,6 +81,7 @@ CREATE FUNCTION app.adjust_item_listing()
       NEW.cost := NEW.cost / divisor;
       NEW.batched_by := NEW.batched_by / divisor;
 
+
       RETURN NEW;
     END;
   $$;

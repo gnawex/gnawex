@@ -1,4 +1,4 @@
-module DB.TradableItemListing where
+module Muridae.Model.TradableItemListing where
 
 import DB (muridaeDB)
 import DB.Types qualified as DB
@@ -21,11 +21,16 @@ import Database.Beam.Query (
   orderBy_,
   runInsert,
   runSelectReturningList,
+  runSelectReturningOne,
+  runUpdate,
   select,
   sqlBool_,
   sum_,
+  update,
   val_,
   (&&?.),
+  (<-.),
+  (==.),
  )
 import MuridaeWeb.Handler.Item.Types qualified as Handler
 import MuridaeWeb.Handler.ItemListing.Types qualified as Handler
@@ -36,6 +41,7 @@ import DB.Types (
   TradableItemId (TradableItemId),
  )
 import Data.Int (Int16, Int32)
+import Database.Beam.Schema (primaryKey)
 
 -------------------------------------------------------------------------------
 -- Item listing DB functions
@@ -80,6 +86,35 @@ create userId handlerParams = do
           (val_ Nothing)
       ]
  where
+
+updateStatus ::
+  Handler.UserId ->
+  Handler.TradableItemListingId ->
+  Handler.ReqStatus ->
+  Pg (Maybe (DB.TradableItemListing Identity))
+updateStatus _userId listingId params = do
+  -- listing <-
+  --   runSelectReturningOne $
+  --     lookup_ (DB.muridaeTradableItemListings muridaeDB) (toListingPk listingId)
+
+  runUpdate $
+    update
+      (DB.muridaeTradableItemListings muridaeDB)
+      (\listing -> mconcat [listing._active <-. val_ params.active])
+      (\listing -> primaryKey listing ==. (toListingPk listingId))
+
+  updatedListing <-
+    runSelectReturningOne $
+      select $
+        all_ (DB.muridaeTradableItemListings muridaeDB)
+
+  pure updatedListing
+ where
+  toListingPk listingId' =
+    DB.TradableItemListingIdPk
+      . val_
+      . coerce @Handler.TradableItemListingId @DB.TradableItemListingId
+      $ listingId'
 
 -------------------------------------------------------------------------------
 -- Query helper functions

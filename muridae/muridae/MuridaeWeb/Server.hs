@@ -46,14 +46,14 @@ muridaeServer =
   let itemRoutes =
         ItemRoute.Routes'
           { index = ItemHandler.indexItems
-          , getItemListings = ItemListingHandler.getListingsOfItem
+          , getListingsUnderItem = ItemListingHandler.getListingsOfItem
           }
 
       itemListingRoutes =
-        -- TODO: Remove undefined for actual handlers
         ItemListingRoute.Routes'
-          { index = undefined
+          { index = ItemListingHandler.index
           , create = ItemListingHandler.create
+          , updateStatus = ItemListingHandler.updateStatus
           }
 
       adminItemRoutes =

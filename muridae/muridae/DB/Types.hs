@@ -102,7 +102,12 @@ deriving instance Show (PrimaryKey TradableItem Identity)
 
 newtype TradableItemListingId = TradableItemListingId Int32
   deriving stock (Generic, Show)
-  deriving (FromBackendRow Postgres) via Int32
+  deriving
+    ( FromBackendRow Postgres
+    , HasSqlEqualityCheck Postgres
+    , HasSqlValueSyntax PgValueSyntax
+    )
+    via Int32
 
 instance Table TradableItemListing where
   newtype PrimaryKey TradableItemListing f
