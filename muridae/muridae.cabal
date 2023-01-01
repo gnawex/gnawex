@@ -18,7 +18,7 @@ maintainer:         software@sekun.net
 extra-source-files: CHANGELOG.md
 
 common common-default-language
-    default-language: Haskell2010
+    default-language: GHC2021
 
 common common-base
     build-depends:
@@ -35,6 +35,21 @@ common common-deps
 common common-warnings
     ghc-options:
         -Wall
+        -Werror
+
+common common-extensions
+    default-extensions:
+        DataKinds
+        DeriveAnyClass
+        DerivingStrategies
+        DerivingVia
+        DuplicateRecordFields
+        ExplicitNamespaces
+        ImportQualifiedPost
+        LambdaCase
+        OverloadedRecordDot
+        OverloadedStrings
+        TypeFamilies
 
 library
     import:
@@ -42,27 +57,36 @@ library
       , common-default-language
       , common-deps
       , common-warnings
+      , common-extensions
 
     exposed-modules:
         MuridaeWeb.Server
 
     other-modules:
-        Muridae.Environment
+        Effectful.Beam
+      , Muridae.Environment
 
       -- DB
-      , Muridae.DB
-      , Muridae.DB.TradableItem
-      , Muridae.DB.Types
+      , DB
+      , DB.Types
+
+      -- Models
+      , Muridae.Model.TradableItem
+      , Muridae.Model.TradableItemListing
 
       -- Routes
-      , MuridaeWeb.Routes
-      , MuridaeWeb.Routes.Items
-      , MuridaeWeb.Routes.Admin.Items
+      , MuridaeWeb.Route
+      , MuridaeWeb.Route.Item
+      , MuridaeWeb.Route.ItemListing
+      , MuridaeWeb.Route.Admin.Item
 
       -- Handlers
-      , MuridaeWeb.Handlers.Items.Create
-      , MuridaeWeb.Handlers.Items.Index
-      , MuridaeWeb.Handlers.Items.Types
+      , MuridaeWeb.Handler.Item.Create
+      , MuridaeWeb.Handler.Item.Index
+      , MuridaeWeb.Handler.Item.Types
+      , MuridaeWeb.Handler.ItemListing
+      , MuridaeWeb.Handler.ItemListing.Types
+      , MuridaeWeb.Handler.User
 
       , MuridaeWeb.Types
 
@@ -96,21 +120,16 @@ library
 
 executable muridae-server
     import:
-        common-base,
-        common-default-language,
-        common-warnings
+        common-base
+      , common-default-language
+      , common-warnings
+      , common-extensions
 
     main-is:          Main.hs
 
-    -- Modules included in this executable, other than Main.
-    -- other-modules:
-
-    -- LANGUAGE extensions used by modules in this package.
-    -- other-extensions:
     build-depends:
-        muridae,
-
-        wai  ^>=3.2,
-        warp ^>=3.3,
+        muridae
+      , wai  ^>=3.2
+      , warp ^>=3.3
 
     hs-source-dirs:   muridae-server

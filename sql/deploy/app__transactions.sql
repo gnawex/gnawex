@@ -7,8 +7,9 @@ BEGIN;
 
 CREATE TABLE app.transactions (
   transaction_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  buy_order      BIGINT REFERENCES app.listings(listing_id),
-  sell_order     BIGINT REFERENCES app.listings(listing_id),
+
+  buy_order      BIGINT REFERENCES app.tradable_item_listings(id),
+  sell_order     BIGINT REFERENCES app.tradable_item_listings(id),
 
   -- Since we subtract the original `quantity` in the listing. Need this to
   -- keep a record so that we can sum all transactions which gives us the
@@ -16,8 +17,8 @@ CREATE TABLE app.transactions (
   quantity       BIGINT NOT NULL,
 
   -- This is here for convenience
-  buyer_id       BIGINT REFERENCES app.users (user_id),
-  seller_id      BIGINT REFERENCES app.users (user_id),
+  buyer_id       BIGINT REFERENCES app.users (id),
+  seller_id      BIGINT REFERENCES app.users (id),
 
   created_at     TIMESTAMPTZ DEFAULT current_timestamp NOT NULL
 );

@@ -6,30 +6,35 @@ BEGIN;
 
 CREATE TYPE app.LISTING_TYPE AS ENUM ('buy', 'sell');
 
-CREATE TABLE app.listings (
-  listing_id BIGSERIAL PRIMARY KEY,
-  item_id    BIGINT REFERENCES app.tradable_items (id),
-  user_id    BIGINT REFERENCES app.users (user_id),
+CREATE TABLE app.tradable_item_listings (
+  id                 BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 
-  quantity   INT NOT NULL,
-  cost       BIGINT NOT NULL CHECK (cost >= 0),
-  type       app.LISTING_TYPE NOT NULL,
-  batch      INT NOT NULL,
-  is_active  BOOLEAN DEFAULT true NOT NULL,
+  -- Foreign Keys
+  tradable_item__id  BIGINT REFERENCES app.tradable_items (id),
+  user__id           BIGINT REFERENCES app.users (id),
 
-  created_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
-  updated_at TIMESTAMPTZ DEFAULT current_timestamp NOT NULL
+  type               app.LISTING_TYPE NOT NULL,
+  batched_by         SMALLINT NOT NULL,
+  unit_quantity      INT NOT NULL,
+  cost               INT NOT NULL CHECK (cost >= 0),
+  active             BOOLEAN DEFAULT true NOT NULL,
+
+  -- Timestamps
+  created_at         TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
+  updated_at         TIMESTAMPTZ
 );
 
-COMMENT ON TABLE app.listings IS
+COMMENT ON TABLE app.tradable_item_listings IS
   'A buy/sell listing to be matched by with another by GNAWEX';
 
-CREATE INDEX active_id ON app.listings (item_id) WHERE is_active = true;
+CREATE INDEX active_id
+  ON app.tradable_item_listings (tradable_item__id)
+  WHERE active = true;
 
-GRANT SELECT ON TABLE app.listings TO anon, verified_user;
-GRANT SELECT, UPDATE ON TABLE app.listings TO gnawex_merchant;
-GRANT SELECT, INSERT, UPDATE (is_active) ON TABLE app.listings TO api;
-GRANT ALL ON app.listings_listing_id_seq TO verified_user;
+GRANT SELECT ON TABLE app.tradable_item_listings TO anon, verified_user;
+GRANT SELECT, UPDATE ON TABLE app.tradable_item_listings TO gnawex_merchant;
+GRANT SELECT, INSERT, UPDATE (active) ON TABLE app.tradable_item_listings TO api;
+GRANT ALL ON app.tradable_item_listings_id_seq TO verified_user;
 
 --------------------------------------------------------------------------------
 
@@ -45,7 +50,7 @@ CREATE FUNCTION app.set_listing_user_id()
       SELECT app.current_user_id() INTO current_user_id;
 
       IF current_user_id IS NOT NULL THEN
-        NEW.user_id := current_user_id;
+        NEW.user__id := current_user_id;
 
         RETURN NEW;
       ELSE
@@ -57,39 +62,40 @@ CREATE FUNCTION app.set_listing_user_id()
 
 CREATE TRIGGER set_listing_user_id
   BEFORE INSERT
-    ON app.listings
+    ON app.tradable_item_listings
     FOR EACH ROW
       EXECUTE PROCEDURE app.set_listing_user_id();
 
 --------------------------------------------------------------------------------
 
-CREATE FUNCTION app.adjust_listing()
+CREATE FUNCTION app.adjust_item_listing()
   RETURNS TRIGGER
   LANGUAGE plpgsql
   AS $$
     DECLARE
       divisor INTEGER;
     BEGIN
-      SELECT gcd(NEW.cost, NEW.batch) INTO divisor;
+      SELECT gcd(NEW.cost, NEW.batched_by) INTO divisor;
 
-      NEW.quantity := NEW.quantity * divisor;
+      NEW.unit_quantity := NEW.unit_quantity * divisor;
       NEW.cost := NEW.cost / divisor;
-      NEW.batch := NEW.batch / divisor;
+      NEW.batched_by := NEW.batched_by / divisor;
+
 
       RETURN NEW;
     END;
   $$;
 
-COMMENT ON FUNCTION app.adjust_listing IS
+COMMENT ON FUNCTION app.adjust_item_listing IS
   'Reduces needless batch sizes, and makes other adjustments accordingly.';
 
-CREATE TRIGGER adjust_listing
+CREATE TRIGGER normalize_tradable_item_listing
   BEFORE INSERT
-    ON app.listings
+    ON app.tradable_item_listings
     FOR EACH ROW
-      EXECUTE PROCEDURE app.adjust_listing();
+      EXECUTE PROCEDURE app.adjust_item_listing();
 
-GRANT EXECUTE ON FUNCTION app.adjust_listing TO verified_user;
+GRANT EXECUTE ON FUNCTION app.adjust_item_listing TO verified_user;
 
 --------------------------------------------------------------------------------
 

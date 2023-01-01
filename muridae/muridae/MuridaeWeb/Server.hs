@@ -1,36 +1,29 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE ExplicitForAll #-}
-{-# LANGUAGE ExplicitNamespaces #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE TypeOperators #-}
-
 module MuridaeWeb.Server (mkServer, runMuridae) where
 
 import Control.Exception (bracket)
 import Control.Monad.Except (throwError)
 import Control.Monad.IO.Class (liftIO)
 import Data.Kind (Type)
-import qualified Data.Pool as Pool
+import Data.Pool qualified as Pool
 import Effectful (Eff, IOE, runEff)
+import Effectful.Beam (runDB)
 import Effectful.Error.Static (Error, runErrorNoCallStack)
 import Effectful.Reader.Static (runReader)
-import Muridae.Environment (MuridaeEnv (MuridaeEnv), getMuridaeEnv)
-import qualified MuridaeWeb.Handlers.Items.Create as ItemHandler
-import MuridaeWeb.Handlers.Items.Index (indexItems)
-import MuridaeWeb.Routes (
+import Muridae.Environment (MuridaeEnv, getMuridaeEnv, pool)
+import MuridaeWeb.Handler.Item.Create qualified as ItemHandler
+import MuridaeWeb.Handler.Item.Index qualified as ItemHandler
+import MuridaeWeb.Handler.ItemListing qualified as ItemListingHandler
+import MuridaeWeb.Route (
   API (API, adminRoutes, publicRoutes),
   AdminRoutes (AdminRoutes, items),
-  PublicRoutes (PublicRoutes, items),
+  PublicRoutes (PublicRoutes, itemListings, items),
  )
-import qualified MuridaeWeb.Routes.Admin.Items as AdminItems
-import MuridaeWeb.Routes.Items (index)
-import qualified MuridaeWeb.Routes.Items as Items
+import MuridaeWeb.Route.Admin.Item qualified as AdminItem
+import MuridaeWeb.Route.Item qualified as ItemRoute
+import MuridaeWeb.Route.ItemListing (index)
+import MuridaeWeb.Route.ItemListing qualified as ItemListingRoute
 import MuridaeWeb.Types (Handler')
-import qualified Network.Wai.Handler.Warp as Warp
+import Network.Wai.Handler.Warp qualified as Warp
 import Servant (ServerError)
 import Servant.Server (Application, Handler)
 import Servant.Server.Generic (AsServerT, genericServeT)
@@ -40,25 +33,45 @@ import Servant.Server.Generic (AsServerT, genericServeT)
 mkServer :: MuridaeEnv -> Application
 mkServer muridaeEnv =
   genericServeT
-    (\app -> effToHandler $ runReader muridaeEnv $ app)
+    ( \app ->
+        effToHandler $
+          runDB (pool muridaeEnv) $
+            runReader muridaeEnv $
+              app
+    )
     muridaeServer
 
 muridaeServer :: API (AsServerT Handler')
 muridaeServer =
-  API
-    { publicRoutes =
-        PublicRoutes
-          { items = Items.Routes'{index = indexItems}
+  let itemRoutes =
+        ItemRoute.Routes'
+          { index = ItemHandler.indexItems
+          , getListingsUnderItem = ItemListingHandler.getListingsOfItem
           }
-    , adminRoutes =
-        AdminRoutes
-          { items =
-              AdminItems.Routes'
-                { index = indexItems
-                , create = ItemHandler.create
-                }
+
+      itemListingRoutes =
+        ItemListingRoute.Routes'
+          { index = ItemListingHandler.index
+          , create = ItemListingHandler.create
+          , updateStatus = ItemListingHandler.updateStatus
           }
-    }
+
+      adminItemRoutes =
+        AdminItem.Routes'
+          { index = ItemHandler.indexItems
+          , create = ItemHandler.create
+          }
+   in API
+        { publicRoutes =
+            PublicRoutes
+              { items = itemRoutes
+              , itemListings = itemListingRoutes
+              }
+        , adminRoutes =
+            AdminRoutes
+              { items = adminItemRoutes
+              }
+        }
 
 runMuridae :: IO ()
 runMuridae =
@@ -68,8 +81,7 @@ runMuridae =
     (Warp.run 8080 . mkServer)
 
 shutdownMuridae :: MuridaeEnv -> Eff '[IOE] ()
-shutdownMuridae (MuridaeEnv pool) =
-  liftIO $ Pool.destroyAllResources pool
+shutdownMuridae = liftIO . Pool.destroyAllResources . pool
 
 effToHandler :: forall (a :: Type). Eff '[Error ServerError, IOE] a -> Handler a
 effToHandler computation = do

@@ -17,7 +17,7 @@ GRANT USAGE ON SCHEMA api TO anon, verified_user;
 --------------------------------------------------------------------------------
 
 CREATE VIEW api.users AS
-  SELECT user_id, username
+  SELECT id, username
     FROM app.users;
 
 GRANT SELECT, UPDATE(username) ON api.users TO verified_user;
@@ -25,7 +25,7 @@ GRANT SELECT, UPDATE(username) ON api.users TO verified_user;
 --------------------------------------------------------------------------------
 
 CREATE TYPE api.user AS (
-  user_id   BIGINT,
+  id   BIGINT,
   hunter_id BIGINT,
   username  TEXT
 );
@@ -35,9 +35,9 @@ CREATE FUNCTION api.current_user()
   LANGUAGE sql
   SECURITY DEFINER
   AS $$
-    SELECT user_id, hunter_id, username
+    SELECT id, hunter_id, username
       FROM app.users
-      WHERE user_id = app.current_user_id();
+      WHERE id = app.current_user_id();
   $$;
 
 COMMENT ON FUNCTION api.current_user IS
@@ -165,19 +165,19 @@ GRANT SELECT ON api.transactions TO verified_user;
 
 --------------------------------------------------------------------------------
 
-CREATE VIEW api.listings AS
+CREATE VIEW api.tradable_item_listings AS
   SELECT
-      item_id,
-      user_id,
-      quantity,
+      tradable_item__id,
+      user__id,
+      unit_quantity,
       cost,
       type,
-      batch,
-      is_active
-    FROM app.listings;
+      batched_by,
+      active
+    FROM app.tradable_item_listings;
 
-GRANT SELECT ON api.listings TO anon, verified_user;
-GRANT INSERT (item_id, quantity, cost, type, batch, is_active) ON api.listings TO verified_user;
+GRANT SELECT ON api.tradable_item_listings TO anon, verified_user;
+GRANT INSERT (tradable_item__id, unit_quantity, cost, type, batched_by, active) ON api.tradable_item_listings TO verified_user;
 
 --------------------------------------------------------------------------------
 
@@ -195,15 +195,15 @@ CREATE FUNCTION api.get_item(item_id BIGINT)
     -- header is so much easier.
     WITH buy_listings AS (
       WITH grouped_buy_orders AS (
-        SELECT listings.cost, sum(listings.quantity) AS quantity, listings.batch
-          FROM app.listings
+        SELECT tradable_item_listings.cost, sum(tradable_item_listings.unit_quantity) AS unit_quantity, tradable_item_listings.batched_by
+          FROM app.tradable_item_listings
           WHERE type = 'buy'
-            AND is_active = true
-            AND listings.item_id = get_item.item_id
-            GROUP BY listings.batch, listings.cost
-            ORDER BY
-              listings.cost DESC,
-              listings.batch ASC
+            AND active = true
+            AND tradable_item_listings.tradable_item__id = get_item.item_id
+          GROUP BY tradable_item_listings.batched_by, tradable_item_listings.cost
+          ORDER BY
+            tradable_item_listings.cost DESC,
+            tradable_item_listings.batched_by ASC
         FETCH FIRST 5 ROWS ONLY
      )
      -- JSON? Nah. Me, and my homies love JSONB.
@@ -212,15 +212,15 @@ CREATE FUNCTION api.get_item(item_id BIGINT)
        FROM grouped_buy_orders
     ), sell_listings AS (
       WITH grouped_sell_orders AS (
-        SELECT listings.cost, sum(listings.quantity) AS quantity, listings.batch
-          FROM app.listings
+        SELECT tradable_item_listings.cost, sum(tradable_item_listings.unit_quantity) AS unit_quantity, tradable_item_listings.batched_by
+          FROM app.tradable_item_listings
           WHERE type = 'sell'
-            AND is_active = true
-            AND listings.item_id = get_item.item_id
-            GROUP BY listings.batch, listings.cost
+            AND active = true
+            AND tradable_item_listings.tradable_item__id = get_item.item_id
+            GROUP BY tradable_item_listings.batched_by, tradable_item_listings.cost
             ORDER BY
-              listings.cost ASC,
-              listings.batch ASC
+              tradable_item_listings.cost ASC,
+              tradable_item_listings.batched_by ASC
         FETCH FIRST 5 ROWS ONLY
      )
      SELECT coalesce(jsonb_agg(row_to_json(grouped_sell_orders)), '[]' :: JSONB)

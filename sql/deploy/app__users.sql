@@ -28,9 +28,10 @@ COMMENT ON TYPE app.USER_ROLE IS
 --------------------------------------------------------------------------------
 
 CREATE TABLE app.users (
-  user_id   BIGSERIAL PRIMARY KEY,
-  hunter_id BIGSERIAL UNIQUE NOT NULL,
+  id   BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  hunter_id BIGINT UNIQUE NOT NULL,
   username  CITEXT UNIQUE NOT NULL,
+
   -- 72 character limit due to 'bf' hash
   password  TEXT NOT NULL
             CHECK (char_length(password) <= 72 AND char_length(password) >= 10),
@@ -41,18 +42,18 @@ CREATE TABLE app.users (
 COMMENT ON TABLE app.users IS
   'GNAWEX users';
 
-GRANT REFERENCES, SELECT (user_id, username, password)
+GRANT REFERENCES, SELECT (id, username, password)
   ON TABLE app.users
   TO auth;
 
 GRANT
-    SELECT (user_id, username, hunter_id, role),
+    SELECT (id, username, hunter_id, role),
     INSERT (username, password, hunter_id, role),
     UPDATE (username, password)
   ON TABLE app.users
   TO api;
 
-GRANT ALL ON app.users_user_id_seq TO api;
+GRANT ALL ON app.users_id_seq TO api;
 
 ALTER TABLE app.users ENABLE ROW LEVEL SECURITY;
 
@@ -69,9 +70,9 @@ CREATE POLICY authenticated_user_update_users
   FOR UPDATE
   USING (
     current_setting('role') = 'verified_user' AND
-    user_id = app.current_user_id()
+    id = app.current_user_id()
   )
-  WITH CHECK (user_id = app.current_user_id());
+  WITH CHECK (id = app.current_user_id());
 
 -- auth should be able to select so that it can validate credentials
 CREATE POLICY auth_read_users
