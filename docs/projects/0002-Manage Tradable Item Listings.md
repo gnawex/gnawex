@@ -46,6 +46,16 @@ Guest (non-logged in user) | :white_check_mark: | :x: | :x: | :x: | :x:
 
 ### Tables
 
+#### `app.users`
+
+Column name | Description | Type | Required | Nullable | Default
+:-- | -- | -- | -- | -- | --
+`id` | User ID | `BIGINT GENERATED ALWAYS AS IDENTITY` | `true` | `false` | Supplied by Postgres
+`hunter_id` | The user's MouseHunt hunter ID | `BIGINT` | `true` | `false` | -
+`username` | Username used to log-in | `CITEXT` (case insensitive text) | `true` | `false` | -
+`password` | User's password | `TEXT` (hashed) | `true` | `false` | -
+`role` | User role | `app.USER_ROLE('verified_user', 'unverified_user', 'banned_user')` | `true` | `false` | `unverified_user` | -
+
 #### `app.tradable_item_listings`
 
 Column name | Description | Type | Required | Nullable | Default
