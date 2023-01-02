@@ -10,6 +10,7 @@ import Effectful.Beam (runDB)
 import Effectful.Error.Static (Error, runErrorNoCallStack)
 import Effectful.Reader.Static (runReader)
 import Muridae.Environment (MuridaeEnv, getMuridaeEnv, pool)
+import MuridaeWeb.Handler.Item qualified as ItemHandler
 import MuridaeWeb.Handler.ItemListing qualified as ItemListingHandler
 import MuridaeWeb.Route (
   API (API, adminRoutes, publicRoutes),
@@ -25,7 +26,6 @@ import Network.Wai.Handler.Warp qualified as Warp
 import Servant (ServerError)
 import Servant.Server (Application, Handler)
 import Servant.Server.Generic (AsServerT, genericServeT)
-import qualified MuridaeWeb.Handler.Item as ItemHandler
 
 -- TODO: Generate docs
 
@@ -34,9 +34,9 @@ mkServer muridaeEnv =
   genericServeT
     ( \app ->
         effToHandler $
-          runDB (pool muridaeEnv) $
-            runReader muridaeEnv $
-              app
+            runDB (muridaeEnv.pool) $
+              runReader muridaeEnv $
+                app
     )
     muridaeServer
 
@@ -80,7 +80,7 @@ runMuridae =
     (Warp.run 8080 . mkServer)
 
 shutdownMuridae :: MuridaeEnv -> Eff '[IOE] ()
-shutdownMuridae = liftIO . Pool.destroyAllResources . pool
+shutdownMuridae env = liftIO (Pool.destroyAllResources env.pool)
 
 effToHandler :: forall (a :: Type). Eff '[Error ServerError, IOE] a -> Handler a
 effToHandler computation = do

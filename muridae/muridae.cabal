@@ -47,6 +47,7 @@ common common-extensions
         ExplicitNamespaces
         ImportQualifiedPost
         LambdaCase
+        NoFieldSelectors
         OverloadedRecordDot
         OverloadedStrings
         TypeFamilies
@@ -114,6 +115,7 @@ library
       , aeson             ^>=2.1
       , bytestring        ^>=0.11
       , uuid-types        ^>=1.0
+      , text-builder      ^>=0.6
 
       -- Effects
       , effectful         ^>=2.2

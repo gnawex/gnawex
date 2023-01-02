@@ -1,5 +1,17 @@
-module Muridae.ItemListing.Types where
+module Muridae.ItemListing.Types (
+  ItemListing (..),
+  ItemSellListing,
+  ItemBuyListing,
+  ItemListingId (..),
+  ListingType (..),
+  PrimaryKey (..),
+  mkItemSellListing,
+  mkItemBuyListing,
+  unItemSellListing,
+  unItemBuyListing,
+) where
 
+import Data.Coerce (coerce)
 import Data.Functor.Identity (Identity)
 import Data.Int (Int16, Int32)
 import Data.Kind (Type)
@@ -38,6 +50,7 @@ data ItemListing f = ItemListing
   , _type :: Columnar f ListingType
   , _batched_by :: Columnar f Int16
   , _unit_quantity :: Columnar f Int32
+  , _current_unit_quantity :: Columnar f Int32
   , _cost :: Columnar f Int32
   , _active :: Columnar f Bool
   , _created_at :: Columnar f UTCTime
@@ -45,6 +58,9 @@ data ItemListing f = ItemListing
   }
   deriving stock (Generic)
   deriving anyclass (Beamable)
+
+newtype ItemSellListing f = ItemSellListing (ItemListing f)
+newtype ItemBuyListing f = ItemBuyListing (ItemListing f)
 
 newtype ItemListingId = ItemListingId Int32
   deriving stock (Generic, Show)
@@ -56,7 +72,7 @@ newtype ItemListingId = ItemListingId Int32
     via Int32
 
 data ListingType = Buy | Sell
-  deriving stock (Generic, Show)
+  deriving stock (Eq, Generic, Show)
   deriving anyclass (HasSqlEqualityCheck Postgres)
 
 -------------------------------------------------------------------------------
@@ -105,3 +121,25 @@ instance HasSqlValueSyntax PgValueSyntax ListingType where
       "buy"
     Sell ->
       "sell"
+
+-------------------------------------------------------------------------------
+
+mkItemSellListing :: ItemListing Identity -> Maybe (ItemSellListing Identity)
+mkItemSellListing listing =
+  \case
+    Sell -> pure (ItemSellListing listing)
+    Buy -> Nothing
+    $ listing._type
+
+mkItemBuyListing :: ItemListing Identity -> Maybe (ItemBuyListing Identity)
+mkItemBuyListing listing =
+  \case
+    Buy -> pure (ItemBuyListing listing)
+    Sell -> Nothing
+    $ listing._type
+
+unItemSellListing :: forall (f :: Type -> Type). ItemSellListing f -> ItemListing f
+unItemSellListing = coerce
+
+unItemBuyListing :: forall (f :: Type -> Type). ItemBuyListing f -> ItemListing f
+unItemBuyListing = coerce

@@ -2,8 +2,9 @@ module Muridae.ItemListing (list, create, getListingsUnderItem, updateStatus) wh
 
 import Data.Coerce (coerce)
 import Data.Functor.Identity (Identity)
+import Data.Int (Int32)
 import Effectful (Eff, type (:>))
-import Effectful.Beam (DB, queryDebug)
+import Effectful.Beam (DB, authQueryDebug, queryDebug)
 import Muridae.Item.Types (ItemId (ItemId), PrimaryKey (ItemPk))
 import Muridae.ItemListing.Model qualified as ItemListing
 import Muridae.ItemListing.Types (
@@ -54,11 +55,23 @@ import MuridaeWeb.Handler.User qualified as UserHandler
 list :: (DB :> es) => Eff es [TradableItemListing]
 list = queryDebug putStrLn ItemListing.all >>= pure . (fmap parseDBItemListing)
 
-create :: (DB :> es) => UserHandler.UserId -> CreateTradableItemListing -> Eff es ()
-create userId params =
-  queryDebug putStrLn (ItemListing.create userId params)
+create ::
+  (DB :> es) =>
+  UserHandler.UserId ->
+  CreateTradableItemListing ->
+  Eff es [(ItemListing Identity, Int32, Int32)]
+create userId params = do
+  authQueryDebug putStrLn (coerce userId) $ do
+    listing <- ItemListing.create userId params
+    matchListing listing
+ where
+  matchListing listing =
+    (ItemListing.match listing)
 
-getListingsUnderItem :: (DB :> es) => ItemHandler.TradableItemId -> Eff es ResListingsUnderItem
+-- >> pure listing
+
+getListingsUnderItem ::
+  (DB :> es) => ItemHandler.TradableItemId -> Eff es ResListingsUnderItem
 getListingsUnderItem itemId =
   queryDebug putStrLn $ do
     (pooledBuy, pooledSell) <- ItemListing.getListingsUnderItem (coerce itemId)
