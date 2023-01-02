@@ -3,14 +3,16 @@
 BEGIN;
 
 SELECT
-    transaction_id,
-    buy_order,
-    sell_order,
-    quantity,
-    buyer_id,
-    seller_id,
-    created_at
-  FROM app.transactions
+    id
+  , buy_item_listing__id
+  , sell_item_listing__id
+  , quantity
+  , status
+  , buyer__id
+  , seller__id
+  , created_at
+  , updated_at
+  FROM app.tradable_item_transactions
   WHERE false;
 
 ROLLBACK;

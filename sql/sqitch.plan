@@ -14,4 +14,4 @@ app__items 2022-03-08T06:56:21Z sekun <sekun@nixos> # Items that can be traded
 app__listings 2022-03-08T06:59:47Z sekun <sekun@nixos> # Buy/sell listings
 app__transactions 2022-03-08T07:07:24Z sekun <sekun@nixos> # A record of listings that have matched
 app__match_listings 2022-03-08T07:10:31Z sekun <sekun@nixos> # Automated listing matcher
-api__schema 2022-03-09T00:38:23Z sekun <sekun@nixos> # Schema that defines what is suitable to be exposed through PostgREST
+# api__schema 2022-03-09T00:38:23Z sekun <sekun@nixos> # Schema that defines what is suitable to be exposed through PostgREST
