@@ -7,21 +7,22 @@ BEGIN;
 CREATE TYPE app.LISTING_TYPE AS ENUM ('buy', 'sell');
 
 CREATE TABLE app.tradable_item_listings (
-  id                 BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id                     BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
 
   -- Foreign Keys
-  tradable_item__id  BIGINT REFERENCES app.tradable_items (id),
-  user__id           BIGINT REFERENCES app.users (id),
+  , tradable_item__id      BIGINT REFERENCES app.tradable_items (id)
+  , user__id               BIGINT REFERENCES app.users (id)
 
-  type               app.LISTING_TYPE NOT NULL,
-  batched_by         SMALLINT NOT NULL,
-  unit_quantity      INT NOT NULL,
-  cost               INT NOT NULL CHECK (cost >= 0),
-  active             BOOLEAN DEFAULT true NOT NULL,
+  , type                   app.LISTING_TYPE NOT NULL
+  , batched_by             SMALLINT NOT NULL
+  , unit_quantity          INT NOT NULL CHECK (unit_quantity > 0)
+  , current_unit_quantity  INT NOT NULL CHECK (unit_quantity > 0)
+  , cost                   INT NOT NULL CHECK (cost >= 0)
+  , active                 BOOLEAN DEFAULT true NOT NULL
 
   -- Timestamps
-  created_at         TIMESTAMPTZ DEFAULT current_timestamp NOT NULL,
-  updated_at         TIMESTAMPTZ
+  , created_at             TIMESTAMPTZ DEFAULT current_timestamp NOT NULL
+  , updated_at             TIMESTAMPTZ
 );
 
 COMMENT ON TABLE app.tradable_item_listings IS
@@ -78,9 +79,9 @@ CREATE FUNCTION app.adjust_item_listing()
       SELECT gcd(NEW.cost, NEW.batched_by) INTO divisor;
 
       NEW.unit_quantity := NEW.unit_quantity * divisor;
+      NEW.current_unit_quantity := NEW.current_unit_quantity * divisor;
       NEW.cost := NEW.cost / divisor;
       NEW.batched_by := NEW.batched_by / divisor;
-
 
       RETURN NEW;
     END;

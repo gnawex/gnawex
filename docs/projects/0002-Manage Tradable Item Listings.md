@@ -66,6 +66,7 @@ Column name | Description | Type | Required | Nullable | Default
 `type` | What the user wants to do | `app.LISTING_TYPE AS ENUM ('buy', 'sell')` | `true` | `false` | -
 `batched_by` | Batches one or more of the same item to be sold as one unit for it to cost as a whole number | `SMALLINT` | `true` | `false` | `1`
 `unit_quantity` | Amount of units to be exchanged | `INT` | `true` | `false` | -
+`current_unit_quantity` | Current available amount of units that can be exchanged. i.e Units not tied to transactions | `INT` | `true` | `false` | -
 `cost` | How much one unit is in SB | `INT` | `true` | `false` | -
 `active` | Determines if an item is delisted or not | `BOOLEAN` | `true` | `false` | `true`
 `created_at` | To record when this was created | `TIMESTAMP WITH TIME ZONE` | `true` | `false` | `now()`
@@ -90,7 +91,8 @@ PG's settings.
 #### `app.normalize_tradable_item_listing`
 
 Before insert, `batched_by`, `cost`, and `quantity` must be normalized based on
-their GCD for GNAWEX to match item listings better.
+their GCD for GNAWEX to match item listings better. Also sets the
+`current_unit_quantity`.
 
 #### `app.set_listing_user_id`
 

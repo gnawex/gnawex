@@ -8,6 +8,7 @@ import Database.Beam (
   Beamable,
   Columnar,
   FromBackendRow,
+  HasSqlEqualityCheck,
   Table (PrimaryKey, primaryKey),
  )
 import Database.Beam.Backend (HasSqlValueSyntax (sqlValueSyntax))
@@ -39,7 +40,12 @@ data User f = User
 
 newtype UserId = UserId Int32
   deriving stock (Generic, Show)
-  deriving (FromBackendRow Postgres, HasSqlValueSyntax PgValueSyntax) via Int32
+  deriving
+    ( FromBackendRow Postgres
+    , HasSqlValueSyntax PgValueSyntax
+    , HasSqlEqualityCheck Postgres
+    )
+    via Int32
 
 deriving instance Show (User Identity)
 deriving instance Show (PrimaryKey User Identity)

@@ -19,11 +19,11 @@ import MuridaeWeb.Handler.Item.Types qualified as Handler
 import Muridae.Item.Types (Item (Item))
 
 all :: Pg [Item Identity]
-all = runSelectReturningList (select (all_ (muridaeTradableItems muridaeDB)))
+all = runSelectReturningList (select (all_ (muridaeDB.muridaeTradableItems)))
 
 create :: Handler.ReqTradableItem -> Pg ()
 create tradableItem = do
-    runInsert . insert (muridaeTradableItems muridaeDB) $
+    runInsert . insert (muridaeDB.muridaeTradableItems) $
         insertExpressions
             [ Item
                 default_

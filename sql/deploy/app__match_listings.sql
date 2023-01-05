@@ -15,6 +15,7 @@ BEGIN
   -- altered after a transaction exists. I suppose altering `active` is
   -- fine.
   SET LOCAL ROLE gnawex_merchant;
+
   -- Brace yourself for loads of CTEs. I don't know if I want it like this but
   -- hey, if it ain't broke don't fix it.
   -- Ok I know this word doesn't exist but I don't know what else to call it.
@@ -47,14 +48,17 @@ BEGIN
         AND cost = NEW.cost
   ), total_cte AS (
     -- Further filters the matches to fulfill the matchee's unit_quantity.
-    SELECT id, unit_quantity, user__id, running_amount, sum(unit_quantity) OVER (partition BY tradable_item__id) AS total_unit_quantity
+    SELECT id, unit_quantity, user__id, running_amount, sum(unit_quantity) OVER (PARTITION BY tradable_item__id) AS total_unit_quantity
       FROM matches_cte
       WHERE running_amount - unit_quantity <= NEW.unit_quantity
   ), update_matchee AS (
     -- Updates the matchee with the new unit_quantity after it got matched with
     -- other listing(s).
     UPDATE app.tradable_item_listings
-      SET unit_quantity = greatest(total_cte.running_amount - total_cte.total_unit_quantity, 0) :: INT
+      SET unit_quantity =
+        greatest( total_cte.running_amount - total_cte.total_unit_quantity
+                , 0
+                ) :: INT
       FROM total_cte
       WHERE tradable_item_listings.id = NEW.id
   ), update_matches AS (
@@ -79,8 +83,8 @@ BEGIN
             -- Since you have to check if the last matching listing should have
             -- a new unit_quantity of 0. If the `total_unit_quantity` does exceed the
             -- actual unit_quantity, then you have to subtract it.
-            -- e.g total_unit_quantity = 5, unit_quantity = 3. The last match's unit_quantity
-            -- is going to be 2.
+            -- e.g total_unit_quantity = 5, unit_quantity = 3. The last match's
+            -- unit_quantity is going to be 2.
             --
             -- When either of these conditions fail, the idea is to zero out
             -- the match's unit_quantity.

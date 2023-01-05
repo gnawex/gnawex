@@ -47,6 +47,7 @@ common common-extensions
         ExplicitNamespaces
         ImportQualifiedPost
         LambdaCase
+        NoFieldSelectors
         OverloadedRecordDot
         OverloadedStrings
         TypeFamilies
@@ -85,6 +86,10 @@ library
       , Muridae.User.Model
       , Muridae.User.Types
 
+      , Muridae.ItemTxn
+      , Muridae.ItemTxn.Model
+      , Muridae.ItemTxn.Types
+
       -- Routes
       , MuridaeWeb.Route
       , MuridaeWeb.Route.Item
@@ -109,6 +114,8 @@ library
       -- Data types
       , aeson             ^>=2.1
       , bytestring        ^>=0.11
+      , uuid-types        ^>=1.0
+      , text-builder      ^>=0.6
 
       -- Effects
       , effectful         ^>=2.2

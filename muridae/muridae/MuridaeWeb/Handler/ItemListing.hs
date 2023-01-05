@@ -19,6 +19,8 @@ import MuridaeWeb.Handler.User qualified as UserHandler (UserId)
 import MuridaeWeb.Types (Handler')
 import Servant (ServerError (ServerError))
 import Servant.API.ContentTypes (NoContent (NoContent))
+import Control.Monad.Catch (catch)
+import Control.Exception (ErrorCall)
 
 -------------------------------------------------------------------------------
 -- Item listing handlers
@@ -37,7 +39,10 @@ create ::
   Handler' NoContent
 create userId params =
   case userId of
-    Just userId' -> ItemListing.create userId' params >> pure NoContent
+    Just userId' -> do
+      _ <- ItemListing.create userId' params
+            `catch` \(_::ErrorCall) -> throwError @ServerError (ServerError 500 "Uh oh" "" [])
+      pure NoContent
     Nothing -> throwError @ServerError (ServerError 401 "No permission" "" [])
 
 updateStatus ::

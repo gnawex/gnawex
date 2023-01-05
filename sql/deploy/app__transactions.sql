@@ -5,26 +5,32 @@ BEGIN;
 
 --------------------------------------------------------------------------------
 
-CREATE TABLE app.transactions (
-  transaction_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+CREATE TYPE app.TRANSACTION_STATUS AS ENUM ('pending', 'completed', 'cancelled');
 
-  buy_order      BIGINT REFERENCES app.tradable_item_listings(id),
-  sell_order     BIGINT REFERENCES app.tradable_item_listings(id),
+CREATE TABLE app.tradable_item_transactions (
+    id                    UUID PRIMARY KEY DEFAULT gen_random_uuid()
 
-  -- Since we subtract the original `quantity` in the listing. Need this to
-  -- keep a record so that we can sum all transactions which gives us the
-  -- original quantity.
-  quantity       BIGINT NOT NULL,
+    -- TODO: Check for listing type
+  , buy_item_listing__id  BIGINT REFERENCES app.tradable_item_listings(id)
+  , sell_item_listing__id BIGINT REFERENCES app.tradable_item_listings(id)
 
-  -- This is here for convenience
-  buyer_id       BIGINT REFERENCES app.users (id),
-  seller_id      BIGINT REFERENCES app.users (id),
+    -- Since we subtract the original `quantity` in the listing. Need this to
+    -- keep a record so that we can sum all transactions which gives us the
+    -- original quantity.
+  , quantity              INT NOT NULL
+  , status                app.TRANSACTION_STATUS NOT NULL
 
-  created_at     TIMESTAMPTZ DEFAULT current_timestamp NOT NULL
+    -- This is here for convenience
+    -- FIXME: Consider removing these two columns?
+  , buyer__id             BIGINT REFERENCES app.users (id)
+  , seller__id            BIGINT REFERENCES app.users (id)
+
+  , created_at            TIMESTAMPTZ DEFAULT current_timestamp NOT NULL
+  , updated_at            TIMESTAMPTZ
 );
 
-GRANT SELECT ON TABLE app.transactions TO api;
-GRANT INSERT ON TABLE app.transactions TO gnawex_merchant;
+GRANT SELECT ON TABLE app.tradable_item_transactions TO api;
+GRANT INSERT ON TABLE app.tradable_item_transactions TO gnawex_merchant;
 
 --------------------------------------------------------------------------------
 
