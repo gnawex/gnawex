@@ -60,7 +60,6 @@ fromItemListing createdListing (matchedListing, matchedRunningAmount, matchedTot
   buyListing = bool matchedListing createdListing (createdListing._type == Buy)
   sellListing = bool matchedListing createdListing (createdListing._type == Sell)
 
--- TODO: Move these where bindings to the top-level
 computeNewMatchedQty ::
   -- The listing created that GNAWEX needs to look for matches for
   ItemListing Identity ->
