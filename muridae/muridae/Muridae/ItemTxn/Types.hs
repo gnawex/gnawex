@@ -45,13 +45,14 @@ data ItemTxn f = ItemTxn
   , _buyer :: PrimaryKey User f
   , _seller :: PrimaryKey User f
   , _created_at :: Columnar f UTCTime
-  , _updated_at :: Columnar f UTCTime
+  , _updated_at :: Columnar f (Maybe UTCTime)
   }
   deriving stock (Generic)
   deriving anyclass (Beamable)
 
 newtype ItemTxnId = ItemTxnId UUID
   deriving stock (Generic, Show)
+  deriving (FromBackendRow Postgres) via UUID
 
 data Status = Pending | Completed | Cancelled
   deriving stock (Generic, Show)

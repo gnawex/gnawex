@@ -13,12 +13,15 @@ import Data.Functor.Identity (Identity)
 import Data.Int (Int16, Int32)
 import Data.List (foldl')
 import Database.Beam.Backend (BeamSqlBackend)
-import Database.Beam.Backend.SQL.BeamExtensions (runInsertReturningList, runUpdateReturningList)
+import Database.Beam.Backend.SQL.BeamExtensions (
+  runInsertReturningList,
+  runUpdateReturningList,
+ )
 import Database.Beam.Postgres (Pg, Postgres)
 import Database.Beam.Query (
   QGenExpr,
   SqlEq ((/=.), (==?.)),
-  SqlOrd ((<=.)),
+  SqlOrd ((<=.), (>.)),
   SqlSelect,
   aggregate_,
   all_,
@@ -76,6 +79,9 @@ import Muridae.ItemListing.Types (
   ListingType (Buy, Sell),
   PrimaryKey (ItemListingPk),
  )
+import Muridae.ItemTxn.Model (fromItemListing)
+import Muridae.ItemTxn.Model qualified as ItemTxnModel
+import Muridae.ItemTxn.Types (ItemTxn (ItemTxn), Status (Pending))
 import Muridae.User.Types (PrimaryKey (UserPk), UserId (UserId))
 import MuridaeWeb.Handler.Item.Types qualified as Handler
 import MuridaeWeb.Handler.ItemListing.Types qualified as Handler
@@ -166,14 +172,14 @@ match :: ItemListing Identity -> Pg [(ItemListing Identity, Int32, Int32)]
 match listing = do
   matches <- findMatches listing
 
+  _txns <- ItemTxnModel.create listing matches
+
   let (zeroQtyMatchIds, nonZeroQtyMatch) = splitMatches matches
 
-  -- TODO: Find match that will have a non-zero thing
   updateCurrentQuantity
     (newCurrentQuantity listing._current_unit_quantity matches)
     listing
 
-  -- -- TODO: May update current quantities to zero
   _updatedZeroMatches <-
     runUpdateReturningList $
       update
@@ -195,19 +201,11 @@ match listing = do
 
   pure matches
  where
-  -- TODO: Move these where bindings to the top-level
-  foo :: Int32 -> Int32 -> Int32
-  foo runningAmount totalMatchedQuantity =
-    bool
-      (max (runningAmount - totalMatchedQuantity) 0)
-      (totalMatchedQuantity - listing._current_unit_quantity)
-      (runningAmount - totalMatchedQuantity == 0)
-
   newCurrentQuantity :: Int32 -> [(ItemListing Identity, Int32, Int32)] -> Int32
   newCurrentQuantity oldCurrentQty = \case
     [] -> oldCurrentQty
-    (_match, totalMatchQty, _newMatchQuantity) : _ ->
-      max (oldCurrentQty - totalMatchQty) 0
+    (_match, _runningAmount, totalMatchedQty) : _ ->
+      max (oldCurrentQty - totalMatchedQty) 0
 
   -- Splits the zero and non-zero current unit quantity matches
   splitMatches ::
@@ -217,9 +215,17 @@ match listing = do
     foldl'
       ( \(zeroMatches, nonZeroMatch) (matchedListing, runningAmount, totalQty) ->
           bool
-            (zeroMatches, Just (matchedListing, foo runningAmount totalQty))
+            ( zeroMatches
+            , Just
+                ( matchedListing
+                , ItemTxnModel.computeNewMatchedQty
+                    listing
+                    runningAmount
+                    totalQty
+                )
+            )
             (((matchedListing._id) : zeroMatches, nonZeroMatch))
-            (foo runningAmount totalQty == 0)
+            (ItemTxnModel.computeNewMatchedQty listing runningAmount totalQty == 0)
       )
       ([], Nothing)
 
@@ -231,7 +237,6 @@ findMatches ::
 findMatches listing =
   runSelectReturningList (selectWith matches)
  where
-  -- FIXME: Nonzero bug
   matches = do
     cteQ <- matchesCte
 
@@ -292,6 +297,7 @@ relevantListings listing potentialListing =
   potentialListing._active
     &&. (potentialListing._tradable_item ==. val_ listing._tradable_item)
     &&. (potentialListing._batched_by ==. val_ listing._batched_by)
+    &&. (potentialListing._current_unit_quantity >. val_ 0)
     &&. (potentialListing._cost ==. val_ listing._cost)
     &&. (potentialListing._user /=. val_ listing._user)
     &&. typeFilter potentialListing listing

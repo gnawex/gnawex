@@ -26,7 +26,7 @@ CREATE TABLE app.tradable_item_transactions (
   , seller__id            BIGINT REFERENCES app.users (id)
 
   , created_at            TIMESTAMPTZ DEFAULT current_timestamp NOT NULL
-  , updated_at            TIMESTAMPTZ DEFAULT current_timestamp
+  , updated_at            TIMESTAMPTZ
 );
 
 GRANT SELECT ON TABLE app.tradable_item_transactions TO api;

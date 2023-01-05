@@ -55,7 +55,10 @@ BEGIN
     -- Updates the matchee with the new unit_quantity after it got matched with
     -- other listing(s).
     UPDATE app.tradable_item_listings
-      SET unit_quantity = greatest(total_cte.running_amount - total_cte.total_unit_quantity, 0) :: INT
+      SET unit_quantity =
+        greatest( total_cte.running_amount - total_cte.total_unit_quantity
+                , 0
+                ) :: INT
       FROM total_cte
       WHERE tradable_item_listings.id = NEW.id
   ), update_matches AS (
