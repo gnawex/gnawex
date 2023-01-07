@@ -25,8 +25,9 @@
               shell.tools = {
                 cabal = {};
                 hlint = {};
-                haskell-language-server = {};
+                # haskell-language-server = "1.8.0.0";
                 fourmolu = {};
+                ghcid = {};
               };
 
               shell.buildInputs = with pkgs; [
