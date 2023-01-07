@@ -1,0 +1,11 @@
+- ignore: {name: "Use <$>"}
+- warn: {name: Use explicit module import list}
+- warn: {name: Use module export list}
+- hint:
+    lhs: return
+    note: "Use `pure`"
+    rhs: pure
+- hint:
+    lhs: mappend a a
+    note: "Use `(<>)`"
+    rhs: a <> a

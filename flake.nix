@@ -25,12 +25,14 @@
               shell.tools = {
                 cabal = {};
                 hlint = {};
-                haskell-language-server = {};
-                fourmolu = {};
+                # haskell-language-server = "1.8.0.0";
+                # fourmolu = {};
+                ghcid = {};
               };
 
               shell.buildInputs = with pkgs; [
                 haskellPackages.implicit-hie
+                stylish-haskell
 
                 postgresql.lib
                 pgformatter
