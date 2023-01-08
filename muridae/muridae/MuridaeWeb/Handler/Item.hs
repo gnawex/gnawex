@@ -1,4 +1,4 @@
-module MuridaeWeb.Handler.Item where
+module MuridaeWeb.Handler.Item (module MuridaeWeb.Handler.Item) where
 
 import Muridae.Item qualified as Item
 import MuridaeWeb.Handler.Item.Types (TradableItem)

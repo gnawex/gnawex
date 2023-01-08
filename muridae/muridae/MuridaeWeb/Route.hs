@@ -1,4 +1,4 @@
-module MuridaeWeb.Route where
+module MuridaeWeb.Route (module MuridaeWeb.Route) where
 
 import GHC.Generics (Generic)
 import MuridaeWeb.Route.Admin.Item qualified as AdminItem
@@ -21,7 +21,7 @@ data PublicRoutes mode = PublicRoutes
     deriving stock (Generic)
 
 -- | Contains admin-specific routes
-data AdminRoutes mode = AdminRoutes
+newtype AdminRoutes mode = AdminRoutes
     { items :: mode :- "items" :> AdminItem.Routes
     }
     deriving stock (Generic)

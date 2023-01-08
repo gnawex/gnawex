@@ -12,8 +12,8 @@ type Routes = NamedRoutes Routes'
 
 data Routes' mode = Routes'
     { index :: mode :- Get '[JSON] [TradableItem]
-    , getListingsUnderItem ::
-        mode
+    , getListingsUnderItem
+        :: mode
             :- Capture "item_id" TradableItemId
                 :> "listings"
                 :> Get '[JSON] ResListingsUnderItem

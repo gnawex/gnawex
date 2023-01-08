@@ -1,4 +1,6 @@
 function-arrows: leading
 record-brace-space: true
 let-style: newline
-indentation: 2
+indentation: 4
+respectful: false
+haddock-style: single-line

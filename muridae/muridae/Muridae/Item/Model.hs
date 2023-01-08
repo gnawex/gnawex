@@ -14,9 +14,8 @@ import Database.Beam.Query (
     select,
     val_,
  )
-
-import MuridaeWeb.Handler.Item.Types qualified as Handler
 import Muridae.Item.Types (Item (Item))
+import MuridaeWeb.Handler.Item.Types qualified as Handler
 
 all :: Pg [Item Identity]
 all = runSelectReturningList (select (all_ (muridaeDB.muridaeTradableItems)))
