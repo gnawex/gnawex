@@ -24,22 +24,23 @@ data MuridaeEnv = MuridaeEnv
 getMuridaeEnv :: Eff '[IOE] MuridaeEnv
 getMuridaeEnv = do
     -- TODO: Get from environment through Reader or something. Idk.
-    let tempConnStr = "host='localhost' port=5432 dbname='gnawex_db' user='postgres'"
+    let
+        tempConnStr = "host='localhost' port=5432 dbname='gnawex_db' user='postgres'"
     connPool <- mkPool tempConnStr 5 20
 
     pure (MuridaeEnv connPool)
 
-mkPool ::
-    forall (es :: [Effect]).
-    (IOE :> es) =>
-    -- PG connection information
+mkPool
+    :: forall (es :: [Effect])
+     . (IOE :> es)
+    => -- PG connection information
     -- e.g host='localhost' port=5432 dbname='gnawex_development' user='postgres'
-    ByteString ->
+    ByteString
     -- Max time to acquire a connection from pool
-    NominalDiffTime ->
+    -> NominalDiffTime
     -- Max number of connections in a pool
-    Int ->
-    Eff es (Pool Connection)
+    -> Int
+    -> Eff es (Pool Connection)
 mkPool connectionInfo timeout poolSize =
     liftIO . Pool.newPool $
         PoolConfig
