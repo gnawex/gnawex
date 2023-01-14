@@ -10,9 +10,9 @@ import Servant (ServerError)
 
 type Handler' :: Type -> Type
 type Handler' =
-    Eff
-        '[ Reader MuridaeEnv
-         , DB
-         , Error ServerError
-         , IOE
-         ]
+  Eff
+    '[ Reader MuridaeEnv
+     , DB
+     , Error ServerError
+     , IOE
+     ]

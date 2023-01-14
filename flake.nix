@@ -40,7 +40,8 @@
             nixpkgs-fmt.enable = true;
 
             haskell-fmt = {
-              enable = true;
+              # FIXME: Investigate disparity between HLS format and fourmolu CLI
+              enable = false;
               name = "Format Haskell";
               files = "\\.(lhs|hs)$";
               entry = "${fourmolu}/bin/fourmolu --mode check " + srcPaths;
@@ -61,9 +62,10 @@
             cabal-install
             haskell.compiler.ghc925
             haskell.packages.ghc925.haskell-language-server
-            haskell.packages.ghc925.fourmolu
             haskell.packages.ghc925.hlint
-            haskellPackages.implicit-hie
+            haskell.packages.ghc925.implicit-hie
+            haskell.packages.ghc925.fourmolu
+            haskell.packages.ghc925.cabal-fmt
 
             # Nix
             nil

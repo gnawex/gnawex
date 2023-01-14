@@ -11,11 +11,11 @@ import Servant.API.Verbs (Get)
 type Routes = NamedRoutes Routes'
 
 data Routes' mode = Routes'
-    { index :: mode :- Get '[JSON] [TradableItem]
-    , getListingsUnderItem
-        :: mode
-            :- Capture "item_id" TradableItemId
-                :> "listings"
-                :> Get '[JSON] ResListingsUnderItem
-    }
-    deriving stock (Generic)
+  { index :: mode :- Get '[JSON] [TradableItem]
+  , getListingsUnderItem
+      :: mode
+        :- Capture "item_id" TradableItemId
+        :> "listings"
+        :> Get '[JSON] ResListingsUnderItem
+  }
+  deriving stock (Generic)

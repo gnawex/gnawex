@@ -9,145 +9,114 @@ version:            0.1.0.0
 -- description:
 
 -- A URL where users can report bugs.
-bug-reports: https://github.com/gnawex/gnawex
-
+bug-reports:        https://github.com/gnawex/gnawex
 license:            AGPL-3.0-only
 author:             SEKUN
 maintainer:         software@sekun.net
-
 extra-source-files: CHANGELOG.md
 
 common common-default-language
-    default-language: GHC2021
+  default-language: GHC2021
 
 common common-base
-    build-depends:
-        base               ^>=4.16
+  build-depends: base ^>=4.16
 
 common common-database
-    build-depends:
+  build-depends:
 
 common common-deps
-    build-depends:
-        text               ^>=2.0
-      , time               ^>=1.11
+  build-depends:
+    , text  ^>=2.0
+    , time  ^>=1.11
 
 common common-warnings
-    ghc-options:
-        -Wall
-        -Werror
+  ghc-options: -Wall -Werror
 
 common common-extensions
-    default-extensions:
-        DataKinds
-        DeriveAnyClass
-        DerivingStrategies
-        DerivingVia
-        DuplicateRecordFields
-        ExplicitNamespaces
-        ImportQualifiedPost
-        LambdaCase
-        NoFieldSelectors
-        OverloadedRecordDot
-        OverloadedStrings
-        TypeFamilies
+  default-extensions:
+    NoFieldSelectors
+    DataKinds
+    DeriveAnyClass
+    DerivingStrategies
+    DerivingVia
+    DuplicateRecordFields
+    ExplicitNamespaces
+    ImportQualifiedPost
+    LambdaCase
+    OverloadedRecordDot
+    OverloadedStrings
+    TypeFamilies
 
 library
-    import:
-        common-base
-      , common-default-language
-      , common-deps
-      , common-warnings
-      , common-extensions
+  import:
+    common-base
+    , common-default-language
+    , common-deps
+    , common-warnings
+    , common-extensions
 
-    exposed-modules:
-        MuridaeWeb.Server
+  exposed-modules: MuridaeWeb.Server
+  other-modules:
+    DB
+    DB.Types
+    Effectful.Beam
+    Muridae.Environment
+    Muridae.Item
+    Muridae.Item.Model
+    Muridae.Item.Types
+    Muridae.ItemListing
+    Muridae.ItemListing.Model
+    Muridae.ItemListing.Types
+    Muridae.ItemTxn
+    Muridae.ItemTxn.Model
+    Muridae.ItemTxn.Types
+    Muridae.User
+    Muridae.User.Model
+    Muridae.User.Types
+    MuridaeWeb.Handler.Item
+    MuridaeWeb.Handler.Item.Types
+    MuridaeWeb.Handler.ItemListing
+    MuridaeWeb.Handler.ItemListing.Types
+    MuridaeWeb.Handler.User
+    MuridaeWeb.Route
+    MuridaeWeb.Route.Admin.Item
+    MuridaeWeb.Route.Item
+    MuridaeWeb.Route.ItemListing
+    MuridaeWeb.Types
 
-    other-modules:
-        Effectful.Beam
-      , Muridae.Environment
+  build-depends:
+    , aeson              ^>=2.1
+    , beam-core          ^>=0.10
+    , beam-postgres      ^>=0.5
+    , bytestring         ^>=0.11
+    , effectful          ^>=2.2
+    , effectful-core     ^>=2.2
+    , exceptions         ^>=0.10
+    , mtl                ^>=2.2
+    , postgresql-simple  ^>=0.6
+    , resource-pool      ^>=0.3
+    , servant            ^>=0.19
+    , servant-effectful  ^>=0.0
+    , servant-server     ^>=0.19
+    , text-builder       ^>=0.6
+    , unliftio           ^>=0.2
+    , uuid-types         ^>=1.0
+    , wai                ^>=3.2
+    , warp               ^>=3.3
 
-      -- DB
-      , DB
-      , DB.Types
-
-      -- Item Listings
-      , Muridae.ItemListing
-      , Muridae.ItemListing.Model
-      , Muridae.ItemListing.Types
-
-      -- Items
-      , Muridae.Item
-      , Muridae.Item.Model
-      , Muridae.Item.Types
-
-      -- Users
-      , Muridae.User
-      , Muridae.User.Model
-      , Muridae.User.Types
-
-      , Muridae.ItemTxn
-      , Muridae.ItemTxn.Model
-      , Muridae.ItemTxn.Types
-
-      -- Routes
-      , MuridaeWeb.Route
-      , MuridaeWeb.Route.Item
-      , MuridaeWeb.Route.ItemListing
-      , MuridaeWeb.Route.Admin.Item
-
-      -- Handlers
-      , MuridaeWeb.Handler.Item
-      , MuridaeWeb.Handler.Item.Types
-
-      , MuridaeWeb.Handler.ItemListing
-      , MuridaeWeb.Handler.ItemListing.Types
-      , MuridaeWeb.Handler.User
-
-      , MuridaeWeb.Types
-
-    build-depends:
-        unliftio          ^>=0.2
-      , exceptions        ^>=0.10
-      , mtl               ^>=2.2
-
-      -- Data types
-      , aeson             ^>=2.1
-      , bytestring        ^>=0.11
-      , uuid-types        ^>=1.0
-      , text-builder      ^>=0.6
-
-      -- Effects
-      , effectful         ^>=2.2
-      , effectful-core    ^>=2.2
-      , servant-effectful ^>=0.0
-
-      -- Web
-      , servant           ^>=0.19
-      , servant-server    ^>=0.19
-      , wai               ^>=3.2
-      , warp              ^>=3.3
-
-      -- Database
-      , postgresql-simple  ^>=0.6
-      , resource-pool      ^>=0.3
-      , beam-core          ^>=0.10
-      , beam-postgres      ^>=0.5
-
-    hs-source-dirs:   muridae
+  hs-source-dirs:  muridae
 
 executable muridae-server
-    import:
-        common-base
-      , common-default-language
-      , common-warnings
-      , common-extensions
+  import:
+    common-base
+    , common-default-language
+    , common-warnings
+    , common-extensions
 
-    main-is:          Main.hs
+  main-is:        Main.hs
+  build-depends:
+    , muridae
+    , wai      ^>=3.2
+    , warp     ^>=3.3
 
-    build-depends:
-        muridae
-      , wai  ^>=3.2
-      , warp ^>=3.3
-
-    hs-source-dirs:   muridae-server
+  hs-source-dirs: muridae-server
