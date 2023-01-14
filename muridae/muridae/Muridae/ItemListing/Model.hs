@@ -1,6 +1,17 @@
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wno-missing-signatures #-}
 
-module Muridae.ItemListing.Model where
+module Muridae.ItemListing.Model
+  ( match
+  , updateStatus
+  , updateCurrentQuantity
+  , create
+  , getListingsUnderItem
+  , listAll
+  , findMatches
+  , greatest
+  )
+where
 
 import Control.Monad ((<=<))
 import DB (muridaeDB)
@@ -88,8 +99,8 @@ import MuridaeWeb.Handler.User qualified as Handler
 -------------------------------------------------------------------------------
 -- Item listing DB functions
 
-all :: Pg [ItemListing Identity]
-all = runSelectReturningList (select (all_ (muridaeDB.muridaeTradableItemListings)))
+listAll :: Pg [ItemListing Identity]
+listAll = runSelectReturningList (select (all_ (muridaeDB.muridaeTradableItemListings)))
 
 getListingsUnderItem
   :: ItemId

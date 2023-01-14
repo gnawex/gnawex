@@ -1,4 +1,10 @@
-module Muridae.ItemListing (list, create, getListingsUnderItem, updateStatus) where
+module Muridae.ItemListing
+  ( list
+  , create
+  , getListingsUnderItem
+  , updateStatus
+  )
+where
 
 import Data.Coerce (coerce)
 import Data.Functor ((<&>))
@@ -54,7 +60,7 @@ import MuridaeWeb.Handler.User qualified as UserHandler
 -------------------------------------------------------------------------------
 
 list :: (DB :> es) => Eff es [TradableItemListing]
-list = queryDebug putStrLn ItemListing.all <&> fmap parseDBItemListing
+list = queryDebug putStrLn ItemListing.listAll <&> fmap parseDBItemListing
 
 create
   :: (DB :> es)
