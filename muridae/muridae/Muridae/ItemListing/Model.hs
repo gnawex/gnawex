@@ -1,10 +1,8 @@
 {-# LANGUAGE UndecidableInstances #-}
-{-# OPTIONS_GHC -Wno-missing-signatures #-}
-{-# OPTIONS_GHC -Wno-unused-imports #-}
-{-# OPTIONS_GHC -Wno-unused-local-binds #-}
 
 module Muridae.ItemListing.Model where
 
+import Control.Monad ((<=<))
 import DB (muridaeDB)
 import DB.Types qualified as DB
 import Data.Bool (bool)
@@ -19,10 +17,12 @@ import Database.Beam.Backend.SQL.BeamExtensions (
  )
 import Database.Beam.Postgres (Pg, Postgres)
 import Database.Beam.Query (
+    HaskellLiteralForQExpr,
     QGenExpr,
     SqlEq ((/=.), (==?.)),
     SqlOrd ((<=.), (>.)),
     SqlSelect,
+    SqlValable,
     aggregate_,
     all_,
     asc_,
@@ -60,7 +60,7 @@ import Database.Beam.Query (
     (<-.),
     (==.),
  )
-import Database.Beam.Schema (primaryKey)
+import Database.Beam.Schema (Columnar, primaryKey)
 import Muridae.Item.Types (ItemId (ItemId), PrimaryKey (ItemPk))
 import Muridae.ItemListing.Types (
     ItemListing (
@@ -79,9 +79,7 @@ import Muridae.ItemListing.Types (
     ListingType (Buy, Sell),
     PrimaryKey (ItemListingPk),
  )
-import Muridae.ItemTxn.Model (fromItemListing)
 import Muridae.ItemTxn.Model qualified as ItemTxnModel
-import Muridae.ItemTxn.Types (ItemTxn (ItemTxn), Status (Pending))
 import Muridae.User.Types (PrimaryKey (UserPk), UserId (UserId))
 import MuridaeWeb.Handler.Item.Types qualified as Handler
 import MuridaeWeb.Handler.ItemListing.Types qualified as Handler
@@ -112,9 +110,11 @@ create
 create userId handlerParams = do
     -- FIXME: I mean ideally this ([a] -> a) is ok but maybe this should be
     -- handled properly?
-    (pure . head =<<)
-        . runInsertReturningList
-        . insert (muridaeDB.muridaeTradableItemListings)
+    ( (pure . head)
+            <=< ( runInsertReturningList
+                    . insert (muridaeDB.muridaeTradableItemListings)
+                )
+        )
         $ insertExpressions
             [ ItemListing
                 default_
@@ -145,14 +145,11 @@ updateStatus _userId listingId params = do
         update
             (muridaeDB.muridaeTradableItemListings)
             (\listing -> mconcat [listing._active <-. val_ params.active])
-            (\listing -> primaryKey listing ==. (toListingPk listingId))
+            (\listing -> primaryKey listing ==. toListingPk listingId)
 
-    updatedListing <-
-        runSelectReturningOne $
-            select $
-                all_ (muridaeDB.muridaeTradableItemListings)
-
-    pure updatedListing
+    runSelectReturningOne $
+        select $
+            all_ (muridaeDB.muridaeTradableItemListings)
 
 -- | Updates a single item listing's current unit quantity
 updateCurrentQuantity :: Int32 -> ItemListing Identity -> Pg ()
@@ -226,7 +223,7 @@ match listing matches = do
                             totalQty
                         )
                     )
-                    (((matchedListing._id) : zeroMatches, nonZeroMatch))
+                    ((matchedListing._id) : zeroMatches, nonZeroMatch)
                     (ItemTxnModel.computeNewMatchedQty listing runningAmount totalQty == 0)
             )
             ([], Nothing)
@@ -264,10 +261,9 @@ findMatches listing =
         listingsWithRunningAmount <- runningAmountCte
 
         selecting $
-            ( filter_
+            filter_
                 (narrowListings listing)
                 (reuse listingsWithRunningAmount)
-            )
 
     -- Find all the listings that match except the quantity.
     runningAmountCte =
@@ -347,7 +343,7 @@ groupListings listingType itemId =
             )
         $ filter_'
             ( \listing ->
-                (listing._type ==?. (val_ listingType))
+                (listing._type ==?. val_ listingType)
                     &&?. (listing._tradable_item ==?. (ItemPk . val_ . coerce $ itemId))
                     &&?. (sqlBool_ listing._active)
             )
@@ -356,11 +352,14 @@ groupListings listingType itemId =
 -------------------------------------------------------------------------------
 -- Non-query helper functions
 
-toListingPk listingId' =
-    ItemListingPk
-        . val_
-        . coerce @Handler.TradableItemListingId @ItemListingId
-        $ listingId'
+toListingPk
+    :: ( HaskellLiteralForQExpr (Columnar f ItemListingId) ~ ItemListingId
+       , SqlValable (Columnar f ItemListingId)
+       )
+    => Handler.TradableItemListingId
+    -> PrimaryKey ItemListing f
+toListingPk =
+    ItemListingPk . val_ . coerce
 
 fromHandlerListingType :: Handler.TradableItemListingType -> ListingType
 fromHandlerListingType = \case

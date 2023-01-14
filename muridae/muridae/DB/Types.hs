@@ -1,4 +1,4 @@
-module DB.Types where
+module DB.Types (module DB.Types) where
 
 import Database.Beam (Database, TableEntity)
 import Database.Beam.Postgres (

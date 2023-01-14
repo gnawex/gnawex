@@ -2,11 +2,11 @@
   description = "An independent marketplate for MouseHunt";
 
   inputs = {
-    haskellNix.url      = "github:input-output-hk/haskell.nix";
-    nixpkgs.follows     = "haskellNix/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs";
     mkdocs-material.url = "github:sekunho/mkdocs-material";
-    flake-utils.url     = "github:numtide/flake-utils";
-    feedback.url        = "github:NorfairKing/feedback";
+    flake-utils.url = "github:numtide/flake-utils";
+    feedback.url = "github:NorfairKing/feedback";
+    pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
   };
 
   outputs =
@@ -14,70 +14,85 @@
     , nixpkgs
     , flake-utils
     , mkdocs-material
-    , haskellNix
     , feedback
+    , pre-commit-hooks
     }:
-      flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
-        let
-          mkdocs-material-insiders = mkdocs-material.packages.${system}.mkdocs-material-insiders;
+    flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
+    let
+      pkgs = import nixpkgs { inherit system; };
+      libs = with pkgs; [ postgresql ];
+      fourmolu = pkgs.haskell.packages.ghc925.fourmolu;
 
-          overlays = [ haskellNix.overlay
-            (final: prev: {
-              # This overlay adds our project to pkgs
-              gnawex =
-                final.haskell-nix.project' {
-                  src = ./muridae;
-                  compiler-nix-name = "ghc925";
+      mkdocs-material-insiders =
+        mkdocs-material.packages.${system}.mkdocs-material-insiders;
 
-                  shell.tools = {
-                    cabal = {};
-                    hlint = {};
-                    # haskell-language-server = "1.8.0.0";
-                    fourmolu = {};
-                    ghcid = {};
-                  };
+      srcPaths =
+        builtins.concatStringsSep
+          " "
+          [ "muridae/muridae" "muridae/muridae-server" ];
+    in
+    {
+      checks = {
+        pre-commit-check = pre-commit-hooks.lib.${system}.run {
+          src = ./.;
 
-                  shell.buildInputs = with pkgs; [
-                    haskellPackages.implicit-hie
+          hooks = {
+            nixpkgs-fmt.enable = true;
 
-                    # Nix
-                    nil
-                    nixpkgs-fmt
-
-                    postgresql.lib
-                    pgformatter
-                    sqitchPg
-                    perl534Packages.TAPParserSourceHandlerpgTAP
-                    mkdocs-material-insiders
-                    feedback.packages.${system}.default
-                  ];
-                };
-            })
-          ];
-
-          pkgs = import nixpkgs { inherit system overlays; inherit (haskellNix) config; };
-
-          flake = pkgs.gnawex.flake {
-            # This adds support for `nix build .#js-unknown-ghcjs:hello:exe:hello`
-            # crossPlatforms = p: [p.ghcjs];
-          };
-        in flake // {
-          packages = rec {
-            default = muridae-server;
-            muridae-server = flake.packages."muridae:exe:muridae-server";
-            muridae = flake.packages."muridae:lib:muridae";
-
-            devShells.${system} = {
-              default = flake.devShells.default;
-              ci = pkgs.mkShell { buildInputs = [ mkdocs-material-insiders ]; };
-
-              ci-db = pkgs.mkShell {
-                buildInputs = with pkgs; [
-                  sqitchPg
-                  perl534Packages.TAPParserSourceHandlerpgTAP
-                ];
-              };
+            haskell-fmt = {
+              enable = true;
+              name = "Format Haskell";
+              files = "\\.(lhs|hs)$";
+              entry = "${fourmolu}/bin/fourmolu --mode check " + srcPaths;
             };
           };
+        };
+      };
+
+      devShells = {
+        default = pkgs.mkShell {
+          inherit (self.checks.${system}.pre-commit-check) shellHook;
+
+          buildInputs = with pkgs; [
+            # Dev tools
+            feedback.packages.${system}.default
+
+            # Haskell
+            cabal-install
+            haskell.compiler.ghc925
+            haskell.packages.ghc925.haskell-language-server
+            haskell.packages.ghc925.fourmolu
+            haskell.packages.ghc925.hlint
+            haskellPackages.implicit-hie
+
+            # Nix
+            nil
+            nixpkgs-fmt
+
+            # Postgres
+            pgformatter
+            sqitchPg
+            perl534Packages.TAPParserSourceHandlerpgTAP
+
+            # Need the full `postgresql` because of the include `libpq-fe.h`
+            postgresql
+            pkg-config
+
+            # Docs
+            mkdocs-material-insiders
+          ];
+
+          LD_LIBRARY_PATH = libs;
+        };
+
+        ci = pkgs.mkShell { buildInputs = [ mkdocs-material-insiders ]; };
+
+        ci-db = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            sqitchPg
+            perl534Packages.TAPParserSourceHandlerpgTAP
+          ];
+        };
+      };
     });
 }

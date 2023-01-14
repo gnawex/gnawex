@@ -1,4 +1,4 @@
-module DB where
+module DB (module DB) where
 
 import DB.Types (MuridaeDB)
 import Database.Beam (DatabaseSettings, defaultDbSettings)
