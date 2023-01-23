@@ -10,13 +10,13 @@ import Control.Exception (ErrorCall)
 import Control.Monad.Catch (catch)
 import Effectful.Error.Static (throwError)
 import Muridae.ItemListing qualified as ItemListing
-import MuridaeWeb.Handler.Item.Types (TradableItemId)
+import MuridaeWeb.Handler.Item.Types (ItemId)
 import MuridaeWeb.Handler.ItemListing.Types
-  ( CreateTradableItemListing
+  ( CreateItemListing
   , ReqStatus
   , ResListingsUnderItem
-  , TradableItemListing
-  , TradableItemListingId
+  , ItemListing
+  , ItemListingId
   )
 import MuridaeWeb.Handler.User qualified as UserHandler (UserId)
 import MuridaeWeb.Types (Handler')
@@ -26,17 +26,17 @@ import Servant.API.ContentTypes (NoContent (NoContent))
 -------------------------------------------------------------------------------
 -- Item listing handlers
 
-index :: Handler' [TradableItemListing]
+index :: Handler' [ItemListing]
 index = ItemListing.list
 
 -- | Get all the listings under a tradable item
-getListingsOfItem :: TradableItemId -> Handler' ResListingsUnderItem
+getListingsOfItem :: ItemId -> Handler' ResListingsUnderItem
 getListingsOfItem = ItemListing.getListingsUnderItem -- TODO: Throw 404
 
 -- TODO: Use auth context
 create
   :: Maybe UserHandler.UserId
-  -> CreateTradableItemListing
+  -> CreateItemListing
   -> Handler' NoContent
 create userId params =
   case userId of
@@ -49,9 +49,9 @@ create userId params =
 
 updateStatus
   :: Maybe UserHandler.UserId
-  -> TradableItemListingId
+  -> ItemListingId
   -> ReqStatus
-  -> Handler' TradableItemListing
+  -> Handler' ItemListing
 updateStatus userId listingId params =
   case userId of
     Just userId' -> do

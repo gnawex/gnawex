@@ -116,7 +116,7 @@ getListingsUnderItem itemId = do
 
 create
   :: Handler.UserId
-  -> Handler.CreateTradableItemListing
+  -> Handler.CreateItemListing
   -> Pg (ItemListing Identity)
 create userId handlerParams = do
   -- FIXME: I mean ideally this ([a] -> a) is ok but maybe this should be
@@ -132,7 +132,7 @@ create userId handlerParams = do
           -- TODO: Maybe get rid of this, and look for the item first via query
           ( ItemPk
               . val_
-              . coerce @Handler.TradableItemId @ItemId
+              . coerce @Handler.ItemId @ItemId
               $ handlerParams.item_id
           )
           (UserPk . val_ . coerce $ userId)
@@ -148,7 +148,7 @@ create userId handlerParams = do
 
 updateStatus
   :: Handler.UserId
-  -> Handler.TradableItemListingId
+  -> Handler.ItemListingId
   -> Handler.ReqStatus
   -> Pg (Maybe (ItemListing Identity))
 updateStatus _userId listingId params = do
@@ -367,12 +367,12 @@ toListingPk
   :: ( HaskellLiteralForQExpr (Columnar f ItemListingId) ~ ItemListingId
      , SqlValable (Columnar f ItemListingId)
      )
-  => Handler.TradableItemListingId
+  => Handler.ItemListingId
   -> PrimaryKey ItemListing f
 toListingPk =
   ItemListingPk . val_ . coerce
 
-fromHandlerListingType :: Handler.TradableItemListingType -> ListingType
+fromHandlerListingType :: Handler.ItemListingType -> ListingType
 fromHandlerListingType = \case
   Handler.BUY -> Buy
   Handler.SELL -> Sell

@@ -1,7 +1,7 @@
-module MuridaeWeb.Route.Item where
+module MuridaeWeb.Route.Item (module MuridaeWeb.Route.Item) where
 
 import GHC.Generics (Generic)
-import MuridaeWeb.Handler.Item.Types (TradableItem, TradableItemId)
+import MuridaeWeb.Handler.Item.Types (Item, ItemId)
 import MuridaeWeb.Handler.ItemListing.Types (ResListingsUnderItem)
 import Servant (Capture, JSON, type (:>))
 import Servant.API.Generic (type (:-))
@@ -11,10 +11,10 @@ import Servant.API.Verbs (Get)
 type Routes = NamedRoutes Routes'
 
 data Routes' mode = Routes'
-  { index :: mode :- Get '[JSON] [TradableItem]
+  { index :: mode :- Get '[JSON] [Item]
   , getListingsUnderItem
       :: mode
-        :- Capture "item_id" TradableItemId
+        :- Capture "item_id" ItemId
         :> "listings"
         :> Get '[JSON] ResListingsUnderItem
   }

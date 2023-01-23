@@ -1,4 +1,4 @@
-module Muridae.Item.Model where
+module Muridae.Item.Model (module Muridae.Item.Model) where
 
 import DB (muridaeDB)
 import DB.Types (muridaeTradableItems)
@@ -20,7 +20,7 @@ import MuridaeWeb.Handler.Item.Types qualified as Handler
 all :: Pg [Item Identity]
 all = runSelectReturningList (select (all_ (muridaeDB.muridaeTradableItems)))
 
-create :: Handler.ReqTradableItem -> Pg ()
+create :: Handler.ReqItem -> Pg ()
 create tradableItem = do
   runInsert . insert (muridaeDB.muridaeTradableItems) $
     insertExpressions

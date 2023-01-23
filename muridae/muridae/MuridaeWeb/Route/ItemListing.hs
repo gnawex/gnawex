@@ -2,10 +2,10 @@ module MuridaeWeb.Route.ItemListing (module MuridaeWeb.Route.ItemListing) where
 
 import GHC.Generics (Generic)
 import MuridaeWeb.Handler.ItemListing.Types
-  ( CreateTradableItemListing
+  ( CreateItemListing
   , ReqStatus
-  , TradableItemListing
-  , TradableItemListingId
+  , ItemListing
+  , ItemListingId
   )
 import MuridaeWeb.Handler.User (UserId)
 import Servant (JSON)
@@ -23,18 +23,18 @@ import Servant.API.Verbs (Get, Patch, PostCreated)
 type Routes = NamedRoutes Routes'
 
 data Routes' mode = Routes'
-  { index :: mode :- Get '[JSON] [TradableItemListing]
+  { index :: mode :- Get '[JSON] [ItemListing]
   , create
       :: mode
         :- Header "Current-User-Id" UserId
-        :> ReqBody '[JSON] CreateTradableItemListing
+        :> ReqBody '[JSON] CreateItemListing
         :> PostCreated '[JSON] NoContent
   , updateStatus
       :: mode
         :- Header "Current-User-Id" UserId
-        :> Capture "item_listing_id" TradableItemListingId
+        :> Capture "item_listing_id" ItemListingId
         :> "status"
         :> ReqBody '[JSON] ReqStatus
-        :> Patch '[JSON] TradableItemListing
+        :> Patch '[JSON] ItemListing
   }
   deriving stock (Generic)

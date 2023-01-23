@@ -1,4 +1,4 @@
-module MuridaeWeb.Handler.Item.Types where
+module MuridaeWeb.Handler.Item.Types (module MuridaeWeb.Handler.Item.Types) where
 
 import Data.Aeson.Types (FromJSON, ToJSON)
 import Data.Int (Int32)
@@ -7,11 +7,11 @@ import Data.Time (UTCTime)
 import GHC.Generics (Generic)
 import Servant.API (FromHttpApiData)
 
-newtype TradableItemId = TradableItemId Int32
+newtype ItemId = ItemId Int32
   deriving (ToJSON, FromJSON, FromHttpApiData) via Int32
 
-data TradableItem = TradableItem
-  { id :: TradableItemId
+data Item = Item
+  { id :: ItemId
   , name :: Text
   , description :: Text
   , wiki_link :: Text
@@ -22,7 +22,7 @@ data TradableItem = TradableItem
   deriving stock (Generic)
   deriving anyclass (FromJSON, ToJSON)
 
-data ReqTradableItem = ReqTradableItem
+data ReqItem = ReqItem
   { name :: Text
   , description :: Text
   , wiki_link :: Text

@@ -20,16 +20,16 @@ import Muridae.Item.Types
   )
 import MuridaeWeb.Handler.Item.Types qualified as Handler
 
-list :: (DB :> es) => Eff es [Handler.TradableItem]
+list :: (DB :> es) => Eff es [Handler.Item]
 list = queryDebug putStrLn ItemModel.all <&> fmap parseDBItem
 
-create_ :: (DB :> es) => Handler.ReqTradableItem -> Eff es ()
+create_ :: (DB :> es) => Handler.ReqItem -> Eff es ()
 create_ params =
   queryDebug putStrLn (ItemModel.create params)
 
-parseDBItem :: Item Identity -> Handler.TradableItem
+parseDBItem :: Item Identity -> Handler.Item
 parseDBItem dbItem =
-  Handler.TradableItem
+  Handler.Item
     { id = coerce dbItem._id
     , name = dbItem._name
     , description = dbItem._description
