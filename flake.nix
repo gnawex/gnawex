@@ -20,7 +20,7 @@
     flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
     let
       pkgs = import nixpkgs { inherit system; };
-      libs = with pkgs; [ postgresql ];
+      libs = with pkgs; [ postgresql zlib ];
       fourmolu = pkgs.haskell.packages.ghc925.fourmolu;
 
       mkdocs-material-insiders =
@@ -84,7 +84,7 @@
             mkdocs-material-insiders
           ];
 
-          LD_LIBRARY_PATH = libs;
+          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath libs;
         };
 
         ci = pkgs.mkShell { buildInputs = [ mkdocs-material-insiders ]; };
