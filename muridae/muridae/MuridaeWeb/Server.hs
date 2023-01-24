@@ -1,4 +1,4 @@
-module MuridaeWeb.Server (mkServer, runMuridae) where
+module MuridaeWeb.Server (runMuridae) where
 
 import Control.Exception (bracket)
 import Control.Monad.Except (throwError)
@@ -33,14 +33,16 @@ import Servant.Server.Generic (AsServerT, genericServeT)
 
 -- TODO: Generate docs
 
-mkServer :: MuridaeEnv -> Application
-mkServer muridaeEnv =
+-- | Makes an application for @wai@ to run
+mkApplication :: MuridaeEnv -> Application
+mkApplication muridaeEnv =
   genericServeT
     (effToHandler . runDB (muridaeEnv.pool) . runReader muridaeEnv)
-    muridaeServer
+    muridaeAPI
 
-muridaeServer :: API (AsServerT Handler')
-muridaeServer =
+-- | Maps the routes and their handlers
+muridaeAPI :: API (AsServerT Handler')
+muridaeAPI =
   let
     itemRoutes =
       ItemRoute.Routes'
@@ -73,13 +75,15 @@ muridaeServer =
             }
       }
 
+-- | Runs the @muridae@ server
 runMuridae :: IO ()
 runMuridae =
   bracket
     (runEff getMuridaeEnv)
     (runEff . shutdownMuridae)
-    (Warp.run 8080 . mkServer)
+    (Warp.run 8080 . mkApplication)
 
+-- | Shuts down @muridae@ as well as destroys the DB pool
 shutdownMuridae :: MuridaeEnv -> Eff '[IOE] ()
 shutdownMuridae env = liftIO (Pool.destroyAllResources env.pool)
 
