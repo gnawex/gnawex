@@ -160,7 +160,8 @@ updateStatus _userId listingId params = do
 
   runSelectReturningOne $
     select $
-      all_ (muridaeDB.muridaeTradableItemListings)
+      filter_ (\listing -> listing._id ==. (val_ . coerce $ listingId)) $
+        all_ (muridaeDB.muridaeTradableItemListings)
 
 -- | Updates a single item listing's current unit quantity
 updateCurrentQuantity :: Int32 -> ItemListing Identity -> Pg ()
