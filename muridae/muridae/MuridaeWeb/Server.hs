@@ -23,7 +23,7 @@ import MuridaeWeb.Route
   )
 import MuridaeWeb.Route.Admin.Item qualified as AdminItem
 import MuridaeWeb.Route.Item qualified as ItemRoute
-import MuridaeWeb.Route.ItemListing (index)
+-- import MuridaeWeb.Route.ItemListing (index)
 import MuridaeWeb.Route.ItemListing qualified as ItemListingRoute
 import MuridaeWeb.Types (Handler')
 import Network.Wai.Handler.Warp qualified as Warp

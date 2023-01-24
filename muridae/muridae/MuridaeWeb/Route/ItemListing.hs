@@ -3,9 +3,9 @@ module MuridaeWeb.Route.ItemListing (module MuridaeWeb.Route.ItemListing) where
 import GHC.Generics (Generic)
 import MuridaeWeb.Handler.ItemListing.Types
   ( CreateItemListing
-  , ReqStatus
   , ItemListing
   , ItemListingId
+  , ReqStatus
   )
 import MuridaeWeb.Handler.User (UserId)
 import Servant (JSON)

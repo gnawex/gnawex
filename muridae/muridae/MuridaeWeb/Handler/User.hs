@@ -6,3 +6,4 @@ import Servant.API (FromHttpApiData)
 
 newtype UserId = UserId Int32
   deriving (FromHttpApiData, ToJSON, FromJSON) via Int32
+  deriving stock (Show)

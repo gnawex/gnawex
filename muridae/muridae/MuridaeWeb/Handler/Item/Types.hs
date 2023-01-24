@@ -9,6 +9,7 @@ import Servant.API (FromHttpApiData)
 
 newtype ItemId = ItemId Int32
   deriving (ToJSON, FromJSON, FromHttpApiData) via Int32
+  deriving stock (Show)
 
 data Item = Item
   { id :: ItemId

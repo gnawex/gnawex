@@ -7,6 +7,10 @@ module MuridaeWeb.Handler.ItemListing
 where
 
 import Effectful.Error.Static (runError, throwError)
+import Control.Exception (ErrorCall (ErrorCall))
+import Control.Monad.Catch (catch)
+import Data.ByteString.Lazy.Char8 (pack)
+import Effectful.Error.Static (throwError)
 import Muridae.ItemListing qualified as ItemListing
 import MuridaeWeb.Handler.Item.Types (ItemId)
 import MuridaeWeb.Handler.ItemListing.Types
@@ -55,7 +59,7 @@ create userId params =
       case result of
         Right _ -> pure NoContent
         Left (_, _) -> throwError @ServerError (ServerError 500 "" "Unable to connect to the DB" [])
-    Nothing -> throwError @ServerError (ServerError 401 "No permission" "" [])
+    Nothing -> throwError @ServerError (ServerError 401 "Unauthorized" "" [])
 
 updateStatus
   :: Maybe UserHandler.UserId
@@ -74,4 +78,4 @@ updateStatus userId listingId params =
             Just listing -> pure listing
             Nothing -> throwError @ServerError (ServerError 404 "Item listing not found" "" [])
     -- TODO: Replace (auth context)
-    Nothing -> throwError @ServerError (ServerError 401 "No permission" "" [])
+    Nothing -> throwError @ServerError (ServerError 401 "Unauthorized" "" [])

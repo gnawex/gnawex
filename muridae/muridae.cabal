@@ -95,6 +95,7 @@ library
     , mtl                ^>=2.2
     , postgresql-simple  ^>=0.6
     , resource-pool      ^>=0.3
+    , scientific         ^>=0.3
     , servant            ^>=0.19
     , servant-effectful  ^>=0.0
     , servant-server     ^>=0.19

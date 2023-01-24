@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
 module Muridae.ItemListing
   ( list
@@ -9,7 +10,6 @@ module Muridae.ItemListing
 where
 
 import Data.Coerce (coerce)
-import Data.Functor ((<&>))
 import Data.Functor.Identity (Identity)
 import Data.Int (Int32)
 import Effectful (Eff, Effect, type (:>))
@@ -32,14 +32,16 @@ import MuridaeWeb.Handler.ItemListing.Types
   , PooledListing (PooledListing)
   , ReqStatus
   , ResListingsUnderItem (ResListingsUnderItem)
+  , mkBatchedBy'
+  , mkCost'
+  , mkUnitQuantity'
   )
 import MuridaeWeb.Handler.ItemListing.Types qualified as Handler
 import MuridaeWeb.Handler.User (UserId (UserId))
 import MuridaeWeb.Handler.User qualified as UserHandler
+import Control.Exception (throw)
 
 -------------------------------------------------------------------------------
-
--- data DbException = DbException
 
 list
   :: forall (es :: [Effect])
@@ -47,7 +49,11 @@ list
   => Eff (Error DbError : es) [Handler.ItemListing]
 list =
   queryDebug putStrLn ItemListing.listAll
-    >>= \listing -> pure $ parseDBItemListing <$> listing
+    >>= \listings ->
+      let
+        parsedListings = mapM parseDBItemListing listings
+       in
+        either (throw . userError) pure parsedListings
 
 create
   :: (DB :> es)
@@ -85,27 +91,33 @@ updateStatus
   -> ReqStatus
   -> Eff (Error DbError : es) (Maybe Handler.ItemListing)
 updateStatus userId listingId params =
-  queryDebug
-    putStrLn
-    (ItemListing.updateStatus userId listingId params)
-    <&> fmap parseDBItemListing
+  queryDebug putStrLn (ItemListing.updateStatus userId listingId params)
+    >>= \case
+      Just listing ->
+        either error (pure . Just) (parseDBItemListing listing)
+      Nothing -> pure Nothing
 
 -------------------------------------------------------------------------------
 
-parseDBItemListing :: DB.ItemListing Identity -> Handler.ItemListing
-parseDBItemListing dbItemListing =
-  Handler.ItemListing
-    { id = coerce dbItemListing._id
-    , tradable_item_id = coerce dbItemListing._tradable_item
-    , owner_id = coerce dbItemListing._user
-    , listing_type = fromDbListingType dbItemListing._type
-    , batched_by = dbItemListing._batched_by
-    , unit_quantity = dbItemListing._unit_quantity
-    , cost = dbItemListing._cost
-    , active = dbItemListing._active
-    , created_at = dbItemListing._created_at
-    , updated_at = dbItemListing._updated_at
-    }
+parseDBItemListing :: DB.ItemListing Identity -> Either String Handler.ItemListing
+parseDBItemListing dbItemListing = do
+  batchedBy <- mkBatchedBy' dbItemListing._batched_by
+  unitQuantity <- mkUnitQuantity' dbItemListing._unit_quantity
+  cost <- mkCost' dbItemListing._cost
+
+  pure $
+    Handler.ItemListing
+      { id = coerce dbItemListing._id
+      , tradable_item_id = coerce dbItemListing._tradable_item
+      , owner_id = coerce dbItemListing._user
+      , listing_type = fromDbListingType dbItemListing._type
+      , batched_by = batchedBy
+      , unit_quantity = unitQuantity
+      , cost = cost
+      , active = dbItemListing._active
+      , created_at = dbItemListing._created_at
+      , updated_at = dbItemListing._updated_at
+      }
 
 fromDbListingType :: ListingType -> ItemListingType
 fromDbListingType dbListingType =
