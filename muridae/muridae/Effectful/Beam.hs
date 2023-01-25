@@ -1,5 +1,8 @@
-module Effectful.Beam where
+{-# LANGUAGE ExistentialQuantification #-}
 
+module Effectful.Beam (module Effectful.Beam) where
+
+import Control.Monad.Catch (Exception, SomeException, catch)
 import Data.Int (Int32)
 import Data.Kind (Type)
 import Data.Pool (Pool, withResource)
@@ -16,13 +19,24 @@ import Effectful.Dispatch.Static
   , getStaticRep
   , unsafeEff_
   )
+import Effectful.Error.Static (Error, throwError)
 import Text.Builder qualified
 
+-------------------------------------------------------------------------------
+-- Types
+
 data DB :: Effect
+
+data DbError = forall (e :: Type). (Exception e, Show e) => DbError e
+
+-------------------------------------------------------------------------------
+-- Instances
 
 type instance DispatchOf DB = 'Static 'WithSideEffects
 
 newtype instance StaticRep DB = DB (Pool Connection)
+
+-------------------------------------------------------------------------------
 
 runDB
   :: forall (es :: [Effect]) (a :: Type)
@@ -52,25 +66,26 @@ authQueryDebug debug userId pg = do
             @[Text]
             @[Text]
             conn
-            ("SELECT set_config('auth.user_id', ?, true)")
+            "SELECT set_config('auth.user_id', ?, true)"
             [Text.Builder.run . Text.Builder.decimal $ userId]
 
-        result <- Beam.runBeamPostgresDebug debug conn pg
-
-        pure result
+        Beam.runBeamPostgresDebug debug conn pg
 
 queryDebug
   :: forall (es :: [Effect]) (a :: Type)
    . (DB :> es)
   => (String -> IO ())
   -> Pg a
-  -> Eff es a
+  -> Eff (Error DbError : es) a
 queryDebug debug pg = do
   DB connPool <- getStaticRep
 
-  unsafeEff_ $
-    withResource connPool $
-      \conn -> withTransactionSerializable conn $ do
-        result <- Beam.runBeamPostgresDebug debug conn pg
-
-        pure result
+  catch @(Eff (Error DbError : es)) @SomeException
+    ( unsafeEff_ $ do
+        withResource connPool $
+          \conn ->
+            withTransactionSerializable conn $ do
+              Beam.runBeamPostgresDebug debug conn pg
+    )
+    -- TODO: Add metadata to @DbError@
+    (throwError @DbError . DbError @SomeException)

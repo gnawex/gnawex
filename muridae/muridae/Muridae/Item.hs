@@ -4,7 +4,8 @@ import Data.Coerce (coerce)
 import Data.Functor ((<&>))
 import Data.Functor.Identity (Identity)
 import Effectful (Eff, type (:>))
-import Effectful.Beam (DB, queryDebug)
+import Effectful.Beam (DB, DbError, queryDebug)
+import Effectful.Error.Static (Error)
 import Muridae.Item.Model qualified as ItemModel
 import Muridae.Item.Types
   ( Item
@@ -20,10 +21,10 @@ import Muridae.Item.Types
   )
 import MuridaeWeb.Handler.Item.Types qualified as Handler
 
-list :: (DB :> es) => Eff es [Handler.Item]
+list :: (DB :> es) => Eff (Error DbError : es) [Handler.Item]
 list = queryDebug putStrLn ItemModel.all <&> fmap parseDBItem
 
-create_ :: (DB :> es) => Handler.ReqItem -> Eff es ()
+create_ :: (DB :> es) => Handler.ReqItem -> Eff (Error DbError : es) ()
 create_ params =
   queryDebug putStrLn (ItemModel.create params)
 
