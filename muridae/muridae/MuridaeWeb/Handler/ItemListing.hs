@@ -6,11 +6,8 @@ module MuridaeWeb.Handler.ItemListing
   )
 where
 
+import Effectful.Beam (DbError)
 import Effectful.Error.Static (runError, throwError)
-import Control.Exception (ErrorCall (ErrorCall))
-import Control.Monad.Catch (catch)
-import Data.ByteString.Lazy.Char8 (pack)
-import Effectful.Error.Static (throwError)
 import Muridae.ItemListing qualified as ItemListing
 import MuridaeWeb.Handler.Item.Types (ItemId)
 import MuridaeWeb.Handler.ItemListing.Types
@@ -24,7 +21,6 @@ import MuridaeWeb.Handler.User qualified as UserHandler (UserId)
 import MuridaeWeb.Types (Handler')
 import Servant (ServerError (ServerError))
 import Servant.API.ContentTypes (NoContent (NoContent))
-import Effectful.Beam (DbError)
 
 -------------------------------------------------------------------------------
 -- Item listing handlers
