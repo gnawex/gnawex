@@ -93,6 +93,7 @@ import Muridae.ItemListing.Types
 import Muridae.ItemTxn.Model qualified as ItemTxnModel
 import Muridae.User.Types (PrimaryKey (UserPk), UserId (UserId))
 import MuridaeWeb.Handler.Item.Types qualified as Handler
+import MuridaeWeb.Handler.ItemListing.Types (unBatchedBy, unCost, unUnitQuantity)
 import MuridaeWeb.Handler.ItemListing.Types qualified as Handler
 import MuridaeWeb.Handler.User qualified as Handler
 
@@ -137,10 +138,10 @@ create userId handlerParams = do
           )
           (UserPk . val_ . coerce $ userId)
           (val_ . fromHandlerListingType $ handlerParams.listing_type)
-          (val_ handlerParams.batched_by)
-          (val_ handlerParams.unit_quantity)
-          (val_ handlerParams.unit_quantity)
-          (val_ handlerParams.cost)
+          (val_ . unBatchedBy $ handlerParams.batched_by)
+          (val_ . unUnitQuantity $ handlerParams.unit_quantity)
+          (val_ . unUnitQuantity $ handlerParams.unit_quantity)
+          (val_ . unCost $ handlerParams.cost)
           (val_ True)
           default_
           (val_ Nothing)

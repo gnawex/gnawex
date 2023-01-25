@@ -9,7 +9,6 @@ module MuridaeWeb.Handler.ItemListing.Types
   , BatchedBy
   , UnitQuantity
   , Cost
-  , ParseError (..)
   , mkBatchedBy
   , mkUnitQuantity
   , mkCost
@@ -32,14 +31,13 @@ import Data.Aeson.Types
   )
 import Data.Coerce (coerce)
 import Data.Int (Int16, Int32)
+import Data.Kind (Type)
 import Data.Scientific (Scientific, toBoundedInteger)
 import Data.Time (UTCTime)
 import GHC.Generics (Generic)
 import MuridaeWeb.Handler.Item.Types (ItemId)
 import MuridaeWeb.Handler.User (UserId)
 import Servant.API (FromHttpApiData)
-
-newtype ParseError = ParseError String
 
 newtype ItemListingId = ItemListingId Int32
   deriving (ToJSON, FromHttpApiData) via Int32
@@ -67,9 +65,9 @@ data ItemListing = ItemListing
 data CreateItemListing = CreateItemListing
   { item_id :: ItemId
   , listing_type :: ItemListingType
-  , batched_by :: Int16
-  , unit_quantity :: Int32
-  , cost :: Int32
+  , batched_by :: BatchedBy
+  , unit_quantity :: UnitQuantity
+  , cost :: Cost
   }
   deriving stock (Generic)
   deriving anyclass (FromJSON)
@@ -112,17 +110,46 @@ instance FromJSON BatchedBy where
   parseJSON :: Value -> Parser BatchedBy
   parseJSON = \case
     Number batchedBy ->
-      (maybe (failure (Number batchedBy)) pure (parse' batchedBy))
-    invalid -> failure invalid
+      (maybe (failure' (Number batchedBy)) pure (parse' batchedBy))
+    invalid -> failure' invalid
    where
     parse' :: Scientific -> Maybe BatchedBy
     parse' batchedBy = toBoundedInteger @Int16 batchedBy >>= mkBatchedBy
 
-    failure :: Value -> Parser BatchedBy
-    failure invalid =
-      prependFailure
-        "parsing 'batched by' failed, "
-        (typeMismatch "16-bit integer" invalid)
+    failure' :: Value -> Parser BatchedBy
+    failure' = failure "batched_by" "Int16"
+
+instance FromJSON UnitQuantity where
+  parseJSON :: Value -> Parser UnitQuantity
+  parseJSON = \case
+    Number qty ->
+      (maybe (failure' (Number qty)) pure (parse' qty))
+    invalid -> failure' invalid
+   where
+    parse' :: Scientific -> Maybe UnitQuantity
+    parse' batchedBy = toBoundedInteger @Int32 batchedBy >>= mkUnitQuantity
+
+    failure' :: Value -> Parser UnitQuantity
+    failure' = failure "unit_quantity" "Int32"
+
+instance FromJSON Cost where
+  parseJSON :: Value -> Parser Cost
+  parseJSON = \case
+    Number qty ->
+      (maybe (failure' (Number qty)) pure (parse' qty))
+    invalid -> failure' invalid
+   where
+    parse' :: Scientific -> Maybe Cost
+    parse' batchedBy = toBoundedInteger @Int32 batchedBy >>= mkCost
+
+    failure' :: Value -> Parser Cost
+    failure' = failure "cost" "Int32"
+
+failure :: forall (a :: Type). String -> String -> Value -> Parser a
+failure fieldName expectedType invalid =
+  prependFailure
+    (mconcat ["parsing '", fieldName, "' failed, "])
+    (typeMismatch expectedType invalid)
 
 -------------------------------------------------------------------------------
 -- Smart constructors
