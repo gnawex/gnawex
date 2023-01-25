@@ -127,7 +127,7 @@ instance FromJSON UnitQuantity where
     invalid -> failure' invalid
    where
     parse' :: Scientific -> Maybe UnitQuantity
-    parse' batchedBy = toBoundedInteger @Int32 batchedBy >>= mkUnitQuantity
+    parse' qty = toBoundedInteger @Int32 qty >>= mkUnitQuantity
 
     failure' :: Value -> Parser UnitQuantity
     failure' = failure "unit_quantity" "Int32"
@@ -135,12 +135,12 @@ instance FromJSON UnitQuantity where
 instance FromJSON Cost where
   parseJSON :: Value -> Parser Cost
   parseJSON = \case
-    Number qty ->
-      (maybe (failure' (Number qty)) pure (parse' qty))
+    Number cost ->
+      (maybe (failure' (Number cost)) pure (parse' cost))
     invalid -> failure' invalid
    where
     parse' :: Scientific -> Maybe Cost
-    parse' batchedBy = toBoundedInteger @Int32 batchedBy >>= mkCost
+    parse' cost = toBoundedInteger @Int32 cost >>= mkCost
 
     failure' :: Value -> Parser Cost
     failure' = failure "cost" "Int32"
