@@ -1,3 +1,5 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Muridae.ItemListing
   ( list
   , create
@@ -10,26 +12,26 @@ import Data.Coerce (coerce)
 import Data.Functor ((<&>))
 import Data.Functor.Identity (Identity)
 import Data.Int (Int32)
-import Effectful (Eff, type (:>))
-import Effectful.Beam (DB, authQueryDebug, queryDebug)
+import Effectful (Eff, Effect, type (:>))
+import Effectful.Beam (DB, DbError, authQueryDebug, queryDebug)
+import Effectful.Error.Static (Error)
 import Muridae.Item.Types (ItemId (ItemId), PrimaryKey (ItemPk))
 import Muridae.ItemListing.Model qualified as ItemListing
-import qualified Muridae.ItemListing.Types as DB
 import Muridae.ItemListing.Types
   ( ItemListingId (ItemListingId)
   , ListingType (Buy, Sell)
   )
+import Muridae.ItemListing.Types qualified as DB
 import Muridae.User.Types (PrimaryKey (UserPk), UserId (UserId))
 import MuridaeWeb.Handler.Item.Types (ItemId (ItemId))
 import MuridaeWeb.Handler.Item.Types qualified as Handler
-
 import MuridaeWeb.Handler.ItemListing.Types
   ( CreateItemListing
+  , ItemListingId (ItemListingId)
+  , ItemListingType (BUY, SELL)
   , PooledListing (PooledListing)
   , ReqStatus
   , ResListingsUnderItem (ResListingsUnderItem)
-  , ItemListingId (ItemListingId)
-  , ItemListingType (BUY, SELL)
   )
 import MuridaeWeb.Handler.ItemListing.Types qualified as Handler
 import MuridaeWeb.Handler.User (UserId (UserId))
@@ -37,8 +39,15 @@ import MuridaeWeb.Handler.User qualified as UserHandler
 
 -------------------------------------------------------------------------------
 
-list :: (DB :> es) => Eff es [Handler.ItemListing]
-list = queryDebug putStrLn ItemListing.listAll <&> fmap parseDBItemListing
+-- data DbException = DbException
+
+list
+  :: forall (es :: [Effect])
+   . (DB :> es)
+  => Eff (Error DbError : es) [Handler.ItemListing]
+list =
+  queryDebug putStrLn ItemListing.listAll
+    >>= \listing -> pure $ parseDBItemListing <$> listing
 
 create
   :: (DB :> es)
@@ -53,16 +62,19 @@ create userId params = do
     ItemListing.match listing matchedListings
 
 getListingsUnderItem
-  :: (DB :> es) => Handler.ItemId -> Eff es ResListingsUnderItem
-getListingsUnderItem itemId =
-  queryDebug putStrLn $ do
-    (pooledBuy, pooledSell) <- ItemListing.getListingsUnderItem (coerce itemId)
+  :: forall (es :: [Effect])
+   . (DB :> es)
+  => Handler.ItemId
+  -> Eff (Error DbError : es) ResListingsUnderItem
+getListingsUnderItem itemId = do
+  (pooledBuy, pooledSell) <-
+    queryDebug putStrLn (ItemListing.getListingsUnderItem (coerce itemId))
 
-    let
-      pooledBuy' = toPooledListing <$> pooledBuy
-      pooledSell' = toPooledListing <$> pooledSell
+  let
+    pooledBuy' = toPooledListing <$> pooledBuy
+    pooledSell' = toPooledListing <$> pooledSell
 
-    pure (ResListingsUnderItem pooledBuy' pooledSell')
+  pure (ResListingsUnderItem pooledBuy' pooledSell')
  where
   toPooledListing (_, lCo, lBa, lQt) = PooledListing lCo lBa lQt
 
@@ -71,7 +83,7 @@ updateStatus
   => UserHandler.UserId
   -> Handler.ItemListingId
   -> ReqStatus
-  -> Eff es (Maybe Handler.ItemListing)
+  -> Eff (Error DbError : es) (Maybe Handler.ItemListing)
 updateStatus userId listingId params =
   queryDebug
     putStrLn

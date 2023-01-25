@@ -17,7 +17,7 @@ import Database.PostgreSQL.Simple (Connection)
 import Database.PostgreSQL.Simple qualified as Beam
 import Effectful (Eff, Effect, IOE, MonadIO (liftIO), type (:>))
 
-data MuridaeEnv = MuridaeEnv
+newtype MuridaeEnv = MuridaeEnv
   { pool :: Pool Connection
   }
 
