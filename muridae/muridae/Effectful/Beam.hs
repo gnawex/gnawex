@@ -3,6 +3,7 @@
 module Effectful.Beam (module Effectful.Beam) where
 
 import Control.Monad.Catch (Exception, SomeException, catch)
+import Data.Aeson (ToJSON (toJSON), Value (String), object)
 import Data.Int (Int32)
 import Data.Kind (Type)
 import Data.Pool (Pool, withResource)
@@ -35,6 +36,14 @@ data DbError = forall (e :: Type). (Exception e, Show e) => DbError e
 type instance DispatchOf DB = 'Static 'WithSideEffects
 
 newtype instance StaticRep DB = DB (Pool Connection)
+
+instance ToJSON DbError where
+  toJSON :: DbError -> Value
+  toJSON (DbError _e) =
+    object
+      [ ("message", String "GNAWEX was unable to establish a connection with the database.")
+      , ("help", String "If you are the GNAWEX admin, ensure that the DB credentials are valid.")
+      ]
 
 -------------------------------------------------------------------------------
 

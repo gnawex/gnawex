@@ -6,7 +6,7 @@ import Data.Time (UTCTime)
 import GHC.Generics (Generic)
 import MuridaeWeb.Handler.Item.Types (ItemId)
 import MuridaeWeb.Handler.User (UserId)
-import Servant.API (FromHttpApiData)
+import Servant.API (FromHttpApiData, HasStatus (StatusOf))
 
 newtype ItemListingId = ItemListingId Int32
   deriving (ToJSON, FromHttpApiData) via Int32
@@ -58,3 +58,12 @@ data ResListingsUnderItem = ResListingsUnderItem
 newtype ReqStatus = ReqStatus {active :: Bool}
   deriving stock (Generic)
   deriving anyclass (FromJSON)
+
+-------------------------------------------------------------------------------
+-- Instances
+
+instance HasStatus ItemListing where
+  type StatusOf ItemListing = 200
+
+instance HasStatus ResListingsUnderItem where
+  type StatusOf ResListingsUnderItem = 200

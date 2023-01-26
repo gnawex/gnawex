@@ -6,7 +6,10 @@ module MuridaeWeb.Handler.ItemListing
   )
 where
 
-import Effectful.Error.Static (runError, throwError)
+import Effectful (Eff, (:>))
+import Effectful.Beam (DB, DbError)
+import Effectful.Error.Static (Error, runErrorNoCallStack)
+import Effectful.Servant (runUVerb, throwUVerb)
 import Muridae.ItemListing qualified as ItemListing
 import MuridaeWeb.Handler.Item.Types (ItemId)
 import MuridaeWeb.Handler.ItemListing.Types
@@ -18,60 +21,112 @@ import MuridaeWeb.Handler.ItemListing.Types
   )
 import MuridaeWeb.Handler.User qualified as UserHandler (UserId)
 import MuridaeWeb.Types (Handler')
-import Servant (ServerError (ServerError))
+import Servant (Union, WithStatus (WithStatus), respond)
 import Servant.API.ContentTypes (NoContent (NoContent))
-import Effectful.Beam (DbError)
 
 -------------------------------------------------------------------------------
 -- Item listing handlers
 
-index :: Handler' [ItemListing]
-index = do
-  result <- runError @DbError ItemListing.list
-
-  case result of
-    Right list -> pure list
-    Left (_, _) -> throwError @ServerError (ServerError 500 "" "Unable to connect" [])
+index
+  :: Handler'
+      ( Union
+          '[ WithStatus 200 [ItemListing]
+           , WithStatus 500 DbError
+           ]
+      )
+index =
+  runUVerb $
+    runErrorNoCallStack @DbError ItemListing.list
+      >>= either (throwUVerb . WithStatus @500) (respond . WithStatus @200)
 
 -- | Get all the listings under a tradable item
-getListingsOfItem :: ItemId -> Handler' ResListingsUnderItem
-getListingsOfItem itemId = do
-  result <- runError @DbError $ ItemListing.getListingsUnderItem itemId
-
-  case result of
-    Right list -> pure list
-    Left (_, _) -> throwError @ServerError (ServerError 500 "" "Unable to connect" [])
+getListingsOfItem
+  :: ItemId
+  -> Handler'
+      ( Union
+          '[ ResListingsUnderItem
+           , WithStatus 500 DbError
+           ]
+      )
+getListingsOfItem itemId =
+  runUVerb $
+    runErrorNoCallStack @DbError (ItemListing.getListingsUnderItem itemId)
+      >>= either (throwUVerb . WithStatus @500) respond
 
 -- TODO: Use auth context
 create
   :: Maybe UserHandler.UserId
   -> CreateItemListing
-  -> Handler' NoContent
-create userId params =
+  -> Handler' (Union '[NoContent, WithStatus 401 String, WithStatus 500 DbError])
+create userId params = runUVerb $ do
   case userId of
-    Just userId' -> do
-      result <- runError @String (ItemListing.create userId' params)
-
-      case result of
-        Right _ -> pure NoContent
-        Left (_, _) -> throwError @ServerError (ServerError 500 "" "Unable to connect to the DB" [])
-    Nothing -> throwError @ServerError (ServerError 401 "No permission" "" [])
+    Just userId' ->
+      runErrorNoCallStack @DbError (ItemListing.create userId' params)
+        >>= either (throwUVerb . WithStatus @500) (\_ -> respond NoContent)
+    Nothing ->
+      throwUVerb @(WithStatus 401 String)
+        (WithStatus @401 "Not allowed to do that")
 
 updateStatus
   :: Maybe UserHandler.UserId
   -> ItemListingId
   -> ReqStatus
-  -> Handler' ItemListing
+  -> Handler'
+      ( Union
+          '[ ItemListing
+           , WithStatus 401 String
+           , WithStatus 404 String
+           , WithStatus 500 DbError
+           ]
+      )
 updateStatus userId listingId params =
-  case userId of
-    Just userId' -> do
-      dbListing <- runError @DbError $ ItemListing.updateStatus userId' listingId params
-
-      case dbListing of
-        Left _ -> throwError @ServerError (ServerError 500 "" "Oh no!" [])
-        Right dbListing' ->
-          case dbListing' of
-            Just listing -> pure listing
-            Nothing -> throwError @ServerError (ServerError 404 "Item listing not found" "" [])
-    -- TODO: Replace (auth context)
-    Nothing -> throwError @ServerError (ServerError 401 "No permission" "" [])
+  -- TODO: Replace (auth context)
+  -- Nothing ->
+  --   throwUVerb @(WithStatus 401 String) (WithStatus @401 "Not allowed to do that")
+  runUVerb $
+    maybe
+      (throwUVerb @(WithStatus 401 String) (WithStatus @401 "Not allowed to do that"))
+      (doUpdate listingId params)
+      userId
+ where
+  doUpdate
+    :: (DB :> es)
+    => ItemListingId
+    -> ReqStatus
+    -> UserHandler.UserId
+    -> Eff
+        ( Error
+            ( Union
+                '[ ItemListing
+                 , WithStatus 401 String
+                 , WithStatus 404 String
+                 , WithStatus 500 DbError
+                 ]
+            )
+            : es
+        )
+        ( Union
+            '[ ItemListing
+             , WithStatus 401 String
+             , WithStatus 404 String
+             , WithStatus 500 DbError
+             ]
+        )
+  doUpdate listingId' params' userId' =
+    runErrorNoCallStack @DbError (ItemListing.updateStatus userId' listingId' params')
+      >>= either
+        ( throwUVerb @(WithStatus 500 DbError)
+            @[ ItemListing
+             , WithStatus 401 String
+             , WithStatus 404 String
+             , WithStatus 500 DbError
+             ]
+            . WithStatus @500
+        )
+        ( maybe
+            ( throwUVerb
+                @(WithStatus 404 String)
+                (WithStatus @404 "Item listing does not exist")
+            )
+            respond
+        )

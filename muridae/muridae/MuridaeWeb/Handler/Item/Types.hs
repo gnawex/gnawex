@@ -5,7 +5,7 @@ import Data.Int (Int32)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import GHC.Generics (Generic)
-import Servant.API (FromHttpApiData)
+import Servant.API (FromHttpApiData, HasStatus (StatusOf))
 
 newtype ItemId = ItemId Int32
   deriving (ToJSON, FromJSON, FromHttpApiData) via Int32
@@ -29,3 +29,9 @@ data ReqItem = ReqItem
   }
   deriving stock (Generic)
   deriving anyclass (FromJSON)
+
+instance HasStatus Item where
+  type StatusOf Item = 200
+
+instance HasStatus [Item] where
+  type StatusOf [Item] = 200
