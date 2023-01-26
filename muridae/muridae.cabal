@@ -60,6 +60,7 @@ library
     DB
     DB.Types
     Effectful.Beam
+    Effectful.Servant
     Muridae.Environment
     Muridae.Item
     Muridae.Item.Model
