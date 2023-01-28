@@ -41,8 +41,8 @@ graph LR
 
 New listings must not be created as a result of the transaction output. Rather,
 this is just to show that provided with the transactions, we're able to determine
-what the final quantity is for the item listing. The quantity column must not be
-manually updated.
+what the final quantity is for the item listing. A copy of the quantity column
+will be created initally, and will be updated as transactions happen.
 
 ## :material-wrench: Operations
 
@@ -77,7 +77,8 @@ Column name | Description | Type | Required | Nullable | Default
 `seller_agreed` | If the seller agreed to the new status | `BOOLEAN` | `true` | `false` | `false`
 `created_at` | To record when this was created | `TIMESTAMP WITH TIME ZONE` | `true` | `false` | `now()`
 `updated_at` | To record when this was updated | `TIMESTAMP WITH TIME ZONE` | `false` | `true` | `now()` (if updated, otherwise `null`)
-`quantity` | How many of an item is being transacted | `INT` | `true` | `false` | -
+`quantity` | Initial number of units that the user wants to sell/buy | `INT` | `true` | `false` | -
+`current_quantity` | Available number of units left | `INT` | `true` | `false` | `quantity`
 
 [^1]:
   Only for transactions they're involved in as the seller/buyer
