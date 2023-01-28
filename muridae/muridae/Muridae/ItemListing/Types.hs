@@ -4,11 +4,15 @@ module Muridae.ItemListing.Types
   , ItemBuyListing
   , ItemListingId (..)
   , ListingType (..)
+  , PooledBuyListing (..)
+  , PooledSellListing (..)
   , PrimaryKey (..)
   , mkItemSellListing
   , mkItemBuyListing
   , unItemSellListing
   , unItemBuyListing
+  , mkPooledBuyListing
+  , mkPooledSellListing
   )
 where
 
@@ -77,6 +81,18 @@ data ListingType = Buy | Sell
   deriving stock (Eq, Generic, Show)
   deriving anyclass (HasSqlEqualityCheck Postgres)
 
+data PooledBuyListing = PooledBuyListing
+  { cost :: Int32
+  , batchedBy :: Int16
+  , unitQuantity :: Int32
+  }
+
+data PooledSellListing = PooledSellListing
+  { cost :: Int32
+  , batchedBy :: Int16
+  , unitQuantity :: Int32
+  }
+
 -------------------------------------------------------------------------------
 -- Instances
 
@@ -114,7 +130,10 @@ instance FromField ListingType where
               "sell" ->
                 pure Sell
               _ ->
-                returnError ConversionFailed f "Could not 'read' value for 'ListingType'"
+                returnError
+                  ConversionFailed
+                  f
+                  "Could not 'read' value for 'ListingType'"
       _ ->
         returnError Incompatible f ""
 
@@ -146,3 +165,17 @@ unItemSellListing = coerce
 
 unItemBuyListing :: forall (f :: Type -> Type). ItemBuyListing f -> ItemListing f
 unItemBuyListing = coerce
+
+mkPooledBuyListing
+  :: (ListingType, Int32, Int16, Int32) -> Maybe PooledBuyListing
+mkPooledBuyListing (type_, cost, batchedBy, unitQuantity)
+  | and [type_ == Buy, cost > 0, batchedBy > 0, unitQuantity > 0] =
+      Just (PooledBuyListing cost batchedBy unitQuantity)
+  | otherwise = Nothing
+
+mkPooledSellListing
+  :: (ListingType, Int32, Int16, Int32) -> Maybe PooledSellListing
+mkPooledSellListing (type_, cost, batchedBy, unitQuantity)
+  | and [type_ == Sell, cost > 0, batchedBy > 0, unitQuantity > 0] =
+      Just (PooledSellListing cost batchedBy unitQuantity)
+  | otherwise = Nothing

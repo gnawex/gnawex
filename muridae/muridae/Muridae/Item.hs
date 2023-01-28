@@ -1,4 +1,4 @@
-module Muridae.Item (list, create_) where
+module Muridae.Item (list, create_, findDetails_) where
 
 import Data.Coerce (coerce)
 import Data.Functor ((<&>))
@@ -19,7 +19,16 @@ import Muridae.Item.Types
       )
   , ItemId (ItemId)
   )
+import Muridae.ItemListing.Model qualified as ItemListingModel
+import Muridae.ItemListing.Types
+  ( PooledBuyListing
+  , PooledSellListing
+  , mkPooledBuyListing
+  , mkPooledSellListing
+  )
 import MuridaeWeb.Handler.Item.Types qualified as Handler
+
+--------------------------------------------------------------------------------
 
 list :: (DB :> es) => Eff (Error DbError : es) [Handler.Item]
 list = queryDebug putStrLn ItemModel.all <&> fmap parseDBItem
@@ -27,6 +36,29 @@ list = queryDebug putStrLn ItemModel.all <&> fmap parseDBItem
 create_ :: (DB :> es) => Handler.ReqItem -> Eff (Error DbError : es) ()
 create_ params =
   queryDebug putStrLn (ItemModel.create params)
+
+
+-- | Finds an item's details including its pooled buy and sell listings
+findDetails_
+  :: (DB :> es)
+  => Handler.ItemId
+  -> Eff
+      (Error DbError : es)
+      (Maybe (Item Identity, [PooledBuyListing], [PooledSellListing]))
+findDetails_ itemId =
+  queryDebug putStrLn $ do
+    item <- ItemModel.find itemId
+
+    (pooledBuys, pooledSells) <-
+      ItemListingModel.getListingsUnderItem (coerce itemId)
+
+    let
+      pooledBuys' = mapM mkPooledBuyListing pooledBuys
+      pooledSells' = mapM mkPooledSellListing pooledSells
+
+    pure $ pure (,,) <*> item <*> pooledBuys' <*> pooledSells'
+
+--------------------------------------------------------------------------------
 
 parseDBItem :: Item Identity -> Handler.Item
 parseDBItem dbItem =

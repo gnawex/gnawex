@@ -1,6 +1,5 @@
 module MuridaeWeb.Handler.ItemListing
-  ( getListingsOfItem
-  , create
+  ( create
   , updateStatus
   , index
   )
@@ -11,13 +10,11 @@ import Effectful.Beam (DB, DbError)
 import Effectful.Error.Static (Error, runErrorNoCallStack)
 import Effectful.Servant (runUVerb, throwUVerb)
 import Muridae.ItemListing qualified as ItemListing
-import MuridaeWeb.Handler.Item.Types (ItemId)
 import MuridaeWeb.Handler.ItemListing.Types
   ( CreateItemListing
   , ItemListing
   , ItemListingId
   , ReqStatus
-  , ResListingsUnderItem
   )
 import MuridaeWeb.Handler.User qualified as UserHandler (UserId)
 import MuridaeWeb.Types (Handler')
@@ -38,20 +35,6 @@ index =
   runUVerb $
     runErrorNoCallStack @DbError ItemListing.list
       >>= either (throwUVerb . WithStatus @500) (respond . WithStatus @200)
-
--- | Get all the listings under a tradable item
-getListingsOfItem
-  :: ItemId
-  -> Handler'
-      ( Union
-          '[ ResListingsUnderItem
-           , WithStatus 500 DbError
-           ]
-      )
-getListingsOfItem itemId =
-  runUVerb $
-    runErrorNoCallStack @DbError (ItemListing.getListingsUnderItem itemId)
-      >>= either (throwUVerb . WithStatus @500) respond
 
 -- TODO: Use auth context
 create

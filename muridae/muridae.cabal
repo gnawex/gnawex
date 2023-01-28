@@ -79,6 +79,7 @@ library
     MuridaeWeb.Handler.ItemListing
     MuridaeWeb.Handler.ItemListing.Types
     MuridaeWeb.Handler.User
+    MuridaeWeb.JSON.PooledListing
     MuridaeWeb.Route
     MuridaeWeb.Route.Admin.Item
     MuridaeWeb.Route.Item
