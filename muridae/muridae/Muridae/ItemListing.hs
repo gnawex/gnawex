@@ -3,7 +3,6 @@
 module Muridae.ItemListing
   ( list
   , create
-  , getListingsUnderItem
   , updateStatus
   )
 where
@@ -24,14 +23,11 @@ import Muridae.ItemListing.Types
 import Muridae.ItemListing.Types qualified as DB
 import Muridae.User.Types (PrimaryKey (UserPk), UserId (UserId))
 import MuridaeWeb.Handler.Item.Types (ItemId (ItemId))
-import MuridaeWeb.Handler.Item.Types qualified as Handler
 import MuridaeWeb.Handler.ItemListing.Types
   ( CreateItemListing
   , ItemListingId (ItemListingId)
   , ItemListingType (BUY, SELL)
-  , PooledListing (PooledListing)
   , ReqStatus
-  , ResListingsUnderItem (ResListingsUnderItem)
   )
 import MuridaeWeb.Handler.ItemListing.Types qualified as Handler
 import MuridaeWeb.Handler.User (UserId (UserId))
@@ -60,23 +56,6 @@ create userId params = do
     matchedListings <- ItemListing.findMatches listing
 
     ItemListing.match listing matchedListings
-
-getListingsUnderItem
-  :: forall (es :: [Effect])
-   . (DB :> es)
-  => Handler.ItemId
-  -> Eff (Error DbError : es) ResListingsUnderItem
-getListingsUnderItem itemId = do
-  (pooledBuy, pooledSell) <-
-    queryDebug putStrLn (ItemListing.getListingsUnderItem (coerce itemId))
-
-  let
-    pooledBuy' = toPooledListing <$> pooledBuy
-    pooledSell' = toPooledListing <$> pooledSell
-
-  pure (ResListingsUnderItem pooledBuy' pooledSell')
- where
-  toPooledListing (_, lCo, lBa, lQt) = PooledListing lCo lBa lQt
 
 updateStatus
   :: (DB :> es)

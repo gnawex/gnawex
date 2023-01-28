@@ -2,8 +2,7 @@ module MuridaeWeb.Route.Item (module MuridaeWeb.Route.Item) where
 
 import Effectful.Beam (DbError)
 import GHC.Generics (Generic)
-import MuridaeWeb.Handler.Item.Types (Item, ItemId)
-import MuridaeWeb.Handler.ItemListing.Types (ResListingsUnderItem)
+import MuridaeWeb.Handler.Item.Types (Item, ItemDetails, ItemId)
 import Servant (Capture, JSON, UVerb, WithStatus, type (:>))
 import Servant.API.Generic (type (:-))
 import Servant.API.NamedRoutes (NamedRoutes)
@@ -20,15 +19,27 @@ data Routes' mode = Routes'
             '[ [Item]
              , WithStatus 500 DbError
              ]
-  , getListingsUnderItem
+  , show
       :: mode
         :- Capture "item_id" ItemId
-        :> "listings"
         :> UVerb
             'GET
             '[JSON]
-            '[ ResListingsUnderItem
+            '[ WithStatus 200 ItemDetails
+             , WithStatus 404 String
              , WithStatus 500 DbError
              ]
+  -- TODO: Replace with an endpoint that responds with listings, not pooled,
+  -- with filters for listing type, and ordering.
+  -- , getListingsUnderItem
+  --     :: mode
+  --       :- Capture "item_id" ItemId
+  --       :> "listings"
+  --       :> UVerb
+  --           'GET
+  --           '[JSON]
+  --           '[ ResListingsUnderItem
+  --            , WithStatus 500 DbError
+  --            ]
   }
   deriving stock (Generic)

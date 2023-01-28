@@ -14,9 +14,9 @@ CREATE TABLE app.tradable_item_listings (
   , user__id               BIGINT REFERENCES app.users (id)
 
   , type                   app.LISTING_TYPE NOT NULL
-  , batched_by             SMALLINT NOT NULL
+  , batched_by             SMALLINT NOT NULL CHECK (batched_by > 0)
   , unit_quantity          INT NOT NULL CHECK (unit_quantity > 0)
-  , current_unit_quantity  INT NOT NULL CHECK (unit_quantity > 0)
+  , current_unit_quantity  INT NOT NULL CHECK (current_unit_quantity > 0)
   , cost                   INT NOT NULL CHECK (cost >= 0)
   , active                 BOOLEAN DEFAULT true NOT NULL
 

@@ -17,7 +17,7 @@ import Database.Beam.Postgres (Postgres)
 import Database.Beam.Postgres.Syntax (PgValueSyntax)
 import GHC.Generics (Generic)
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- Types
 
 data Item f = Item
@@ -41,7 +41,7 @@ newtype ItemId = ItemId Int32
     )
     via Int32
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- Instances
 
 deriving instance Show (Item Identity)

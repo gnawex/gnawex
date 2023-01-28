@@ -47,7 +47,8 @@ muridaeAPI =
     itemRoutes =
       ItemRoute.Routes'
         { index = ItemHandler.indexItems
-        , getListingsUnderItem = ItemListingHandler.getListingsOfItem
+        , show = ItemHandler.showDetails
+
         }
 
     itemListingRoutes =
