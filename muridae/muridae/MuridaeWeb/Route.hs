@@ -7,9 +7,9 @@ import MuridaeWeb.Route.ItemListing qualified as ItemListing
 import Servant.API (type (:-), type (:>))
 import Servant.API.NamedRoutes (NamedRoutes)
 
-data API mode = API
-  { publicRoutes :: mode :- "api" :> NamedRoutes PublicRoutes
-  , adminRoutes :: mode :- "api" :> "admin" :> NamedRoutes AdminRoutes
+data APIv1 mode = APIv1
+  { publicRoutes :: mode :- "api" :> "v1" :> NamedRoutes PublicRoutes
+  , adminRoutes :: mode :- "api" :> "v1" :> "admin" :> NamedRoutes AdminRoutes
   }
   deriving stock (Generic)
 

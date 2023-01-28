@@ -17,7 +17,7 @@ import Muridae.Environment
 import MuridaeWeb.Handler.Item qualified as ItemHandler
 import MuridaeWeb.Handler.ItemListing qualified as ItemListingHandler
 import MuridaeWeb.Route
-  ( API (API, adminRoutes, publicRoutes)
+  ( APIv1 (APIv1, adminRoutes, publicRoutes)
   , AdminRoutes (AdminRoutes, items)
   , PublicRoutes (PublicRoutes, itemListings, items)
   )
@@ -38,11 +38,11 @@ mkApplication :: MuridaeEnv -> Application
 mkApplication muridaeEnv =
   genericServeT
     (effToHandler . runDB (muridaeEnv.pool) . runReader muridaeEnv)
-    muridaeAPI
+    muridaeAPIv1
 
 -- | Maps the routes and their handlers
-muridaeAPI :: API (AsServerT Handler')
-muridaeAPI =
+muridaeAPIv1 :: APIv1 (AsServerT Handler')
+muridaeAPIv1 =
   let
     itemRoutes =
       ItemRoute.Routes'
@@ -64,7 +64,7 @@ muridaeAPI =
         , create = ItemHandler.create
         }
    in
-    API
+    APIv1
       { publicRoutes =
           PublicRoutes
             { items = itemRoutes
