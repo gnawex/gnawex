@@ -35,18 +35,16 @@ import MuridaeWeb.Handler.User qualified as UserHandler
 
 -------------------------------------------------------------------------------
 
--- data DbException = DbException
-
 list
   :: forall (es :: [Effect])
-   . (DB :> es)
-  => Eff (Error DbError : es) [Handler.ItemListing]
+   . (DB :> es, Error DbError :> es)
+  => Eff es [Handler.ItemListing]
 list =
   queryDebug putStrLn ItemListing.listAll
     >>= \listing -> pure $ parseDBItemListing <$> listing
 
 create
-  :: (DB :> es)
+  :: (DB :> es, Error DbError :> es)
   => UserHandler.UserId
   -> CreateItemListing
   -> Eff es [(DB.ItemListing Identity, Int32, Int32)]
@@ -58,11 +56,11 @@ create userId params = do
     ItemListing.match listing matchedListings
 
 updateStatus
-  :: (DB :> es)
+  :: (DB :> es, Error DbError :> es)
   => UserHandler.UserId
   -> Handler.ItemListingId
   -> ReqStatus
-  -> Eff (Error DbError : es) (Maybe Handler.ItemListing)
+  -> Eff es (Maybe Handler.ItemListing)
 updateStatus userId listingId params =
   queryDebug
     putStrLn

@@ -30,20 +30,19 @@ import MuridaeWeb.Handler.Item.Types qualified as Handler
 
 --------------------------------------------------------------------------------
 
-list :: (DB :> es) => Eff (Error DbError : es) [Handler.Item]
+list :: (DB :> es, Error DbError :> es) => Eff es [Handler.Item]
 list = queryDebug putStrLn ItemModel.all <&> fmap parseDBItem
 
-create_ :: (DB :> es) => Handler.ReqItem -> Eff (Error DbError : es) ()
+create_ :: (DB :> es, Error DbError :> es) => Handler.ReqItem -> Eff es ()
 create_ params =
   queryDebug putStrLn (ItemModel.create params)
 
-
 -- | Finds an item's details including its pooled buy and sell listings
 findDetails_
-  :: (DB :> es)
+  :: (DB :> es, Error DbError :> es)
   => Handler.ItemId
   -> Eff
-      (Error DbError : es)
+      es
       (Maybe (Item Identity, [PooledBuyListing], [PooledSellListing]))
 findDetails_ itemId =
   queryDebug putStrLn $ do

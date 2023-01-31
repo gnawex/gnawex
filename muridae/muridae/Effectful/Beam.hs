@@ -47,6 +47,7 @@ instance ToJSON DbError where
 
 -------------------------------------------------------------------------------
 
+-- | @DB@ effect handler
 runDB
   :: forall (es :: [Effect]) (a :: Type)
    . (IOE :> es)
@@ -55,6 +56,10 @@ runDB
   -> Eff es a
 runDB connPool = evalStaticRep (DB connPool)
 
+-- TODO: Write non-debug version of @queryDebug@
+-- TODO: Add @Log@ effect to anything that involves debugging
+
+-- TODO: Refactor to use checked exception
 authQueryDebug
   :: forall (es :: [Effect]) (a :: Type)
    . (DB :> es)
@@ -82,14 +87,14 @@ authQueryDebug debug userId pg = do
 
 queryDebug
   :: forall (es :: [Effect]) (a :: Type)
-   . (DB :> es)
+   . (DB :> es, Error DbError :> es)
   => (String -> IO ())
   -> Pg a
-  -> Eff (Error DbError : es) a
+  -> Eff es a
 queryDebug debug pg = do
   DB connPool <- getStaticRep
 
-  catch @(Eff (Error DbError : es)) @SomeException
+  catch -- @(Eff (Error DbError : es)) @SomeException
     ( unsafeEff_ $ do
         withResource connPool $
           \conn ->
