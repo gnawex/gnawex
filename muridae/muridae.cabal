@@ -34,7 +34,6 @@ common common-warnings
 
 common common-extensions
   default-extensions:
-    NoFieldSelectors
     DataKinds
     DeriveAnyClass
     DerivingStrategies
@@ -43,9 +42,10 @@ common common-extensions
     ExplicitNamespaces
     ImportQualifiedPost
     LambdaCase
-    OverloadedRecordDot
     OverloadedStrings
     TypeFamilies
+    NoFieldSelectors
+    OverloadedRecordDot
 
 library
   import:

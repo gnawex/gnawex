@@ -2,7 +2,8 @@
   description = "An independent marketplate for MouseHunt";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs";
+    haskellNix.url = "github:input-output-hk/haskell.nix";
+    nixpkgs.follows = "haskellNix/nixpkgs-unstable";
     mkdocs-material.url = "github:sekunho/mkdocs-material";
     flake-utils.url = "github:numtide/flake-utils";
     feedback.url = "github:NorfairKing/feedback";
@@ -11,82 +12,72 @@
 
   outputs =
     { self
+    , haskellNix
     , nixpkgs
-    , flake-utils
     , mkdocs-material
+    , flake-utils
     , feedback
     , pre-commit-hooks
     }:
     flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
     let
-      pkgs = import nixpkgs { inherit system; };
-      libs = with pkgs; [ postgresql zlib ];
-      fourmolu = pkgs.haskell.packages.ghc925.fourmolu;
-
       mkdocs-material-insiders =
         mkdocs-material.packages.${system}.mkdocs-material-insiders;
 
-      srcPaths =
-        builtins.concatStringsSep
-          " "
-          [ "muridae/muridae" "muridae/muridae-server" ];
-    in
-    {
-      checks = {
-        pre-commit-check = pre-commit-hooks.lib.${system}.run {
-          src = ./.;
+      overlays = [
+        haskellNix.overlay
+        (final: prev: {
+          # This overlay adds our project to pkgs
+          muridaeProject =
+            final.haskell-nix.project' {
+              src = ./.;
+              compiler-nix-name = "ghc925";
 
-          hooks = {
-            nixpkgs-fmt.enable = true;
+              shell.tools = {
+                cabal = { };
+                hlint = { };
+                haskell-language-server = { };
+                fourmolu = { };
+                cabal-fmt = { };
+              };
 
-            haskell-fmt = {
-              # FIXME: Investigate disparity between HLS format and fourmolu CLI
-              enable = false;
-              name = "Format Haskell";
-              files = "\\.(lhs|hs)$";
-              entry = "${fourmolu}/bin/fourmolu --mode check " + srcPaths;
+              # Non-Haskell shell tools go here
+              shell.buildInputs = with pkgs; [
+                haskellPackages.implicit-hie
+
+                # Nix
+                nil
+                nixpkgs-fmt
+
+                postgresql.lib
+                pgformatter
+                sqitchPg
+                perl534Packages.TAPParserSourceHandlerpgTAP
+
+                mkdocs-material-insiders
+
+                feedback.packages.${system}.default
+              ];
+              # This adds `js-unknown-ghcjs-cabal` to the shell.
+              # shell.crossPlatforms = p: [p.ghcjs];
             };
-          };
-        };
+        })
+      ];
+      pkgs = import nixpkgs { inherit system overlays; inherit (haskellNix) config; };
+      flake = pkgs.muridaeProject.flake {
+        # This adds support for `nix build .#js-unknown-ghcjs:muridae:exe:muridae`
+        # crossPlatforms = p: [p.ghcjs];
+      };
+    in
+    flake // {
+      packages = rec {
+        default = muridae-server;
+        muridae-server = flake.packages."muridae:exe:muridae-server";
+        muridae = flake.packages."muridae:lib:muridae";
       };
 
       devShells = {
-        default = pkgs.mkShell {
-          inherit (self.checks.${system}.pre-commit-check) shellHook;
-
-          buildInputs = with pkgs; [
-            # Dev tools
-            feedback.packages.${system}.default
-
-            # Haskell
-            cabal-install
-            haskell.compiler.ghc925
-            haskell.packages.ghc925.haskell-language-server
-            haskell.packages.ghc925.hlint
-            haskell.packages.ghc925.implicit-hie
-            haskell.packages.ghc925.fourmolu
-            haskell.packages.ghc925.cabal-fmt
-
-            # Nix
-            nil
-            nixpkgs-fmt
-
-            # Postgres
-            pgformatter
-            sqitchPg
-            perl534Packages.TAPParserSourceHandlerpgTAP
-
-            # Need the full `postgresql` because of the include `libpq-fe.h`
-            postgresql
-            pkg-config
-
-            # Docs
-            mkdocs-material-insiders
-          ];
-
-          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath libs;
-        };
-
+        default = flake.devShells.default;
         ci = pkgs.mkShell { buildInputs = [ mkdocs-material-insiders ]; };
 
         ci-db = pkgs.mkShell {
