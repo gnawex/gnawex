@@ -5,11 +5,12 @@ where
 
 import Data.Aeson.Types (FromJSON, ToJSON)
 import Data.Int (Int16, Int32)
+import Data.Text (Text)
 import Data.Time (UTCTime)
 import GHC.Generics (Generic)
 import MuridaeWeb.Handler.Item.Types (ItemId)
 import MuridaeWeb.Handler.User (UserId)
-import Servant.API (FromHttpApiData, HasStatus (StatusOf))
+import Servant.API (FromHttpApiData (parseQueryParam), HasStatus (StatusOf))
 
 newtype ItemListingId = ItemListingId Int32
   deriving (ToJSON, FromHttpApiData) via Int32
@@ -47,9 +48,22 @@ newtype ReqStatus = ReqStatus {active :: Bool}
   deriving stock (Generic)
   deriving anyclass (FromJSON)
 
-
 --------------------------------------------------------------------------------
 -- Instances
 
 instance HasStatus ItemListing where
   type StatusOf ItemListing = 200
+
+instance FromHttpApiData ItemListingType where
+  parseQueryParam :: Text -> Either Text ItemListingType
+  parseQueryParam = \case
+    "BUY" -> pure BUY
+    "SELL" -> pure SELL
+    invalid ->
+      Left $
+        mconcat
+          [ "Invalid value `"
+          , invalid
+          , "` for item listing type."
+          , " I expected `BUY` or `SELL`"
+          ]

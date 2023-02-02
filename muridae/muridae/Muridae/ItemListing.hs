@@ -3,6 +3,7 @@
 module Muridae.ItemListing
   ( list
   , create
+  , itemListings
   , updateStatus
   )
 where
@@ -14,15 +15,16 @@ import Data.Int (Int32)
 import Effectful (Eff, Effect, type (:>))
 import Effectful.Beam (DB, DbError, authQueryDebug, queryDebug)
 import Effectful.Error.Static (Error)
-import Muridae.Item.Types (ItemId (ItemId), PrimaryKey (ItemPk))
+import Muridae.Item.Types (Item, ItemId (ItemId), PrimaryKey (ItemPk))
 import Muridae.ItemListing.Model qualified as ItemListing
 import Muridae.ItemListing.Types
-  ( ItemListingId (ItemListingId)
+  ( FilterItemListingType
+  , ItemListingId (ItemListingId)
   , ListingType (Buy, Sell)
   )
 import Muridae.ItemListing.Types qualified as DB
 import Muridae.User.Types (PrimaryKey (UserPk), UserId (UserId))
-import MuridaeWeb.Handler.Item.Types (ItemId (ItemId))
+import MuridaeWeb.Handler.Item.Types qualified as Handler
 import MuridaeWeb.Handler.ItemListing.Types
   ( CreateItemListing
   , ItemListingId (ItemListingId)
@@ -38,9 +40,20 @@ import MuridaeWeb.Handler.User qualified as UserHandler
 list
   :: forall (es :: [Effect])
    . (DB :> es, Error DbError :> es)
-  => Eff es [Handler.ItemListing]
-list =
-  queryDebug putStrLn ItemListing.listAll
+  => FilterItemListingType
+  -> Eff es [Handler.ItemListing]
+list filterType =
+  queryDebug putStrLn (ItemListing.listAll Nothing filterType)
+    >>= \listing -> pure $ parseDBItemListing <$> listing
+
+itemListings
+  :: forall (es :: [Effect])
+   . (DB :> es, Error DbError :> es)
+  => ItemId
+  -> FilterItemListingType
+  -> Eff es [Handler.ItemListing]
+itemListings itemId filterType =
+  queryDebug putStrLn (ItemListing.listAll (Just itemId) filterType)
     >>= \listing -> pure $ parseDBItemListing <$> listing
 
 create
@@ -73,7 +86,11 @@ parseDBItemListing :: DB.ItemListing Identity -> Handler.ItemListing
 parseDBItemListing dbItemListing =
   Handler.ItemListing
     { id = coerce dbItemListing._id
-    , tradable_item_id = coerce dbItemListing._tradable_item
+    , tradable_item_id =
+        coerce
+          @(PrimaryKey Item Identity)
+          @Handler.ItemId
+          dbItemListing._tradable_item
     , owner_id = coerce dbItemListing._user
     , listing_type = fromDbListingType dbItemListing._type
     , batched_by = dbItemListing._batched_by

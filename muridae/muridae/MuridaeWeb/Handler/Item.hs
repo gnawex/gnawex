@@ -1,11 +1,17 @@
 module MuridaeWeb.Handler.Item (module MuridaeWeb.Handler.Item) where
 
+import Data.Coerce (coerce)
 import Effectful.Beam (DbError)
 import Effectful.Error.Static (runErrorNoCallStack)
 import Effectful.Servant (runUVerb, throwUVerb)
 import Muridae.Item qualified as Item
+import Muridae.Item.Types qualified as DB
+import Muridae.ItemListing qualified as ItemListing
+import Muridae.ItemListing.Types (FilterItemListingType (ByBoth, ByBuy, BySell))
 import MuridaeWeb.Handler.Item.Types (ItemDetails, fromItem)
 import MuridaeWeb.Handler.Item.Types qualified as Handler
+import MuridaeWeb.Handler.ItemListing.Types (ItemListing)
+import MuridaeWeb.Handler.ItemListing.Types qualified as Handler
 import MuridaeWeb.Types (Handler')
 import Servant
   ( Union
@@ -53,3 +59,27 @@ showDetails itemId =
             (respond @(WithStatus 200 ItemDetails) . WithStatus @200 . fromItem)
         )
 
+getListings
+  :: Handler.ItemId
+  -> Maybe Handler.ItemListingType
+  -> Handler'
+      ( Union
+          '[ WithStatus 200 [ItemListing]
+           , WithStatus 500 DbError
+           ]
+      )
+getListings itemId itemListingType =
+  runUVerb $
+    runErrorNoCallStack @DbError
+      ( ItemListing.itemListings
+          (coerce itemId)
+          (maybe ByBoth filterListingType itemListingType)
+      )
+      >>= either
+        (throwUVerb . WithStatus @500)
+        (respond @(WithStatus 200 [ItemListing]) . WithStatus @200)
+ where
+  filterListingType :: Handler.ItemListingType -> FilterItemListingType
+  filterListingType = \case
+    Handler.BUY -> ByBuy
+    Handler.SELL -> BySell

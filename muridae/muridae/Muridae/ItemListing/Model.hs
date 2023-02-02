@@ -6,7 +6,7 @@ module Muridae.ItemListing.Model
   , updateStatus
   , updateCurrentQuantity
   , create
-  , getListingsUnderItem
+  , getPooledListingsUnderItem
   , listAll
   , findMatches
   , greatest
@@ -29,7 +29,10 @@ import Database.Beam.Backend.SQL.BeamExtensions
 import Database.Beam.Postgres (Pg, Postgres)
 import Database.Beam.Query
   ( HaskellLiteralForQExpr
+  , QBaseScope
+  , QExpr
   , QGenExpr
+  , QValueContext
   , SqlEq ((/=.), (==?.))
   , SqlOrd ((<=.), (>.))
   , SqlSelect
@@ -70,22 +73,24 @@ import Database.Beam.Query
   , (&&?.)
   , (<-.)
   , (==.)
+  , (||.)
   )
 import Database.Beam.Schema (Columnar, primaryKey)
 import Muridae.Item.Types (ItemId (ItemId), PrimaryKey (ItemPk))
 import Muridae.ItemListing.Types
-  ( ItemListing
-      ( ItemListing
-      , _active
-      , _batched_by
-      , _cost
-      , _current_unit_quantity
-      , _id
-      , _tradable_item
-      , _type
-      , _unit_quantity
-      , _user
-      )
+  ( FilterItemListingType (ByBoth, ByBuy, BySell)
+  , ItemListing
+    ( ItemListing
+    , _active
+    , _batched_by
+    , _cost
+    , _current_unit_quantity
+    , _id
+    , _tradable_item
+    , _type
+    , _unit_quantity
+    , _user
+    )
   , ItemListingId (ItemListingId)
   , ListingType (Buy, Sell)
   , PrimaryKey (ItemListingPk)
@@ -99,16 +104,30 @@ import MuridaeWeb.Handler.User qualified as Handler
 -------------------------------------------------------------------------------
 -- Item listing DB functions
 
-listAll :: Pg [ItemListing Identity]
-listAll = runSelectReturningList (select (all_ (muridaeDB.muridaeTradableItemListings)))
+-- TODO: I don't like the @Maybe ItemId@ part
+-- TODO: Filter by @active@
+listAll :: Maybe ItemId -> FilterItemListingType -> Pg [ItemListing Identity]
+listAll itemId filterType =
+  runSelectReturningList
+    $ select
+    $ filter_
+      (\row -> byListingType filterType row &&. byItemId itemId row)
+    $ all_
+      (muridaeDB.muridaeTradableItemListings)
+ where
+  byListingType filterType' row =
+    case filterType' of
+      ByBuy -> row._type ==. val_ Buy
+      BySell -> row._type ==. val_ Sell
+      ByBoth -> row._type ==. val_ Buy ||. row._type ==. val_ Sell
 
-getListingsUnderItem
+getPooledListingsUnderItem
   :: ItemId
   -> Pg
       ( [(ListingType, Int32, Int16, Int32)]
       , [(ListingType, Int32, Int16, Int32)]
       )
-getListingsUnderItem itemId = do
+getPooledListingsUnderItem itemId = do
   pooledBuy <- runSelectReturningList (groupListings Buy itemId)
   pooledSell <- runSelectReturningList (groupListings Sell itemId)
 
@@ -360,6 +379,15 @@ groupListings listingType itemId =
             &&?. sqlBool_ listing._active
       )
     $ all_ (muridaeDB.muridaeTradableItemListings)
+
+byItemId
+  :: Maybe ItemId
+  -> ItemListing (QExpr Postgres QBaseScope)
+  -> QGenExpr QValueContext Postgres QBaseScope Bool
+byItemId itemId row =
+  case itemId of
+    Just itemId' -> row._tradable_item ==. ItemPk (val_ itemId')
+    Nothing -> val_ True
 
 -------------------------------------------------------------------------------
 -- Non-query helper functions

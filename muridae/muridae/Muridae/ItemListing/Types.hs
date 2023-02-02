@@ -7,6 +7,7 @@ module Muridae.ItemListing.Types
   , PooledBuyListing (..)
   , PooledSellListing (..)
   , PrimaryKey (..)
+  , FilterItemListingType (..)
   , mkItemSellListing
   , mkItemBuyListing
   , unItemSellListing
@@ -92,6 +93,15 @@ data PooledSellListing = PooledSellListing
   , batchedBy :: Int16
   , unitQuantity :: Int32
   }
+
+-- | Valid states when filtering item listings given its type
+data FilterItemListingType
+  = ByBuy
+  -- ^ Filters out sell item listings, keeping only buy listings
+  | BySell
+  -- ^ Filters out buy item listings, keeping only sell listings
+  | ByBoth
+  -- ^ Filters in both buy and sell item listings
 
 -------------------------------------------------------------------------------
 -- Instances
