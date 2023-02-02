@@ -20,6 +20,7 @@ import MuridaeWeb.Handler.User qualified as UserHandler (UserId)
 import MuridaeWeb.Types (Handler')
 import Servant (Union, WithStatus (WithStatus), respond)
 import Servant.API.ContentTypes (NoContent (NoContent))
+import Muridae.ItemListing.Types (FilterItemListingType(ByBoth))
 
 -------------------------------------------------------------------------------
 -- Item listing handlers
@@ -33,7 +34,7 @@ index
       )
 index =
   runUVerb $
-    runErrorNoCallStack @DbError ItemListing.list
+    runErrorNoCallStack @DbError (ItemListing.list ByBoth)
       >>= either (throwUVerb . WithStatus @500) (respond . WithStatus @200)
 
 -- TODO: Use auth context

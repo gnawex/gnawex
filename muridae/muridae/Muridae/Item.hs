@@ -49,7 +49,7 @@ findDetails_ itemId =
     item <- ItemModel.find itemId
 
     (pooledBuys, pooledSells) <-
-      ItemListingModel.getListingsUnderItem (coerce itemId)
+      ItemListingModel.getPooledListingsUnderItem (coerce itemId)
 
     let
       pooledBuys' = mapM mkPooledBuyListing pooledBuys
