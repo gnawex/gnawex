@@ -34,6 +34,7 @@ common common-warnings
 
 common common-extensions
   default-extensions:
+    NoFieldSelectors
     DataKinds
     DeriveAnyClass
     DerivingStrategies
@@ -42,10 +43,9 @@ common common-extensions
     ExplicitNamespaces
     ImportQualifiedPost
     LambdaCase
+    OverloadedRecordDot
     OverloadedStrings
     TypeFamilies
-    NoFieldSelectors
-    OverloadedRecordDot
 
 library
   import:
@@ -55,12 +55,8 @@ library
     , common-warnings
     , common-extensions
 
-  exposed-modules: MuridaeWeb.Server
-  other-modules:
-    DB
-    DB.Types
+  exposed-modules:
     Effectful.Beam
-    Effectful.Servant
     Muridae.Environment
     Muridae.Item
     Muridae.Item.Model
@@ -68,12 +64,6 @@ library
     Muridae.ItemListing
     Muridae.ItemListing.Model
     Muridae.ItemListing.Types
-    Muridae.ItemTxn
-    Muridae.ItemTxn.Model
-    Muridae.ItemTxn.Types
-    Muridae.User
-    Muridae.User.Model
-    Muridae.User.Types
     MuridaeWeb.Handler.Item
     MuridaeWeb.Handler.Item.Types
     MuridaeWeb.Handler.ItemListing
@@ -84,6 +74,18 @@ library
     MuridaeWeb.Route.Admin.Item
     MuridaeWeb.Route.Item
     MuridaeWeb.Route.ItemListing
+    MuridaeWeb.Server
+
+  other-modules:
+    DB
+    DB.Types
+    Effectful.Servant
+    Muridae.ItemTxn
+    Muridae.ItemTxn.Model
+    Muridae.ItemTxn.Types
+    Muridae.User
+    Muridae.User.Model
+    Muridae.User.Types
     MuridaeWeb.Types
 
   build-depends:
@@ -122,3 +124,41 @@ executable muridae-server
     , warp     ^>=3.3
 
   hs-source-dirs: muridae-server
+
+test-suite muridae-test
+  import:
+    common-base
+    , common-default-language
+    , common-deps
+    , common-warnings
+    , common-extensions
+
+  type:               exitcode-stdio-1.0
+  hs-source-dirs:     test
+  main-is:            Driver.hs
+  other-modules:      MuridaeApi.ItemTest
+
+  -- Test dependencies
+  build-depends:
+    , hspec           ^>=2.10
+    , tasty           ^>=1.4
+    , tasty-discover  ^>=5.0
+    , tasty-golden    ^>=2.3
+    , tasty-hspec     ^>=1.2
+    , tasty-hunit     ^>=0.10
+
+  -- Stuff to test
+  build-depends:
+    , beam-core          ^>=0.10
+    , beam-postgres      ^>=0.5
+    , effectful-core     ^>=2.2
+    , http-client        ^>=0.7
+    , muridae
+    , postgresql-simple  ^>=0.6
+    , resource-pool      ^>=0.3
+    , servant-client     ^>=0.19
+    , servant-server     ^>=0.19
+    , wai                ^>=3.2
+    , warp               ^>=3.3
+
+  build-tool-depends: tasty-discover:tasty-discover

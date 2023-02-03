@@ -25,7 +25,7 @@ data PooledBuyListing = PooledBuyListing
   , batched_by :: Int16
   , unit_quantity :: Int32
   }
-  deriving stock (Generic)
+  deriving stock (Generic, Show, Eq)
   deriving anyclass (ToJSON, FromJSON)
 
 data PooledSellListing = PooledSellListing
@@ -33,7 +33,7 @@ data PooledSellListing = PooledSellListing
   , batched_by :: Int16
   , unit_quantity :: Int32
   }
-  deriving stock (Generic)
+  deriving stock (Generic, Show, Eq)
   deriving anyclass (ToJSON, FromJSON)
 
 --------------------------------------------------------------------------------

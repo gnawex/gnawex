@@ -14,10 +14,11 @@ import Muridae.Item.Types qualified as DB
 import Muridae.ItemListing.Types qualified as DB
 import MuridaeWeb.JSON.PooledListing (fromDbPooledBuyListing, fromDbPooledSellListing)
 import MuridaeWeb.JSON.PooledListing qualified as JSON
-import Servant.API (FromHttpApiData, HasStatus (StatusOf))
+import Servant.API (FromHttpApiData, HasStatus (StatusOf), ToHttpApiData)
 
 newtype ItemId = ItemId Int32
-  deriving (ToJSON, FromJSON, FromHttpApiData) via Int32
+  deriving stock (Show)
+  deriving (ToJSON, FromJSON, FromHttpApiData, ToHttpApiData, Eq) via Int32
 
 data Item = Item
   { id :: ItemId
@@ -28,7 +29,7 @@ data Item = Item
   , updated_at :: Maybe UTCTime
   , deleted_at :: Maybe UTCTime
   }
-  deriving stock (Generic)
+  deriving stock (Generic, Show, Eq)
   deriving anyclass (FromJSON, ToJSON)
 
 -- | Contains the details to be shown in an item page.
@@ -53,7 +54,7 @@ data ItemDetails = ItemDetails
   -- ^ How much this item was last transacted for
   }
   deriving stock (Generic)
-  deriving anyclass (ToJSON)
+  deriving anyclass (ToJSON, FromJSON)
 
 data ReqItem = ReqItem
   { name :: Text
@@ -61,7 +62,7 @@ data ReqItem = ReqItem
   , wiki_link :: Text
   }
   deriving stock (Generic)
-  deriving anyclass (FromJSON)
+  deriving anyclass (FromJSON, ToJSON)
 
 --------------------------------------------------------------------------------
 -- Instances

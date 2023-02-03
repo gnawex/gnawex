@@ -1,0 +1,10 @@
+cradle:
+  cabal:
+    - path: "./muridae/muridae"
+      component: "lib:muridae"
+
+    - path: "./muridae/muridae-server/Main.hs"
+      component: "muridae:exe:muridae-server"
+
+    - path: "./muridae/test"
+      component: "muridae:test:muridae-test"

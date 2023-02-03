@@ -1,4 +1,4 @@
-module MuridaeWeb.Server (runMuridae) where
+module MuridaeWeb.Server (runMuridae, mkApplication) where
 
 import Control.Exception (bracket)
 import Control.Monad.Except (throwError)
@@ -82,7 +82,7 @@ runMuridae =
   bracket
     (runEff getMuridaeEnv)
     (runEff . shutdownMuridae)
-    (Warp.run 8080 . mkApplication)
+    (Warp.run 8081 . mkApplication)
 
 -- | Shuts down @muridae@ as well as destroys the DB pool
 shutdownMuridae :: MuridaeEnv -> Eff '[IOE] ()
