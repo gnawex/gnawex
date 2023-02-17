@@ -1,9 +1,10 @@
 {-# LANGUAGE ExistentialQuantification #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Effectful.Beam (module Effectful.Beam) where
 
 import Control.Monad.Catch (Exception, SomeException, catch)
-import Data.Aeson (ToJSON (toJSON), Value (String), object)
+import Data.Aeson (ToJSON (toJSON), Value (String), object, FromJSON (parseJSON))
 import Data.Int (Int32)
 import Data.Kind (Type)
 import Data.Pool (Pool, withResource)
@@ -22,6 +23,8 @@ import Effectful.Dispatch.Static
   )
 import Effectful.Error.Static (Error, throwError)
 import Text.Builder qualified
+import Data.Aeson.Types (parseFail)
+import Servant (NoContent)
 
 -------------------------------------------------------------------------------
 -- Types
@@ -36,6 +39,12 @@ data DbError = forall (e :: Type). (Exception e, Show e) => DbError e
 type instance DispatchOf DB = 'Static 'WithSideEffects
 
 newtype instance StaticRep DB = DB (Pool Connection)
+
+instance FromJSON DbError where
+  parseJSON _ = parseFail "oh no"
+
+instance FromJSON NoContent where
+  parseJSON _ = parseFail "oh no"
 
 instance ToJSON DbError where
   toJSON :: DbError -> Value

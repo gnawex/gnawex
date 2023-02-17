@@ -1,7 +1,8 @@
 module MuridaeWeb.Handler.Item (module MuridaeWeb.Handler.Item) where
 
 import Data.Coerce (coerce)
-import Effectful.Beam (DbError)
+import Effectful (liftIO)
+import Effectful.Beam (DbError (DbError))
 import Effectful.Error.Static (runErrorNoCallStack)
 import Effectful.Servant (runUVerb, throwUVerb)
 import Muridae.Item qualified as Item
@@ -76,7 +77,10 @@ getListings itemId itemListingType =
           (maybe ByBoth filterListingType itemListingType)
       )
       >>= either
-        (throwUVerb . WithStatus @500)
+        ( \e -> do
+            _ <- (\(DbError s) -> liftIO $ print s) e
+            throwUVerb $ WithStatus @500 e
+        )
         (respond @(WithStatus 200 [ItemListing]) . WithStatus @200)
  where
   filterListingType :: Handler.ItemListingType -> FilterItemListingType

@@ -74,6 +74,7 @@
         default = muridae-server;
         muridae-server = flake.packages."muridae:exe:muridae-server";
         muridae = flake.packages."muridae:lib:muridae";
+        muridae-test = flake.packages."muridae:test:muridae-test";
       };
 
       devShells = {

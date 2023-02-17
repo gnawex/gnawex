@@ -1,4 +1,9 @@
-module Muridae.Environment (MuridaeEnv (..), getMuridaeEnv) where
+module Muridae.Environment
+  ( MuridaeEnv (..)
+  , getMuridaeEnv
+  , mkPool
+  )
+where
 
 import Data.ByteString (ByteString)
 import Data.Pool
@@ -25,7 +30,7 @@ getMuridaeEnv :: Eff '[IOE] MuridaeEnv
 getMuridaeEnv = do
   -- TODO: Get from environment through Reader or something. Idk.
   let
-    tempConnStr = "host='localhost' port=5432 dbname='gnawex_db' user='postgres'"
+    tempConnStr = "host='localhost' port=5432 dbname='gnawex_test' user='postgres'"
   connPool <- mkPool tempConnStr 5 20
 
   pure (MuridaeEnv connPool)

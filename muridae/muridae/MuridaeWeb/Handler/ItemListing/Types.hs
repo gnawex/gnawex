@@ -10,13 +10,14 @@ import Data.Time (UTCTime)
 import GHC.Generics (Generic)
 import MuridaeWeb.Handler.Item.Types (ItemId)
 import MuridaeWeb.Handler.User (UserId)
-import Servant.API (FromHttpApiData (parseQueryParam), HasStatus (StatusOf))
+import Servant.API (FromHttpApiData (parseQueryParam), HasStatus (StatusOf), ToHttpApiData (toQueryParam))
 
 newtype ItemListingId = ItemListingId Int32
-  deriving (ToJSON, FromHttpApiData) via Int32
+  deriving stock (Show, Eq)
+  deriving (ToJSON, FromHttpApiData, ToHttpApiData, FromJSON) via Int32
 
 data ItemListingType = BUY | SELL
-  deriving stock (Generic)
+  deriving stock (Eq, Generic, Show)
   deriving anyclass (ToJSON, FromJSON)
 
 data ItemListing = ItemListing
@@ -32,7 +33,7 @@ data ItemListing = ItemListing
   , updated_at :: Maybe UTCTime
   }
   deriving stock (Generic)
-  deriving anyclass (ToJSON)
+  deriving anyclass (ToJSON, FromJSON)
 
 data CreateItemListing = CreateItemListing
   { item_id :: ItemId
@@ -42,11 +43,11 @@ data CreateItemListing = CreateItemListing
   , cost :: Int32
   }
   deriving stock (Generic)
-  deriving anyclass (FromJSON)
+  deriving anyclass (FromJSON, ToJSON)
 
 newtype ReqStatus = ReqStatus {active :: Bool}
   deriving stock (Generic)
-  deriving anyclass (FromJSON)
+  deriving anyclass (FromJSON, ToJSON)
 
 --------------------------------------------------------------------------------
 -- Instances
@@ -67,3 +68,8 @@ instance FromHttpApiData ItemListingType where
           , "` for item listing type."
           , " I expected `BUY` or `SELL`"
           ]
+
+instance ToHttpApiData ItemListingType where
+  toQueryParam = \case
+    BUY -> "BUY"
+    SELL -> "SELL"

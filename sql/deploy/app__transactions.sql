@@ -32,6 +32,8 @@ CREATE TABLE app.tradable_item_transactions (
 GRANT SELECT ON TABLE app.tradable_item_transactions TO api;
 GRANT INSERT ON TABLE app.tradable_item_transactions TO gnawex_merchant;
 
+-- ALTER DATABASE gnawex_db SET search_path TO app,auth,public;
+
 --------------------------------------------------------------------------------
 
 COMMIT;

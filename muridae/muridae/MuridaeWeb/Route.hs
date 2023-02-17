@@ -1,3 +1,5 @@
+{-# LANGUAGE FieldSelectors #-}
+
 module MuridaeWeb.Route (module MuridaeWeb.Route) where
 
 import GHC.Generics (Generic)

@@ -1,3 +1,5 @@
+{-# LANGUAGE FieldSelectors #-}
+
 module MuridaeWeb.Route.Item (module MuridaeWeb.Route.Item) where
 
 import Effectful.Beam (DbError)
