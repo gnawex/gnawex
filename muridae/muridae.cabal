@@ -59,10 +59,8 @@ library
     Effectful.Beam
     Muridae.Environment
     Muridae.Item
-    Muridae.Item.Model
     Muridae.Item.Types
     Muridae.ItemListing
-    Muridae.ItemListing.Model
     Muridae.ItemListing.Types
     MuridaeWeb.Handler.Item
     MuridaeWeb.Handler.ItemListing
@@ -78,14 +76,10 @@ library
     MuridaeWeb.Server
 
   other-modules:
-    DB
-    DB.Types
     Effectful.Servant
     Muridae.ItemTxn
-    Muridae.ItemTxn.Model
     Muridae.ItemTxn.Types
     Muridae.User
-    Muridae.User.Model
     Muridae.User.Types
     MuridaeWeb.Types
 
