@@ -42,7 +42,7 @@ muridaeAPIv1 =
     itemRoutes =
       ItemRoute.Routes'
         { index = ItemHandler.indexItems
-        -- , show = ItemHandler.showDetails
+        , show = ItemHandler.showItem
         -- , getListingsUnderItem = ItemHandler.getListings
         }
 

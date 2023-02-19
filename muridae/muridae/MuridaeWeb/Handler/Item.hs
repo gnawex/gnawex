@@ -1,4 +1,4 @@
-module MuridaeWeb.Handler.Item (indexItems) where
+module MuridaeWeb.Handler.Item (indexItems, showItem) where
 
 --------------------------------------------------------------------------------
 
@@ -6,11 +6,12 @@ import Data.Vector (Vector)
 import Effectful.Servant (runUVerb, throwUVerb)
 import Muridae.Item (runManageUserDB)
 import Muridae.Item qualified as Item
-import MuridaeWeb.Handler.Item.Types qualified as Handler
+import Muridae.Item.Types qualified as Domain
 import MuridaeWeb.JSON.DbError (DbError (DbError))
+import MuridaeWeb.JSON.Item (ItemDetails, parseItem, parseItemWithPools)
+import MuridaeWeb.JSON.Item qualified as JSON
 import MuridaeWeb.Types (Handler')
-import Servant (Union, respond)
-import MuridaeWeb.Handler.Item.Types (parseItem)
+import Servant (Union, WithStatus (WithStatus), respond)
 
 --------------------------------------------------------------------------------
 
@@ -24,32 +25,40 @@ import MuridaeWeb.Handler.Item.Types (parseItem)
 --         (throwUVerb . WithStatus @500)
 --         (\_ -> respond (WithStatus @201 NoContent))
 
-indexItems :: Handler' (Union '[Vector Handler.Item, DbError])
+indexItems :: Handler' (Union '[Vector JSON.Item, DbError])
 indexItems =
   runUVerb $
     runManageUserDB Item.indexItems
       >>= either (throwUVerb . DbError) (respond . fmap parseItem)
 
--- showDetails
---   :: Handler.ItemId
---   -> Handler'
---       ( Union
---           '[ WithStatus 200 ItemDetails
---            , WithStatus 404 String
---            , WithStatus 500 DbError
---            ]
---       )
--- showDetails itemId =
---   runUVerb $
---     runErrorNoCallStack @DbError (Item.findDetails_ itemId)
---       >>= either
---         (throwUVerb . WithStatus @500)
---         ( maybe
---             ( throwUVerb @(WithStatus 404 String)
---                 (WithStatus @404 "Item does not exist")
---             )
---             (respond @(WithStatus 200 ItemDetails) . WithStatus @200 . fromItem)
+showItem
+  :: JSON.ItemId
+  -> Handler'
+      ( Union
+          '[ ItemDetails
+           , WithStatus 404 String
+           , DbError
+           ]
+      )
+showItem (JSON.ItemId itemId) =
+  runUVerb $
+    runManageUserDB (Item.showItem (Domain.ItemId itemId))
+      >>= either
+        (throwUVerb . DbError)
+        ( maybe
+            (throwUVerb (WithStatus @404 @String "Item does not exist"))
+            (respond . parseItemWithPools)
+        )
+
+-- runErrorNoCallStack @DbError (Item.findDetails_ itemId)
+--   >>= either
+--     (throwUVerb . WithStatus @500)
+--     ( maybe
+--         ( throwUVerb @(WithStatus 404 String)
+--             (WithStatus @404 "Item does not exist")
 --         )
+--         (respond @(WithStatus 200 ItemDetails) . WithStatus @200 . fromItem)
+--     )
 
 -- getListings
 --   :: Handler.ItemId

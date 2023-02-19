@@ -2,7 +2,7 @@ module MuridaeWeb.Route.Admin.Item (module MuridaeWeb.Route.Admin.Item) where
 
 import Effectful.Beam (DbError)
 import GHC.Generics (Generic)
-import MuridaeWeb.Handler.Item.Types (Item, ReqItem)
+import MuridaeWeb.JSON.Item (Item, ReqItem)
 import Servant.API
   ( GenericMode (type (:-))
   , NamedRoutes

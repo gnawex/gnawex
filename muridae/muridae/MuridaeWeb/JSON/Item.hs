@@ -1,17 +1,17 @@
-module MuridaeWeb.Handler.Item.Types
-  ( module MuridaeWeb.Handler.Item.Types
-  )
-where
+module MuridaeWeb.JSON.Item (module MuridaeWeb.JSON.Item) where
 
 import Data.Aeson.Types (FromJSON, ToJSON)
+import Data.Coerce (coerce)
 import Data.Int (Int64)
 import Data.Text (Text)
 import Data.Time (UTCTime)
+import Data.Vector (Vector)
 import GHC.Generics (Generic)
 import Muridae.Item.Types qualified as Domain
+import Muridae.ItemListing.Types (PooledBuyListing, PooledSellListing)
+import MuridaeWeb.JSON.PooledListing (serializeBuyListing, serializeSellListing)
 import MuridaeWeb.JSON.PooledListing qualified as JSON
 import Servant.API (FromHttpApiData, HasStatus (StatusOf), ToHttpApiData)
-import Data.Vector (Vector)
 
 newtype ItemId = ItemId Int64
   deriving stock (Show)
@@ -42,9 +42,12 @@ data ItemDetails = ItemDetails
   -- ^ Description of an item
   , wiki_link :: Text
   -- ^ Link to MHWiki
-  , pooled_buy_listings :: [JSON.PooledBuyListing]
+  , pooled_buy_listings :: Vector JSON.PooledBuyListing
   -- ^ Pooled buy listings of item
-  , pooled_sell_listings :: [JSON.PooledSellListing]
+  , pooled_sell_listings :: Vector JSON.PooledSellListing
+  , created_at :: UTCTime
+  , updated_at :: Maybe UTCTime
+  , deleted_at :: Maybe UTCTime
   -- ^ Pooled sell listings of item
   -- TODO: Latest price
   -- , latest_transacted_cost :: Int32
@@ -82,3 +85,21 @@ instance HasStatus ItemDetails where
 parseItem :: Domain.Item -> Item
 parseItem (Domain.Item (Domain.ItemId itemId) name desc wiki createdAt updatedAt deletedAt) =
   Item (ItemId itemId) name desc wiki createdAt updatedAt deletedAt
+
+parseItemWithPools
+  :: ( Domain.Item
+     , Vector PooledBuyListing
+     , Vector PooledSellListing
+     )
+  -> ItemDetails
+parseItemWithPools (item, buys, sells) =
+  ItemDetails
+    (ItemId (coerce item.id))
+    item.name
+    item.description
+    item.wikiLink
+    (serializeBuyListing <$> buys)
+    (serializeSellListing <$> sells)
+    item.createdAt
+    item.updatedAt
+    item.deletedAt

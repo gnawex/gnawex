@@ -8,9 +8,13 @@ import Data.Int (Int16, Int32)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import GHC.Generics (Generic)
-import MuridaeWeb.Handler.Item.Types (ItemId)
 import MuridaeWeb.Handler.User (UserId)
-import Servant.API (FromHttpApiData (parseQueryParam), HasStatus (StatusOf), ToHttpApiData (toQueryParam))
+import MuridaeWeb.JSON.Item (ItemId)
+import Servant.API
+  ( FromHttpApiData (parseQueryParam)
+  , HasStatus (StatusOf)
+  , ToHttpApiData (toQueryParam)
+  )
 
 newtype ItemListingId = ItemListingId Int32
   deriving stock (Show, Eq)

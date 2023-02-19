@@ -4,7 +4,7 @@ module Muridae.DB.Item (module Muridae.DB.Item) where
 
 --------------------------------------------------------------------------------
 
-import Data.Int (Int64)
+import Data.Int (Int64, Int32, Int16)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Vector (Vector)
@@ -15,6 +15,7 @@ import Hasql.Pool (UsageError)
 import Hasql.TH (maybeStatement, singletonStatement, vectorStatement)
 import Hasql.Transaction qualified as Transaction
 import Hasql.Transaction.Sessions qualified as Session
+import Data.Scientific (Scientific)
 
 --------------------------------------------------------------------------------
 
@@ -45,8 +46,8 @@ index =
     [vectorStatement|
       SELECT id :: BIGINT
            , name :: TEXT
-           , wiki_link :: TEXT
            , description :: TEXT
+           , wiki_link :: TEXT
            , created_at :: TIMESTAMPTZ
            , updated_at :: TIMESTAMPTZ?
            , deleted_at :: TIMESTAMPTZ?
@@ -103,24 +104,72 @@ find
       ( Either
           UsageError
           ( Maybe
-              (Int64, Text, Text, Text, UTCTime, Maybe UTCTime, Maybe UTCTime)
+              ( Int64
+              , Text
+              , Text
+              , Text
+              , UTCTime
+              , Maybe UTCTime
+              , Maybe UTCTime
+              , Vector (Int32, Int16, Int64, Scientific)
+              , Vector (Int32, Int16, Int64, Scientific)
+              )
           )
       )
 find itemId =
-  Pool.use
-    . Session.transaction Session.ReadCommitted Session.Read
-    . Transaction.statement itemId
-    $ query
+  Pool.use . Session.transaction Session.ReadCommitted Session.Read $ do
+    item <- Transaction.statement itemId itemQuery
+    pooledBuys <- Transaction.statement  itemId pooledBuyQuery
+    pooledSells <- Transaction.statement itemId pooledSellQuery
+
+    pure $ f pooledBuys pooledSells <$> item
  where
-  query =
+  f buys sells (itemId', name, desc, wikiLink, createdAt, updatedAt, deletedAt) =
+    (itemId', name, desc, wikiLink, createdAt, updatedAt, deletedAt, buys, sells)
+
+  itemQuery =
     [maybeStatement|
-        SELECT id :: BIGINT
-          , name :: TEXT
-          , wiki_link :: TEXT
-          , description :: TEXT
-          , created_at :: TIMESTAMPTZ
-          , updated_at :: TIMESTAMPTZ?
-          , deleted_at :: TIMESTAMPTZ?
-          FROM app.tradable_items
-          WHERE id = $1 :: BIGINT
+      SELECT id :: BIGINT
+        , name :: TEXT
+        , description :: TEXT
+        , wiki_link :: TEXT
+        , created_at :: TIMESTAMPTZ
+        , updated_at :: TIMESTAMPTZ?
+        , deleted_at :: TIMESTAMPTZ?
+        FROM app.tradable_items
+        WHERE id = $1 :: BIGINT
       |]
+
+  -- TODO: Decode to pg enum
+  -- TODO: Consider using dynamic statements
+  pooledBuyQuery =
+    [vectorStatement|
+      SELECT cost :: INT
+           , batched_by :: SMALLINT
+           , sum(unit_quantity) :: BIGINT AS unit_quantity
+           , (cast(cost AS NUMERIC) / cast(batched_by AS NUMERIC))
+                :: NUMERIC AS individual_cost
+        FROM app.tradable_item_listings
+        WHERE type = 'buy'
+          AND active = true
+          AND tradable_item__id = $1 :: BIGINT
+        GROUP BY batched_by, cost
+        ORDER BY individual_cost DESC
+        FETCH FIRST 5 ROWS ONLY
+    |]
+
+  pooledSellQuery =
+    [vectorStatement|
+      SELECT cost :: INT
+           , batched_by :: SMALLINT
+           , sum(unit_quantity) :: BIGINT AS unit_quantity
+           , (cast(cost AS NUMERIC) / cast(batched_by AS NUMERIC))
+                :: NUMERIC AS individual_cost
+        FROM app.tradable_item_listings
+        WHERE type = 'sell'
+          AND active = true
+          AND tradable_item__id = $1 :: BIGINT
+        GROUP BY batched_by, cost
+        ORDER BY individual_cost ASC
+        FETCH FIRST 5 ROWS ONLY
+    |]

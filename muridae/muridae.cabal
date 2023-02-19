@@ -65,12 +65,12 @@ library
     Muridae.ItemListing.Model
     Muridae.ItemListing.Types
     MuridaeWeb.Handler.Item
-    MuridaeWeb.Handler.Item.Types
     MuridaeWeb.Handler.ItemListing
     MuridaeWeb.Handler.ItemListing.Types
     MuridaeWeb.Handler.User
-    MuridaeWeb.JSON.PooledListing
     MuridaeWeb.JSON.DbError
+    MuridaeWeb.JSON.Item
+    MuridaeWeb.JSON.PooledListing
     MuridaeWeb.Route
     MuridaeWeb.Route.Admin.Item
     MuridaeWeb.Route.Item
@@ -101,6 +101,7 @@ library
     , muridae-db
     , postgresql-simple  ^>=0.6
     , resource-pool      ^>=0.3
+    , scientific         ^>=0.3
     , servant            ^>=0.19
     , servant-effectful  ^>=0.0
     , servant-server     ^>=0.19
@@ -134,6 +135,7 @@ library muridae-db
     , hasql-pool         ^>=0.8
     , hasql-th           ^>=0.4
     , hasql-transaction  ^>=1.0
+    , scientific         ^>=0.3
     , vector             ^>=0.12
 
   hs-source-dirs:  muridae-db
