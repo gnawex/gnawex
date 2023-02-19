@@ -70,6 +70,7 @@ library
     MuridaeWeb.Handler.ItemListing.Types
     MuridaeWeb.Handler.User
     MuridaeWeb.JSON.PooledListing
+    MuridaeWeb.JSON.DbError
     MuridaeWeb.Route
     MuridaeWeb.Route.Admin.Item
     MuridaeWeb.Route.Item
@@ -97,6 +98,7 @@ library
     , effectful-core     ^>=2.2
     , exceptions         ^>=0.10
     , mtl                ^>=2.2
+    , muridae-db
     , postgresql-simple  ^>=0.6
     , resource-pool      ^>=0.3
     , servant            ^>=0.19
@@ -105,10 +107,36 @@ library
     , text-builder       ^>=0.6
     , unliftio           ^>=0.2
     , uuid-types         ^>=1.0
+    , vector             ^>=0.12
     , wai                ^>=3.2
     , warp               ^>=3.3
 
   hs-source-dirs:  muridae
+
+library muridae-db
+  import:
+    common-base
+    , common-default-language
+    , common-deps
+    , common-warnings
+    , common-extensions
+
+  exposed-modules:
+    Muridae.DB
+    Muridae.DB.Item
+
+  build-depends:
+    , effectful          ^>=2.2
+    , effectful-core     ^>=2.2
+    , exceptions         ^>=0.10
+    , hasql              ^>=1.6
+    , hasql-effectful    ^>=0.1
+    , hasql-pool         ^>=0.8
+    , hasql-th           ^>=0.4
+    , hasql-transaction  ^>=1.0
+    , vector             ^>=0.12
+
+  hs-source-dirs:  muridae-db
 
 executable muridae-server
   import:

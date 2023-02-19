@@ -4,9 +4,8 @@ import Control.Exception (bracket)
 import Control.Monad.Except (throwError)
 import Control.Monad.IO.Class (liftIO)
 import Data.Kind (Type)
-import Data.Pool qualified as Pool
 import Effectful (Eff, IOE, runEff)
-import Effectful.Beam (runDB)
+import Muridae.DB (runDB, release)
 import Effectful.Error.Static (Error, runErrorNoCallStack)
 import Effectful.Reader.Static (runReader)
 import Muridae.Environment
@@ -14,22 +13,18 @@ import Muridae.Environment
   , getMuridaeEnv
   , pool
   )
-import MuridaeWeb.Handler.Item qualified as ItemHandler
-import MuridaeWeb.Handler.ItemListing qualified as ItemListingHandler
 import MuridaeWeb.Route
-  ( APIv1 (APIv1, adminRoutes, publicRoutes)
-  , AdminRoutes (AdminRoutes, items)
-  , PublicRoutes (PublicRoutes, itemListings, items)
+  ( APIv1 (APIv1, publicRoutes)
+  -- , AdminRoutes (AdminRoutes, items)
+  , PublicRoutes (PublicRoutes, items)
   )
-import MuridaeWeb.Route.Admin.Item qualified as AdminItem
 import MuridaeWeb.Route.Item qualified as ItemRoute
-import MuridaeWeb.Route.ItemListing (index)
-import MuridaeWeb.Route.ItemListing qualified as ItemListingRoute
 import MuridaeWeb.Types (Handler')
 import Network.Wai.Handler.Warp qualified as Warp
 import Servant (ServerError)
 import Servant.Server (Application, Handler)
 import Servant.Server.Generic (AsServerT, genericServeT)
+import qualified MuridaeWeb.Handler.Item as ItemHandler
 
 -- TODO: Generate docs
 
@@ -37,7 +32,7 @@ import Servant.Server.Generic (AsServerT, genericServeT)
 mkApplication :: MuridaeEnv -> Application
 mkApplication muridaeEnv =
   genericServeT
-    (effToHandler . runDB (muridaeEnv.pool) . runReader muridaeEnv)
+    (effToHandler . runDB muridaeEnv.pool . runReader muridaeEnv)
     muridaeAPIv1
 
 -- | Maps the routes and their handlers
@@ -47,33 +42,33 @@ muridaeAPIv1 =
     itemRoutes =
       ItemRoute.Routes'
         { index = ItemHandler.indexItems
-        , show = ItemHandler.showDetails
-        , getListingsUnderItem = ItemHandler.getListings
+        -- , show = ItemHandler.showDetails
+        -- , getListingsUnderItem = ItemHandler.getListings
         }
 
-    itemListingRoutes =
-      ItemListingRoute.Routes'
-        { index = ItemListingHandler.index
-        , create = ItemListingHandler.create
-        , updateStatus = ItemListingHandler.updateStatus
-        }
+    -- itemListingRoutes =
+    --   ItemListingRoute.Routes'
+    --     { index = ItemListingHandler.index
+    --     , create = ItemListingHandler.create
+    --     , updateStatus = ItemListingHandler.updateStatus
+    --     }
 
-    adminItemRoutes =
-      AdminItem.Routes'
-        { index = ItemHandler.indexItems
-        , create = ItemHandler.create
-        }
+    -- adminItemRoutes =
+    --   AdminItem.Routes'
+    --     { index = ItemHandler.indexItems
+    --     , create = ItemHandler.create
+    --     }
    in
     APIv1
       { publicRoutes =
           PublicRoutes
             { items = itemRoutes
-            , itemListings = itemListingRoutes
+            -- , itemListings = itemListingRoutes
             }
-      , adminRoutes =
-          AdminRoutes
-            { items = adminItemRoutes
-            }
+      -- , adminRoutes =
+      --     AdminRoutes
+      --       { items = adminItemRoutes
+      --       }
       }
 
 -- | Runs the @muridae@ server
@@ -86,7 +81,7 @@ runMuridae =
 
 -- | Shuts down @muridae@ as well as destroys the DB pool
 shutdownMuridae :: MuridaeEnv -> Eff '[IOE] ()
-shutdownMuridae env = liftIO (Pool.destroyAllResources env.pool)
+shutdownMuridae env = liftIO (release env.pool)
 
 effToHandler :: forall (a :: Type). Eff '[Error ServerError, IOE] a -> Handler a
 effToHandler computation = do

@@ -1,72 +1,58 @@
-module Muridae.Item (list, create_, findDetails_) where
+module Muridae.Item (runManageUserDB, indexItems) where
 
-import Data.Coerce (coerce)
-import Data.Functor ((<&>))
-import Data.Functor.Identity (Identity)
+import Data.Int (Int64)
+import Data.Text (Text)
+import Data.Time (UTCTime)
+import Data.Vector (Vector)
 import Effectful (Eff, type (:>))
-import Effectful.Beam (DB, DbError, queryDebug)
-import Effectful.Error.Static (Error)
-import Muridae.Item.Model qualified as ItemModel
+import Effectful.Dispatch.Dynamic (interpret, send)
+import Muridae.DB (DB, UsageError)
+import Muridae.DB.Item qualified as ItemDB
 import Muridae.Item.Types
-  ( Item
-      ( _created_at
-      , _deleted_at
-      , _description
-      , _id
-      , _name
-      , _updated_at
-      , _wiki_link
-      )
+  ( Item (Item)
   , ItemId (ItemId)
+  , ManageItem (IndexItems)
   )
-import Muridae.ItemListing.Model qualified as ItemListingModel
-import Muridae.ItemListing.Types
-  ( PooledBuyListing
-  , PooledSellListing
-  , mkPooledBuyListing
-  , mkPooledSellListing
-  )
-import MuridaeWeb.Handler.Item.Types qualified as Handler
+import Muridae.ItemListing.Types ()
 
 --------------------------------------------------------------------------------
 
-list :: (DB :> es, Error DbError :> es) => Eff es [Handler.Item]
-list = queryDebug putStrLn ItemModel.all <&> fmap parseDBItem
+indexItems
+  :: (ManageItem :> es, DB :> es)
+  => Eff es (Either UsageError (Vector Item))
+indexItems = send IndexItems
 
-create_ :: (DB :> es, Error DbError :> es) => Handler.ReqItem -> Eff es ()
-create_ params =
-  queryDebug putStrLn (ItemModel.create params)
+--------------------------------------------------------------------------------
+-- Item handler
 
--- | Finds an item's details including its pooled buy and sell listings
-findDetails_
-  :: (DB :> es, Error DbError :> es)
-  => Handler.ItemId
-  -> Eff
-      es
-      (Maybe (Item Identity, [PooledBuyListing], [PooledSellListing]))
-findDetails_ itemId =
-  queryDebug putStrLn $ do
-    item <- ItemModel.find itemId
-
-    (pooledBuys, pooledSells) <-
-      ItemListingModel.getPooledListingsUnderItem (coerce itemId)
-
-    let
-      pooledBuys' = mapM mkPooledBuyListing pooledBuys
-      pooledSells' = mapM mkPooledSellListing pooledSells
-
-    pure $ pure (,,) <*> item <*> pooledBuys' <*> pooledSells'
+runManageUserDB
+  :: (DB :> es)
+  => Eff (ManageItem : es) (Either UsageError a)
+  -> Eff es (Either UsageError a)
+runManageUserDB = interpret $ \_ -> \case
+  IndexItems ->
+    ItemDB.index >>= \case
+      Right items -> pure $ Right $ serializeItem <$> items
+      Left e -> pure $ Left e
 
 --------------------------------------------------------------------------------
 
-parseDBItem :: Item Identity -> Handler.Item
-parseDBItem dbItem =
-  Handler.Item
-    { id = coerce dbItem._id
-    , name = dbItem._name
-    , description = dbItem._description
-    , wiki_link = dbItem._wiki_link
-    , created_at = dbItem._created_at
-    , updated_at = dbItem._updated_at
-    , deleted_at = dbItem._deleted_at
-    }
+serializeItem
+  :: ( Int64
+     , Text
+     , Text
+     , Text
+     , UTCTime
+     , Maybe UTCTime
+     , Maybe UTCTime
+     )
+  -> Item
+serializeItem (itemId, name, wiki, description, createdAt, updatedAt, deletedAt) =
+  Item
+    (ItemId itemId)
+    name
+    description
+    wiki
+    createdAt
+    updatedAt
+    deletedAt

@@ -1,62 +1,27 @@
-module Muridae.Item.Types where
+module Muridae.Item.Types (module Muridae.Item.Types) where
 
-import Data.Functor.Identity (Identity)
-import Data.Int (Int32)
-import Data.Kind (Type)
+import Data.Int (Int64)
 import Data.Text (Text)
 import Data.Time (UTCTime)
-import Database.Beam
-  ( Beamable
-  , Columnar
-  , FromBackendRow
-  , HasSqlEqualityCheck
-  , Table (PrimaryKey, primaryKey)
-  )
-import Database.Beam.Backend (HasSqlValueSyntax)
-import Database.Beam.Postgres (Postgres)
-import Database.Beam.Postgres.Syntax (PgValueSyntax)
-import GHC.Generics (Generic)
+import Data.Vector (Vector)
+import Effectful (Dispatch (Dynamic), DispatchOf, Effect)
+import Muridae.DB (UsageError)
 
---------------------------------------------------------------------------------
--- Types
+newtype ItemId = ItemId Int64
+  deriving stock (Eq, Show)
 
-data Item f = Item
-  { _id :: Columnar f ItemId
-  , _name :: Columnar f Text
-  , _description :: Columnar f Text
-  , _wiki_link :: Columnar f Text
-  , _created_at :: Columnar f UTCTime
-  , _updated_at :: Columnar f (Maybe UTCTime)
-  , _deleted_at :: Columnar f (Maybe UTCTime)
+data Item = Item
+  { id :: ItemId
+  , name :: Text
+  , description :: Text
+  , wiki :: Text
+  , createdAt :: UTCTime
+  , updatedAt :: Maybe UTCTime
+  , deletedAt :: Maybe UTCTime
   }
-  deriving stock (Generic)
-  deriving anyclass (Beamable)
+  deriving stock (Eq, Show)
 
-newtype ItemId = ItemId Int32
-  deriving stock (Generic, Show)
-  deriving
-    ( FromBackendRow Postgres
-    , HasSqlValueSyntax PgValueSyntax
-    , HasSqlEqualityCheck Postgres
-    )
-    via Int32
+data ManageItem :: Effect where
+  IndexItems :: ManageItem m (Either UsageError (Vector Item))
 
---------------------------------------------------------------------------------
--- Instances
-
-deriving instance Show (Item Identity)
-
-deriving instance Show (PrimaryKey Item Identity)
-
-instance Table Item where
-  newtype PrimaryKey Item f
-    = ItemPk (Columnar f ItemId)
-    deriving stock (Generic)
-
-  primaryKey
-    :: forall (column :: Type -> Type)
-     . Item column
-    -> PrimaryKey Item column
-  primaryKey item = ItemPk (item._id)
-
-instance Beamable (PrimaryKey Item)
+type instance DispatchOf ManageItem = 'Dynamic

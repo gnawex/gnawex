@@ -1,56 +1,25 @@
 module Muridae.Environment
   ( MuridaeEnv (..)
   , getMuridaeEnv
-  , mkPool
   )
 where
 
-import Data.ByteString (ByteString)
-import Data.Pool
-  ( Pool
-  , PoolConfig
-    ( PoolConfig
-    , createResource
-    , freeResource
-    , poolCacheTTL
-    , poolMaxResources
-    )
-  )
-import Data.Pool qualified as Pool
-import Data.Time (NominalDiffTime)
-import Database.PostgreSQL.Simple (Connection)
-import Database.PostgreSQL.Simple qualified as Beam
-import Effectful (Eff, Effect, IOE, MonadIO (liftIO), type (:>))
+import Effectful (Eff, IOE, MonadIO (liftIO), (:>))
+import Muridae.DB (Pool, Settings, acquire)
 
 newtype MuridaeEnv = MuridaeEnv
-  { pool :: Pool Connection
+  { pool :: Pool
   }
 
 getMuridaeEnv :: Eff '[IOE] MuridaeEnv
 getMuridaeEnv = do
   -- TODO: Get from environment through Reader or something. Idk.
-  let
-    tempConnStr = "host='localhost' port=5432 dbname='gnawex_test' user='postgres'"
-  connPool <- mkPool tempConnStr 5 20
+  pool <- mkPool dbSettings 20
 
-  pure (MuridaeEnv connPool)
+  pure (MuridaeEnv pool)
+ where
+  dbSettings = "host='localhost' port=5432 dbname='gnawex_db' user='postgres'"
 
-mkPool
-  :: forall (es :: [Effect])
-   . (IOE :> es)
-  => -- PG connection information
-  -- e.g host='localhost' port=5432 dbname='gnawex_development' user='postgres'
-  ByteString
-  -- Max time to acquire a connection from pool
-  -> NominalDiffTime
-  -- Max number of connections in a pool
-  -> Int
-  -> Eff es (Pool Connection)
-mkPool connectionInfo timeout poolSize =
-  liftIO . Pool.newPool $
-    PoolConfig
-      { createResource = Beam.connectPostgreSQL connectionInfo
-      , freeResource = Beam.close
-      , poolCacheTTL = realToFrac timeout
-      , poolMaxResources = poolSize
-      }
+mkPool :: (IOE :> es) => Settings -> Int -> Eff es Pool
+mkPool dbSettings poolCapacity =
+  liftIO $ acquire poolCapacity Nothing dbSettings

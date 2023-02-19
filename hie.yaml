@@ -3,6 +3,10 @@ cradle:
     - path: "./muridae/muridae"
       component: "lib:muridae"
 
+    - path: "./muridae/muridae-db"
+      component: "lib:muridae-db"
+
+
     - path: "./muridae/muridae-server/Main.hs"
       component: "muridae:exe:muridae-server"
 

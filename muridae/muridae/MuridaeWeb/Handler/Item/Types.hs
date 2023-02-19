@@ -4,21 +4,18 @@ module MuridaeWeb.Handler.Item.Types
 where
 
 import Data.Aeson.Types (FromJSON, ToJSON)
-import Data.Coerce (coerce)
-import Data.Functor.Identity (Identity)
-import Data.Int (Int32)
+import Data.Int (Int64)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import GHC.Generics (Generic)
-import Muridae.Item.Types qualified as DB
-import Muridae.ItemListing.Types qualified as DB
-import MuridaeWeb.JSON.PooledListing (fromDbPooledBuyListing, fromDbPooledSellListing)
+import Muridae.Item.Types qualified as Domain
 import MuridaeWeb.JSON.PooledListing qualified as JSON
 import Servant.API (FromHttpApiData, HasStatus (StatusOf), ToHttpApiData)
+import Data.Vector (Vector)
 
-newtype ItemId = ItemId Int32
+newtype ItemId = ItemId Int64
   deriving stock (Show)
-  deriving (ToJSON, FromJSON, FromHttpApiData, ToHttpApiData, Eq) via Int32
+  deriving (ToJSON, FromJSON, FromHttpApiData, ToHttpApiData, Eq) via Int64
 
 data Item = Item
   { id :: ItemId
@@ -73,20 +70,15 @@ instance HasStatus Item where
 instance HasStatus [Item] where
   type StatusOf [Item] = 200
 
+instance HasStatus (Vector Item) where
+  type StatusOf (Vector Item) = 200
+
 instance HasStatus ItemDetails where
   type StatusOf ItemDetails = 200
 
---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
-fromItem
-  :: (DB.Item Identity, [DB.PooledBuyListing], [DB.PooledSellListing])
-  -> ItemDetails
-fromItem (item, pooledBuys, pooledSells) =
-  ItemDetails
-    { id = coerce item._id
-    , name = item._name
-    , description = item._description
-    , wiki_link = item._wiki_link
-    , pooled_buy_listings = fromDbPooledBuyListing <$> pooledBuys
-    , pooled_sell_listings = fromDbPooledSellListing <$> pooledSells
-    }
+-- | Serializes an @Item@
+parseItem :: Domain.Item -> Item
+parseItem (Domain.Item (Domain.ItemId itemId) name desc wiki createdAt updatedAt deletedAt) =
+  Item (ItemId itemId) name desc wiki createdAt updatedAt deletedAt
