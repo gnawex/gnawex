@@ -11,7 +11,7 @@ import Servant.API.NamedRoutes (NamedRoutes)
 
 data APIv1 mode = APIv1
   { publicRoutes :: mode :- "api" :> "v1" :> NamedRoutes PublicRoutes
-  -- , adminRoutes :: mode :- "api" :> "v1" :> "admin" :> NamedRoutes AdminRoutes
+  , adminRoutes :: mode :- "api" :> "v1" :> "admin" :> NamedRoutes AdminRoutes
   }
   deriving stock (Generic)
 

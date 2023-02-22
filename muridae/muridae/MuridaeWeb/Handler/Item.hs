@@ -1,29 +1,46 @@
-module MuridaeWeb.Handler.Item (indexItems, showItem) where
+module MuridaeWeb.Handler.Item (indexItems, showItem, createItem) where
 
 --------------------------------------------------------------------------------
 
+import Data.Coerce (coerce)
 import Data.Vector (Vector)
+import Effectful (liftIO)
 import Effectful.Servant (runUVerb, throwUVerb)
 import Muridae.Item (runManageUserDB)
 import Muridae.Item qualified as Item
 import Muridae.Item.Types qualified as Domain
 import MuridaeWeb.JSON.DbError (DbError (DbError))
-import MuridaeWeb.JSON.Item (ItemDetails, parseItem, parseItemWithPools)
+import MuridaeWeb.JSON.Item
+  ( Item
+  , ItemDetails
+  , ReqItem (ReqItem)
+  , parseItem
+  , parseItemWithPools
+  )
 import MuridaeWeb.JSON.Item qualified as JSON
 import MuridaeWeb.Types (Handler')
-import Servant (Union, WithStatus (WithStatus), respond)
+import Servant
+  ( Union
+  , WithStatus (WithStatus)
+  , respond
+  )
 
 --------------------------------------------------------------------------------
 
--- create
---   :: Handler.ReqItem
---   -> Handler' (Union '[WithStatus 201 NoContent, WithStatus 500 DbError])
--- create params =
---   runUVerb $
---     runErrorNoCallStack @DbError (Item.create_ params)
---       >>= either
---         (throwUVerb . WithStatus @500)
---         (\_ -> respond (WithStatus @201 NoContent))
+createItem
+  :: JSON.ReqItem
+  -> Handler' (Union '[WithStatus 201 Item, DbError])
+createItem (ReqItem name desc wikiLink) =
+  runUVerb $
+    runManageUserDB
+      ( Item.createItem
+          (coerce name)
+          (coerce desc)
+          (coerce wikiLink)
+      )
+      >>= either
+        (\e -> liftIO (print e) >> throwUVerb (DbError e))
+        (respond . WithStatus @201 . parseItem)
 
 indexItems :: Handler' (Union '[Vector JSON.Item, DbError])
 indexItems =
@@ -49,41 +66,3 @@ showItem (JSON.ItemId itemId) =
             (throwUVerb (WithStatus @404 @String "Item does not exist"))
             (respond . parseItemWithPools)
         )
-
--- runErrorNoCallStack @DbError (Item.findDetails_ itemId)
---   >>= either
---     (throwUVerb . WithStatus @500)
---     ( maybe
---         ( throwUVerb @(WithStatus 404 String)
---             (WithStatus @404 "Item does not exist")
---         )
---         (respond @(WithStatus 200 ItemDetails) . WithStatus @200 . fromItem)
---     )
-
--- getListings
---   :: Handler.ItemId
---   -> Maybe Handler.ItemListingType
---   -> Handler'
---       ( Union
---           '[ WithStatus 200 [ItemListing]
---            , WithStatus 500 DbError
---            ]
---       )
--- getListings itemId itemListingType =
---   runUVerb $
---     runErrorNoCallStack @DbError
---       ( ItemListing.itemListings
---           (coerce itemId)
---           (maybe ByBoth filterListingType itemListingType)
---       )
---       >>= either
---         ( \e -> do
---             _ <- (\(DbError s) -> liftIO $ print s) e
---             throwUVerb $ WithStatus @500 e
---         )
---         (respond @(WithStatus 200 [ItemListing]) . WithStatus @200)
---  where
---   filterListingType :: Handler.ItemListingType -> FilterItemListingType
---   filterListingType = \case
---     Handler.BUY -> ByBuy
---     Handler.SELL -> BySell

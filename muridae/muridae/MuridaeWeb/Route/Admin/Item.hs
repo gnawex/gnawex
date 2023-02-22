@@ -1,33 +1,25 @@
 module MuridaeWeb.Route.Admin.Item (module MuridaeWeb.Route.Admin.Item) where
 
-import Effectful.Beam (DbError)
 import GHC.Generics (Generic)
-import MuridaeWeb.JSON.Item (Item, ReqItem)
+import MuridaeWeb.JSON.DbError (DbError)
+import MuridaeWeb.JSON.Item (ReqItem, Item)
 import Servant.API
   ( GenericMode (type (:-))
   , NamedRoutes
   , ReqBody
-  , StdMethod (GET, POST)
+  , StdMethod (POST)
   , UVerb
   , WithStatus
   , type (:>)
   )
-import Servant.API.ContentTypes (JSON, NoContent)
+import Servant.API.ContentTypes (JSON)
 
 type Routes = NamedRoutes Routes'
 
 data Routes' mode = Routes'
-  { index
-      :: mode
-        :- UVerb
-            'GET
-            '[JSON]
-            '[ [Item]
-             , WithStatus 500 DbError
-             ]
-  , create
+  { create
       :: mode
         :- ReqBody '[JSON] ReqItem
-        :> UVerb 'POST '[JSON] '[WithStatus 201 NoContent, WithStatus 500 DbError]
+        :> UVerb 'POST '[JSON] '[WithStatus 201 Item, DbError]
   }
   deriving stock (Generic)

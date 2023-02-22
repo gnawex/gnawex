@@ -11,6 +11,16 @@ import Muridae.ItemListing.Types (PooledBuyListing, PooledSellListing)
 newtype ItemId = ItemId Int64
   deriving stock (Eq, Show)
 
+newtype ItemName = ItemName Text
+  deriving stock (Eq, Show)
+
+newtype ItemDesc = ItemDesc Text
+  deriving stock (Eq, Show)
+
+-- TODO: URL type?
+newtype ItemWikiLink = ItemWikiLink Text
+  deriving stock (Eq, Show)
+
 data Item = Item
   { id :: ItemId
   , name :: Text
@@ -37,5 +47,10 @@ data ManageItem :: Effect where
                 )
             )
         )
+  CreateItem
+    :: ItemName
+    -> ItemDesc
+    -> ItemWikiLink
+    -> ManageItem m (Either UsageError Item)
 
 type instance DispatchOf ManageItem = 'Dynamic

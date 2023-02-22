@@ -4,7 +4,8 @@ module Muridae.DB.Item (module Muridae.DB.Item) where
 
 --------------------------------------------------------------------------------
 
-import Data.Int (Int64, Int32, Int16)
+import Data.Int (Int16, Int32, Int64)
+import Data.Scientific (Scientific)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Vector (Vector)
@@ -15,7 +16,6 @@ import Hasql.Pool (UsageError)
 import Hasql.TH (maybeStatement, singletonStatement, vectorStatement)
 import Hasql.Transaction qualified as Transaction
 import Hasql.Transaction.Sessions qualified as Session
-import Data.Scientific (Scientific)
 
 --------------------------------------------------------------------------------
 
@@ -74,7 +74,7 @@ create
       )
 create name desc wikiLink =
   Pool.use
-    . Session.transaction Session.ReadCommitted Session.Read
+    . Session.transaction Session.ReadCommitted Session.Write
     . Transaction.statement (name, desc, wikiLink)
     $ query
  where
@@ -119,7 +119,7 @@ find
 find itemId =
   Pool.use . Session.transaction Session.ReadCommitted Session.Read $ do
     item <- Transaction.statement itemId itemQuery
-    pooledBuys <- Transaction.statement  itemId pooledBuyQuery
+    pooledBuys <- Transaction.statement itemId pooledBuyQuery
     pooledSells <- Transaction.statement itemId pooledSellQuery
 
     pure $ f pooledBuys pooledSells <$> item

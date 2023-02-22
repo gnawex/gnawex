@@ -5,26 +5,33 @@ import Control.Monad.Except (throwError)
 import Control.Monad.IO.Class (liftIO)
 import Data.Kind (Type)
 import Effectful (Eff, IOE, runEff)
-import Muridae.DB (runDB, release)
 import Effectful.Error.Static (Error, runErrorNoCallStack)
 import Effectful.Reader.Static (runReader)
+import Muridae.DB (release, runDB)
 import Muridae.Environment
   ( MuridaeEnv
   , getMuridaeEnv
   , pool
   )
+-- , AdminRoutes (AdminRoutes, items)
+
+import MuridaeWeb.Handler.Item qualified as ItemHandler
 import MuridaeWeb.Route
   ( APIv1 (APIv1, publicRoutes)
-  -- , AdminRoutes (AdminRoutes, items)
-  , PublicRoutes (PublicRoutes, items)
+  , AdminRoutes (AdminRoutes, items)
+  , PublicRoutes
+    ( PublicRoutes
+    , items
+    )
+  , adminRoutes
   )
+import MuridaeWeb.Route.Admin.Item qualified as AdminItem
 import MuridaeWeb.Route.Item qualified as ItemRoute
 import MuridaeWeb.Types (Handler')
 import Network.Wai.Handler.Warp qualified as Warp
 import Servant (ServerError)
 import Servant.Server (Application, Handler)
 import Servant.Server.Generic (AsServerT, genericServeT)
-import qualified MuridaeWeb.Handler.Item as ItemHandler
 
 -- TODO: Generate docs
 
@@ -53,11 +60,10 @@ muridaeAPIv1 =
     --     , updateStatus = ItemListingHandler.updateStatus
     --     }
 
-    -- adminItemRoutes =
-    --   AdminItem.Routes'
-    --     { index = ItemHandler.indexItems
-    --     , create = ItemHandler.create
-    --     }
+    adminItemRoutes =
+      AdminItem.Routes'
+        { create = ItemHandler.createItem
+        }
    in
     APIv1
       { publicRoutes =
@@ -65,10 +71,10 @@ muridaeAPIv1 =
             { items = itemRoutes
             -- , itemListings = itemListingRoutes
             }
-      -- , adminRoutes =
-      --     AdminRoutes
-      --       { items = adminItemRoutes
-      --       }
+      , adminRoutes =
+          AdminRoutes
+            { items = adminItemRoutes
+            }
       }
 
 -- | Runs the @muridae@ server

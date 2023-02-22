@@ -1,4 +1,4 @@
-module Muridae.Item (runManageUserDB, indexItems, showItem) where
+module Muridae.Item (runManageUserDB, indexItems, showItem, createItem) where
 
 import Data.Int (Int16, Int32, Int64)
 import Data.Scientific (Scientific)
@@ -11,11 +11,15 @@ import Muridae.DB (DB, UsageError)
 import Muridae.DB.Item qualified as ItemDB
 import Muridae.Item.Types
   ( Item (Item)
+  , ItemDesc (ItemDesc)
   , ItemId (ItemId)
-  , ManageItem (IndexItems, ShowItem)
+  , ItemName (ItemName)
+  , ItemWikiLink (ItemWikiLink)
+  , ManageItem (CreateItem, IndexItems, ShowItem)
   )
 import Muridae.ItemListing (serializePooledBuys, serializePooledSells)
 import Muridae.ItemListing.Types (PooledBuyListing, PooledSellListing)
+import Data.Coerce (coerce)
 
 --------------------------------------------------------------------------------
 
@@ -40,6 +44,14 @@ showItem
       )
 showItem itemId = send (ShowItem itemId)
 
+createItem
+  :: (ManageItem :> es)
+  => ItemName
+  -> ItemDesc
+  -> ItemWikiLink
+  -> Eff es (Either UsageError Item)
+createItem name desc = send . CreateItem name desc
+
 --------------------------------------------------------------------------------
 -- Item handler
 
@@ -56,6 +68,9 @@ runManageUserDB = interpret $ \_ -> \case
         -- FIXME: Use proper logging
         (\e -> liftIO (print e) >> pure (Left e))
         (pure . Right . (serializeItemAndPooledListings =<<))
+  CreateItem name description wikiLink ->
+    ItemDB.create (coerce name) (coerce description) (coerce wikiLink)
+      >>= either (pure . Left) (pure . Right . serializeItem)
 
 --------------------------------------------------------------------------------
 
