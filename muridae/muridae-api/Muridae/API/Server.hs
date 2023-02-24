@@ -1,4 +1,4 @@
-module MuridaeWeb.Server (runMuridae, mkApplication) where
+module Muridae.API.Server (runMuridae, mkApplication) where
 
 import Control.Exception (bracket)
 import Control.Monad.Except (throwError)
@@ -15,23 +15,25 @@ import Muridae.Environment
   )
 -- , AdminRoutes (AdminRoutes, items)
 
-import MuridaeWeb.Handler.Item qualified as ItemHandler
-import MuridaeWeb.Route
+import Muridae.API.Handler.Item qualified as ItemHandler
+import Muridae.API.Route
   ( APIv1 (APIv1, publicRoutes)
   , AdminRoutes (AdminRoutes, items)
   , PublicRoutes
     ( PublicRoutes
     , items
     )
-  , adminRoutes
+  , adminRoutes, itemListings
   )
-import MuridaeWeb.Route.Admin.Item qualified as AdminItem
-import MuridaeWeb.Route.Item qualified as ItemRoute
-import MuridaeWeb.Types (Handler')
+import Muridae.API.Route.Admin.Item qualified as AdminItem
+import Muridae.API.Route.Item qualified as ItemRoute
+import Muridae.API.Types (Handler')
 import Network.Wai.Handler.Warp qualified as Warp
 import Servant (ServerError)
 import Servant.Server (Application, Handler)
 import Servant.Server.Generic (AsServerT, genericServeT)
+import qualified Muridae.API.Route.ItemListing as ItemListingRoute
+import qualified Muridae.API.Handler.ItemListing as ItemListingHandler
 
 -- TODO: Generate docs
 
@@ -53,12 +55,10 @@ muridaeAPIv1 =
         -- , getListingsUnderItem = ItemHandler.getListings
         }
 
-    -- itemListingRoutes =
-    --   ItemListingRoute.Routes'
-    --     { index = ItemListingHandler.index
-    --     , create = ItemListingHandler.create
-    --     , updateStatus = ItemListingHandler.updateStatus
-    --     }
+    itemListingRoutes =
+      ItemListingRoute.Routes'
+        { index = ItemListingHandler.index
+        }
 
     adminItemRoutes =
       AdminItem.Routes'
@@ -69,7 +69,7 @@ muridaeAPIv1 =
       { publicRoutes =
           PublicRoutes
             { items = itemRoutes
-            -- , itemListings = itemListingRoutes
+            , itemListings = itemListingRoutes
             }
       , adminRoutes =
           AdminRoutes

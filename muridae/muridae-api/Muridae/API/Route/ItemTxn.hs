@@ -1,4 +1,4 @@
-module MuridaeWeb.Route.ItemTxn (module MuridaeWeb.Route.ItemTxn) where
+module Muridae.API.Route.ItemTxn (module Muridae.API.Route.ItemTxn) where
 
 import Servant (JSON, NamedRoutes, StdMethod (GET, PATCH), UVerb, (:-))
 

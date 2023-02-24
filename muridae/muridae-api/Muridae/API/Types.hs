@@ -1,4 +1,4 @@
-module MuridaeWeb.Types (module MuridaeWeb.Types) where
+module Muridae.API.Types (module Muridae.API.Types) where
 
 import Data.Kind (Type)
 import Effectful (Eff, IOE)

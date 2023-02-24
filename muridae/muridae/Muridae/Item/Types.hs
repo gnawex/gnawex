@@ -1,15 +1,12 @@
 module Muridae.Item.Types (module Muridae.Item.Types) where
 
-import Data.Int (Int64)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Vector (Vector)
 import Effectful (Dispatch (Dynamic), DispatchOf, Effect)
 import Muridae.DB (UsageError)
+import Muridae.Item.Id (ItemId)
 import Muridae.ItemListing.Types (PooledBuyListing, PooledSellListing)
-
-newtype ItemId = ItemId Int64
-  deriving stock (Eq, Show)
 
 newtype ItemName = ItemName Text
   deriving stock (Eq, Show)

@@ -1,8 +1,8 @@
-module MuridaeWeb.Route.Admin.Item (module MuridaeWeb.Route.Admin.Item) where
+module Muridae.API.Route.Admin.Item (module Muridae.API.Route.Admin.Item) where
 
 import GHC.Generics (Generic)
-import MuridaeWeb.JSON.DbError (DbError)
-import MuridaeWeb.JSON.Item (ReqItem, Item)
+import Hasql.Pool (DbError)
+import Muridae.JSON.Item.Types (Item, ReqItem)
 import Servant.API
   ( GenericMode (type (:-))
   , NamedRoutes
@@ -16,10 +16,10 @@ import Servant.API.ContentTypes (JSON)
 
 type Routes = NamedRoutes Routes'
 
-data Routes' mode = Routes'
+newtype Routes' mode = Routes'
   { create
       :: mode
         :- ReqBody '[JSON] ReqItem
-        :> UVerb 'POST '[JSON] '[WithStatus 201 Item, DbError]
+        :> UVerb 'POST '[JSON] '[WithStatus 201 Item, WithStatus 500 DbError]
   }
   deriving stock (Generic)

@@ -1,5 +1,6 @@
-module Muridae.Item (runManageUserDB, indexItems, showItem, createItem) where
+module Muridae.Item (runManageItemDB, indexItems, showItem, createItem) where
 
+import Data.Coerce (coerce)
 import Data.Int (Int16, Int32, Int64)
 import Data.Scientific (Scientific)
 import Data.Text (Text)
@@ -9,27 +10,26 @@ import Effectful (Eff, IOE, liftIO, type (:>))
 import Effectful.Dispatch.Dynamic (interpret, send)
 import Muridae.DB (DB, UsageError)
 import Muridae.DB.Item qualified as ItemDB
+import Muridae.Item.Id (ItemId (ItemId))
 import Muridae.Item.Types
   ( Item (Item)
   , ItemDesc (ItemDesc)
-  , ItemId (ItemId)
   , ItemName (ItemName)
   , ItemWikiLink (ItemWikiLink)
   , ManageItem (CreateItem, IndexItems, ShowItem)
   )
 import Muridae.ItemListing (serializePooledBuys, serializePooledSells)
 import Muridae.ItemListing.Types (PooledBuyListing, PooledSellListing)
-import Data.Coerce (coerce)
 
 --------------------------------------------------------------------------------
 
 indexItems
-  :: (ManageItem :> es, DB :> es)
+  :: ManageItem :> es
   => Eff es (Either UsageError (Vector Item))
 indexItems = send IndexItems
 
 showItem
-  :: (ManageItem :> es, DB :> es)
+  :: ManageItem :> es
   => ItemId
   -> Eff
       es
@@ -55,11 +55,11 @@ createItem name desc = send . CreateItem name desc
 --------------------------------------------------------------------------------
 -- Item handler
 
-runManageUserDB
+runManageItemDB
   :: (IOE :> es, DB :> es)
   => Eff (ManageItem : es) (Either UsageError a)
   -> Eff es (Either UsageError a)
-runManageUserDB = interpret $ \_ -> \case
+runManageItemDB = interpret $ \_ -> \case
   IndexItems ->
     ItemDB.index >>= either (pure . Left) (pure . Right . fmap serializeItem)
   ShowItem (ItemId itemId) ->

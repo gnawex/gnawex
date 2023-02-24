@@ -4,6 +4,10 @@ module Muridae.ItemListing.Types
   , Cost
   , BatchedBy
   , UnitQuantity
+  , ItemListing (..)
+  , ItemListingType (..)
+  , ItemListingParseError (..)
+  , ManageItemListing (..)
   , mkCost
   , mkBatchedBy
   , mkUnitQuantity
@@ -22,6 +26,13 @@ where
 import Data.Coerce (coerce)
 import Data.Int (Int16, Int32, Int64)
 import Data.Scientific (Scientific)
+import Data.Text (Text)
+import Data.Time (UTCTime)
+import Data.Vector (Vector)
+import Effectful (Dispatch (Dynamic), DispatchOf, Effect)
+import Muridae.Item.Id (ItemId)
+import Muridae.ItemListing.Id (ItemListingId)
+import Muridae.User.Id (UserId)
 
 --------------------------------------------------------------------------------
 
@@ -54,6 +65,36 @@ data PooledSellListing = PooledSellListing
   , unitQuantity :: SummedUnitQuantity
   , individualCost :: IndividualCost
   }
+  deriving stock (Eq, Show)
+
+data ItemListingType = Buy | Sell
+  deriving stock (Eq, Show)
+
+data ItemListing = ItemListing
+  { id :: ItemListingId
+  , tradableItemId :: ItemId
+  , userId :: UserId
+  , username :: Text
+  , listingType :: ItemListingType
+  , batchedBy :: BatchedBy
+  , unitQuantity :: UnitQuantity
+  , currentUnitQUantity :: UnitQuantity
+  , cost :: Cost
+  , active :: Bool
+  , createdAt :: UTCTime
+  , updatedAt :: Maybe UTCTime
+  }
+
+data ManageItemListing :: Effect where
+  IndexItemListings
+    :: ManageItemListing m (Vector ItemListing)
+
+type instance DispatchOf ManageItemListing = 'Dynamic
+
+--------------------------------------------------------------------------------
+-- Errors
+
+data ItemListingParseError = ItemListingParseError
   deriving stock (Eq, Show)
 
 --------------------------------------------------------------------------------

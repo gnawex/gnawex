@@ -1,21 +1,20 @@
-module MuridaeWeb.JSON.Item (module MuridaeWeb.JSON.Item) where
+module Muridae.JSON.Item.Types
+  ( module Muridae.JSON.Item.Types
+  , module Muridae.JSON.Item.Id
+  )
+where
 
-import Data.Aeson.Types (FromJSON, ToJSON)
-import Data.Coerce (coerce)
-import Data.Int (Int64)
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Vector (Vector)
 import GHC.Generics (Generic)
-import Muridae.Item.Types qualified as Domain
-import Muridae.ItemListing.Types (PooledBuyListing, PooledSellListing)
-import MuridaeWeb.JSON.PooledListing (serializeBuyListing, serializeSellListing)
-import MuridaeWeb.JSON.PooledListing qualified as JSON
-import Servant.API (FromHttpApiData, HasStatus (StatusOf), ToHttpApiData)
+import Muridae.JSON.Item.Id (ItemId (ItemId))
+import Servant.API (HasStatus (StatusOf))
+import qualified Muridae.JSON.PooledListing.Types as JSON
 
-newtype ItemId = ItemId Int64
-  deriving stock (Show)
-  deriving (ToJSON, FromJSON, FromHttpApiData, ToHttpApiData, Eq) via Int64
+--------------------------------------------------------------------------------
+-- Serialized Types
 
 data Item = Item
   { id :: ItemId
@@ -46,7 +45,9 @@ data ItemDetails = ItemDetails
   -- ^ Pooled buy listings of item
   , pooled_sell_listings :: Vector JSON.PooledSellListing
   , created_at :: UTCTime
+  -- ^ When the item was created
   , updated_at :: Maybe UTCTime
+  -- ^ When the item was last updated
   , deleted_at :: Maybe UTCTime
   -- ^ Pooled sell listings of item
   -- TODO: Latest price
@@ -65,6 +66,9 @@ data ReqItem = ReqItem
   deriving anyclass (FromJSON, ToJSON)
 
 --------------------------------------------------------------------------------
+-- Handler Errors
+
+--------------------------------------------------------------------------------
 -- Instances
 
 instance HasStatus Item where
@@ -78,28 +82,3 @@ instance HasStatus (Vector Item) where
 
 instance HasStatus ItemDetails where
   type StatusOf ItemDetails = 200
-
--------------------------------------------------------------------------------
-
--- | Serializes an @Item@
-parseItem :: Domain.Item -> Item
-parseItem (Domain.Item (Domain.ItemId itemId) name desc wiki createdAt updatedAt deletedAt) =
-  Item (ItemId itemId) name desc wiki createdAt updatedAt deletedAt
-
-parseItemWithPools
-  :: ( Domain.Item
-     , Vector PooledBuyListing
-     , Vector PooledSellListing
-     )
-  -> ItemDetails
-parseItemWithPools (item, buys, sells) =
-  ItemDetails
-    (ItemId (coerce item.id))
-    item.name
-    item.description
-    item.wikiLink
-    (serializeBuyListing <$> buys)
-    (serializeSellListing <$> sells)
-    item.createdAt
-    item.updatedAt
-    item.deletedAt

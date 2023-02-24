@@ -1,11 +1,11 @@
 {-# LANGUAGE FieldSelectors #-}
 
-module MuridaeWeb.Route (module MuridaeWeb.Route) where
+module Muridae.API.Route (module Muridae.API.Route) where
 
 import GHC.Generics (Generic)
-import MuridaeWeb.Route.Admin.Item qualified as AdminItem
-import MuridaeWeb.Route.Item qualified as Item
--- import MuridaeWeb.Route.ItemListing qualified as ItemListing
+import Muridae.API.Route.Admin.Item qualified as AdminItem
+import Muridae.API.Route.Item qualified as Item
+import Muridae.API.Route.ItemListing qualified as ItemListing
 import Servant.API (type (:-), type (:>))
 import Servant.API.NamedRoutes (NamedRoutes)
 
@@ -18,7 +18,7 @@ data APIv1 mode = APIv1
 -- | Contains guest and user routes
 data PublicRoutes mode = PublicRoutes
   { items :: mode :- "items" :> Item.Routes
-  -- , itemListings :: mode :- "listings" :> ItemListing.Routes
+  , itemListings :: mode :- "item_listings" :> ItemListing.Routes
   }
   deriving stock (Generic)
 

@@ -13,26 +13,26 @@ module MuridaeApi.ItemTest (module MuridaeApi.ItemTest) where
 --import Muridae.Environment (MuridaeEnv (MuridaeEnv), mkPool)
 --import Muridae.Item qualified as Item
 --import Muridae.ItemListing qualified as ItemListing
---import MuridaeWeb.JSON.Item
+--import Muridae.JSON.Item
 --  ( Item (Item)
 --  , ItemDetails (ItemDetails)
 --  , ItemId (ItemId)
 --  , ReqItem (ReqItem)
 --  )
---import MuridaeWeb.Handler.ItemListing.Types
+--import Muridae.API.Handler.ItemListing.Types
 --  ( CreateItemListing (CreateItemListing)
 --  , ItemListing (ItemListing)
 --  , ItemListingId (ItemListingId)
 --  , ItemListingType (BUY, SELL)
 --  )
---import MuridaeWeb.Handler.User (UserId (UserId))
---import MuridaeWeb.JSON.PooledListing
+--import Muridae.API.Handler.User (UserId (UserId))
+--import Muridae.JSON.PooledListing
 --  ( PooledBuyListing (PooledBuyListing)
 --  , PooledSellListing (PooledSellListing)
 --  )
---import MuridaeWeb.Route (APIv1 (publicRoutes), PublicRoutes (items))
---import MuridaeWeb.Route.Item (getListingsUnderItem, index, show)
---import MuridaeWeb.Server (mkApplication)
+--import Muridae.API.Route (APIv1 (publicRoutes), PublicRoutes (items))
+--import Muridae.API.Route.Item (getListingsUnderItem, index, show)
+--import Muridae.API.Server (mkApplication)
 --import Network.HTTP.Client (defaultManagerSettings, newManager)
 --import Network.Wai (Application)
 --import Network.Wai.Handler.Warp (Port)

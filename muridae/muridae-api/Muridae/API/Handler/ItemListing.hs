@@ -1,36 +1,48 @@
-module MuridaeWeb.Handler.ItemListing () where
+module Muridae.API.Handler.ItemListing (index) where
 
--- import Effectful (Eff, (:>))
--- import Effectful.Beam (DB, DbError)
--- import Effectful.Error.Static (Error, runErrorNoCallStack)
--- import Effectful.Servant (runUVerb, throwUVerb)
--- import Muridae.ItemListing qualified as ItemListing
--- import MuridaeWeb.Handler.ItemListing.Types
---   ( CreateItemListing
---   , ItemListing
---   , ItemListingId
---   , ReqStatus
---   )
--- import MuridaeWeb.Handler.User qualified as UserHandler (UserId)
--- import MuridaeWeb.Types (Handler')
--- import Servant (Union, WithStatus (WithStatus), respond)
--- import Servant.API.ContentTypes (NoContent (NoContent))
--- import Muridae.ItemListing.Types (FilterItemListingType(ByBoth))
+import Data.Vector (Vector)
+import Effectful (liftIO)
+import Effectful.Error.Static (runErrorNoCallStack)
+import Effectful.Servant (runUVerb, throwUVerb)
+import Hasql.Pool (DbError (DbError))
+import Muridae.API.Types (Handler')
+import Muridae.DB (UsageError)
+import Muridae.ItemListing (runManageItemListingDB)
+import Muridae.ItemListing qualified as ItemListing
+import Muridae.ItemListing.Types (ItemListingParseError)
+import Muridae.JSON.ItemListing qualified as JSON (serializeItemListing)
+import Muridae.JSON.ItemListing.Types qualified as JSON
+  ( ItemListing
+  , ItemListingIndex500 (DbError, ParseError)
+  )
+import Servant (Union, WithStatus (WithStatus), respond)
 
 -------------------------------------------------------------------------------
 -- Item listing handlers
 
--- index
---   :: Handler'
---       ( Union
---           '[ WithStatus 200 [ItemListing]
---            , WithStatus 500 DbError
---            ]
---       )
--- index =
---   runUVerb $
---     runErrorNoCallStack @DbError (ItemListing.list ByBoth)
---       >>= either (throwUVerb . WithStatus @500) (respond . WithStatus @200)
+index
+  :: Handler'
+      ( Union
+          '[ WithStatus 200 (Vector JSON.ItemListing)
+           , WithStatus 500 JSON.ItemListingIndex500
+           ]
+      )
+index = do
+  result <-
+    runErrorNoCallStack @UsageError $
+      runErrorNoCallStack @ItemListingParseError $
+        runManageItemListingDB ItemListing.indexItemListings
+
+  runUVerb $ case result of
+    (Left usageError) -> do
+      liftIO (print usageError)
+      (throwUVerb . WithStatus @500 . JSON.DbError . DbError) usageError
+    (Right (Left parseError)) ->
+      throwUVerb (WithStatus @500 (JSON.ParseError parseError))
+    (Right (Right itemListings)) ->
+      respond (WithStatus @200 $ JSON.serializeItemListing <$> itemListings)
+
+-- >>= either (throwUVerb . WithStatus @500) (respond . WithStatus @200)
 
 -- -- TODO: Use auth context
 -- create
