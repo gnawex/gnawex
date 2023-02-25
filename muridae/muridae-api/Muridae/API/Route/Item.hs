@@ -10,7 +10,7 @@ import Servant (Capture, JSON, UVerb, WithStatus, (:>))
 import Servant.API.Generic (type (:-))
 import Servant.API.NamedRoutes (NamedRoutes)
 import Servant.API.Verbs (StdMethod (GET))
-import Hasql.Pool (DbError)
+import Muridae.JSON.DbError (DbError)
 
 type Routes = NamedRoutes Routes'
 

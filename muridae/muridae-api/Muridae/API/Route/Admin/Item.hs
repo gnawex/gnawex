@@ -1,7 +1,7 @@
 module Muridae.API.Route.Admin.Item (module Muridae.API.Route.Admin.Item) where
 
 import GHC.Generics (Generic)
-import Hasql.Pool (DbError)
+import Muridae.JSON.DbError (DbError)
 import Muridae.JSON.Item.Types (Item, ReqItem)
 import Servant.API
   ( GenericMode (type (:-))

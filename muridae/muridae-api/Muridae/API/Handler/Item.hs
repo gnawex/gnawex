@@ -6,7 +6,7 @@ import Data.Coerce (coerce)
 import Data.Vector (Vector)
 import Effectful (liftIO)
 import Effectful.Servant (runUVerb, throwUVerb)
-import Hasql.Pool (DbError (DbError))
+import Muridae.JSON.DbError (DbError (DbError))
 import Muridae.API.Types (Handler')
 import Muridae.Item (runManageItemDB)
 import Muridae.Item qualified as Item

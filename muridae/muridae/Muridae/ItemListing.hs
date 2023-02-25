@@ -1,11 +1,14 @@
 module Muridae.ItemListing
   ( indexItemListings
+  , createItemListing
   , runManageItemListingDB
-  , serializePooledBuys
-  , serializePooledSells
+  , parsePooledBuys
+  , parsePooledSells
+  , serializeItemListingType
   )
 where
 
+import Data.Coerce (coerce)
 import Data.Int (Int16, Int32, Int64)
 import Data.Kind (Type)
 import Data.Scientific (Scientific)
@@ -20,26 +23,46 @@ import Muridae.DB.ItemListing qualified as ItemListingDB
 import Muridae.Item.Id (ItemId (ItemId))
 import Muridae.ItemListing.Id (ItemListingId (ItemListingId))
 import Muridae.ItemListing.Types
-  ( ItemListing (ItemListing)
+  ( BatchedBy
+  , Cost
+  , ItemListing (ItemListing)
   , ItemListingParseError (ItemListingParseError)
   , ItemListingType (Buy, Sell)
-  , ManageItemListing (IndexItemListings)
+  , ManageItemListing (CreateItemListing, IndexItemListings)
   , PooledBuyListing (PooledBuyListing)
   , PooledSellListing (PooledSellListing)
+  , UnitQuantity
   , mkBatchedBy
   , mkCost
   , mkIndividualCost
   , mkUnitQuantity
   , mkUnitQuantity'
+  , unBatchedBy
+  , unCost
+  , unUnitQuantity
   )
 import Muridae.User.Id (UserId (UserId))
 
 --------------------------------------------------------------------------------
 
 indexItemListings
-  :: ManageItemListing :> es
+  :: forall (es :: [Effect])
+   . ManageItemListing :> es
   => Eff es (Vector ItemListing)
 indexItemListings = send IndexItemListings
+
+createItemListing
+  :: forall (es :: [Effect])
+   . ManageItemListing :> es
+  => UserId
+  -> ItemId
+  -> ItemListingType
+  -> BatchedBy
+  -> UnitQuantity
+  -> Cost
+  -> Eff es ItemListing
+createItemListing userId itemId listingType batchedBy unitQuantity =
+  send . CreateItemListing userId itemId listingType batchedBy unitQuantity
 
 -- TODO: Log effect?
 runManageItemListingDB
@@ -53,23 +76,34 @@ runManageItemListingDB
 runManageItemListingDB = interpret $ \_ -> \case
   IndexItemListings ->
     ItemListingDB.index >>= either throwError parseItemListings
+  CreateItemListing userId itemId listingType batchedBy unitQuantity cost ->
+    ItemListingDB.create
+      (coerce userId)
+      (coerce itemId)
+      (serializeItemListingType listingType)
+      (unBatchedBy batchedBy)
+      (unUnitQuantity unitQuantity)
+      (unCost cost)
+      >>= either
+        throwError
+        (maybe (throwError ItemListingParseError) pure . parseItemListing)
 
 --------------------------------------------------------------------------------
 
-serializePooledBuys
+parsePooledBuys
   :: (Int32, Int16, Int64, Scientific) -> Maybe PooledBuyListing
-serializePooledBuys (cost, batchedBy, summedUnitQuantity, individualCost) =
-  pure PooledBuyListing
-    <*> mkCost cost
+parsePooledBuys (cost, batchedBy, summedUnitQuantity, individualCost) =
+  PooledBuyListing
+    <$> mkCost cost
     <*> mkBatchedBy batchedBy
     <*> mkUnitQuantity' summedUnitQuantity
     <*> mkIndividualCost individualCost
 
-serializePooledSells
+parsePooledSells
   :: (Int32, Int16, Int64, Scientific) -> Maybe PooledSellListing
-serializePooledSells (cost, batchedBy, summedUnitQuantity, individualCost) =
-  pure PooledSellListing
-    <*> mkCost cost
+parsePooledSells (cost, batchedBy, summedUnitQuantity, individualCost) =
+  PooledSellListing
+    <$> mkCost cost
     <*> mkBatchedBy batchedBy
     <*> mkUnitQuantity' summedUnitQuantity
     <*> mkIndividualCost individualCost
@@ -103,8 +137,8 @@ parseItemListing
     , createdAt
     , updatedAt
     ) =
-    pure ItemListing
-      <*> Just (ItemListingId listingId)
+    ItemListing
+      <$> Just (ItemListingId listingId)
       <*> Just (ItemId itemId)
       <*> Just (UserId userId)
       <*> Just username
@@ -124,7 +158,8 @@ parseItemListingType = \case
   _ -> Nothing
 
 parseItemListings
-  :: (Error ItemListingParseError :> es)
+  :: forall (es :: [Effect])
+   . (Error ItemListingParseError :> es)
   => Vector
       ( Int64
       , Int64
@@ -145,3 +180,9 @@ parseItemListings =
     (throwError @ItemListingParseError ItemListingParseError)
     pure
     . mapM parseItemListing
+
+-- | Serializes @ItemListingType@ into @Text@
+serializeItemListingType :: ItemListingType -> Text
+serializeItemListingType = \case
+  Buy -> "buy"
+  Sell -> "sell"

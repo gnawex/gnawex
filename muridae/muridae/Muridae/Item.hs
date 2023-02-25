@@ -18,7 +18,7 @@ import Muridae.Item.Types
   , ItemWikiLink (ItemWikiLink)
   , ManageItem (CreateItem, IndexItems, ShowItem)
   )
-import Muridae.ItemListing (serializePooledBuys, serializePooledSells)
+import Muridae.ItemListing (parsePooledBuys, parsePooledSells)
 import Muridae.ItemListing.Types (PooledBuyListing, PooledSellListing)
 
 --------------------------------------------------------------------------------
@@ -61,20 +61,20 @@ runManageItemDB
   -> Eff es (Either UsageError a)
 runManageItemDB = interpret $ \_ -> \case
   IndexItems ->
-    ItemDB.index >>= either (pure . Left) (pure . Right . fmap serializeItem)
+    ItemDB.index >>= either (pure . Left) (pure . Right . fmap parseItem)
   ShowItem (ItemId itemId) ->
     ItemDB.find itemId
       >>= either
         -- FIXME: Use proper logging
         (\e -> liftIO (print e) >> pure (Left e))
-        (pure . Right . (serializeItemAndPooledListings =<<))
+        (pure . Right . (parseItemAndPooledListings =<<))
   CreateItem name description wikiLink ->
     ItemDB.create (coerce name) (coerce description) (coerce wikiLink)
-      >>= either (pure . Left) (pure . Right . serializeItem)
+      >>= either (pure . Left) (pure . Right . parseItem)
 
 --------------------------------------------------------------------------------
 
-serializeItemAndPooledListings
+parseItemAndPooledListings
   :: ( Int64
      , Text
      , Text
@@ -86,7 +86,7 @@ serializeItemAndPooledListings
      , Vector (Int32, Int16, Int64, Scientific)
      )
   -> Maybe (Item, Vector PooledBuyListing, Vector PooledSellListing)
-serializeItemAndPooledListings
+parseItemAndPooledListings
   ( itemId
     , name
     , desc
@@ -99,7 +99,7 @@ serializeItemAndPooledListings
     ) =
     pure (,,)
       <*> Just
-        ( serializeItem
+        ( parseItem
             ( itemId
             , name
             , desc
@@ -111,10 +111,10 @@ serializeItemAndPooledListings
         )
       -- TODO: Change it so that it actually says it failed to parse rather than
       -- say an item does not exist
-      <*> (Just buys >>= mapM serializePooledBuys)
-      <*> (Just sells >>= mapM serializePooledSells)
+      <*> (Just buys >>= mapM parsePooledBuys)
+      <*> (Just sells >>= mapM parsePooledSells)
 
-serializeItem
+parseItem
   :: ( Int64
      , Text
      , Text
@@ -124,7 +124,7 @@ serializeItem
      , Maybe UTCTime
      )
   -> Item
-serializeItem
+parseItem
   ( itemId
     , name
     , description

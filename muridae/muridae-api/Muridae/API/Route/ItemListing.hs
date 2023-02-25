@@ -3,14 +3,19 @@ module Muridae.API.Route.ItemListing (module Muridae.API.Route.ItemListing) wher
 import Data.Vector (Vector)
 import GHC.Generics (Generic)
 import Muridae.JSON.ItemListing.Types
-  ( ItemListing
-  , ItemListingIndex500
+  ( CreateItemListing
+  , ItemListing
+  , ItemListingIndex500, ItemListingCreate500
   )
-import Servant (JSON)
+import Muridae.JSON.User (UserId)
 import Servant.API
-  ( StdMethod (GET)
+  ( Header
+  , JSON
+  , ReqBody
+  , StdMethod (GET, POST)
   , UVerb
   , WithStatus
+  , (:>)
   )
 import Servant.API.Generic (type (:-))
 import Servant.API.NamedRoutes (NamedRoutes)
@@ -28,17 +33,17 @@ data Routes' mode = Routes'
             '[ WithStatus 200 (Vector ItemListing)
              , WithStatus 500 ItemListingIndex500
              ]
-             -- , create
-             --     :: mode
-             --       :- Header "Current-User-Id" UserId
-             --       :> ReqBody '[JSON] CreateItemListing
-             --       :> UVerb
-             --           'POST
-             --           '[JSON]
-             --           '[ NoContent
-             --            , WithStatus 401 String
-             --            , WithStatus 500 DbError
-             --            ]
+  , create
+      :: mode
+        :- Header "Current-User-Id" UserId
+        :> ReqBody '[JSON] CreateItemListing
+        :> UVerb
+            'POST
+            '[JSON]
+            '[ ItemListing
+             , WithStatus 401 String
+             , WithStatus 500 ItemListingCreate500
+             ]
              -- , updateStatus
              --     :: mode
              --       :- Header "Current-User-Id" UserId

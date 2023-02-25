@@ -88,6 +88,14 @@ data ItemListing = ItemListing
 data ManageItemListing :: Effect where
   IndexItemListings
     :: ManageItemListing m (Vector ItemListing)
+  CreateItemListing
+    :: UserId
+    -> ItemId
+    -> ItemListingType
+    -> BatchedBy
+    -> UnitQuantity
+    -> Cost
+    -> ManageItemListing m ItemListing
 
 type instance DispatchOf ManageItemListing = 'Dynamic
 
@@ -138,3 +146,5 @@ mkIndividualCost num
 
 unIndividualCost :: IndividualCost -> Scientific
 unIndividualCost = coerce
+
+

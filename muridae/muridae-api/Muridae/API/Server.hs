@@ -58,6 +58,7 @@ muridaeAPIv1 =
     itemListingRoutes =
       ItemListingRoute.Routes'
         { index = ItemListingHandler.index
+        , create = ItemListingHandler.create
         }
 
     adminItemRoutes =

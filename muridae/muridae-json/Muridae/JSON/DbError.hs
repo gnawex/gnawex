@@ -1,4 +1,4 @@
-module Hasql.Pool (DbError (..)) where
+module Muridae.JSON.DbError (DbError (..)) where
 
 import Data.Aeson (ToJSON (toJSON), Value (String), object)
 import Muridae.DB (UsageError)

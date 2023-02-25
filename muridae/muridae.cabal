@@ -87,7 +87,7 @@ library muridae-json
     , common-extensions
 
   exposed-modules:
-    Hasql.Pool
+    Muridae.JSON.DbError
     Muridae.JSON
     Muridae.JSON.Item
     Muridae.JSON.Item.Id
