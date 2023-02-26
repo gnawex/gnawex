@@ -1,20 +1,21 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
-module Muridae.API.Handler.ItemListing (index, create) where
+module Muridae.API.Handler.ItemListing (index, create, update) where
 
 -------------------------------------------------------------------------------
 
 import Data.Coerce (coerce)
+import Data.Int (Int32)
 import Data.Maybe (fromJust)
 import Data.Vector (Vector)
 import Effectful (Eff, liftIO, (:>))
 import Effectful.Error.Static (runErrorNoCallStack)
 import Effectful.Servant (runUVerb, throwUVerb)
+import GHC.Natural (Natural)
 import Muridae.API.Types (Handler')
 import Muridae.DB (DB, UsageError)
 import Muridae.Item.Id qualified as Domain
 import Muridae.ItemListing (runManageItemListingDB)
 import Muridae.ItemListing qualified as ItemListing
+import Muridae.ItemListing.Id qualified as Domain
 import Muridae.ItemListing.Types qualified as Domain
 import Muridae.JSON.DbError (DbError (DbError))
 import Muridae.JSON.Item.Id qualified as JSON
@@ -45,7 +46,12 @@ index = do
       liftIO (print usageError)
       (throwUVerb . WithStatus @500 . JSON.IndexDbError . DbError) usageError
     (Right (Left parseError)) ->
-      (throwUVerb . WithStatus @500 . JSON.IndexParseError) parseError
+      ( throwUVerb
+          . WithStatus @500
+          . JSON.IndexParseError
+          . JSON.MkItemListingParseError'
+      )
+        parseError
     (Right (Right itemListings)) ->
       respond (WithStatus @200 $ JSON.serializeItemListing <$> itemListings)
 
@@ -82,7 +88,12 @@ create userId params = runUVerb $ do
           liftIO (print usageError)
           (throwUVerb . WithStatus @500 . JSON.CreateDbError . DbError) usageError
         (Right (Left parseError)) ->
-          (throwUVerb . WithStatus @500 . JSON.CreateParseError) parseError
+          ( throwUVerb
+              . WithStatus @500
+              . JSON.CreateParseError
+              . JSON.MkItemListingParseError'
+          )
+            parseError
         (Right (Right itemListing)) ->
           respond (JSON.serializeItemListing itemListing)
  where
@@ -114,67 +125,52 @@ create userId params = runUVerb $ do
               cost
           )
 
--- updateStatus
---   :: Maybe UserHandler.UserId
---   -> ItemListingId
---   -> ReqStatus
---   -> Handler'
---       ( Union
---           '[ ItemListing
---            , WithStatus 401 String
---            , WithStatus 404 String
---            , WithStatus 500 DbError
---            ]
---       )
--- updateStatus userId listingId params =
---   -- TODO: Replace (auth context)
---   -- Nothing ->
---   --   throwUVerb @(WithStatus 401 String) (WithStatus @401 "Not allowed to do that")
---   runUVerb $
---     maybe
---       (throwUVerb @(WithStatus 401 String) (WithStatus @401 "Not allowed to do that"))
---       (doUpdate listingId params)
---       userId
---  where
---   doUpdate
---     :: (DB :> es)
---     => ItemListingId
---     -> ReqStatus
---     -> UserHandler.UserId
---     -> Eff
---         ( Error
---             ( Union
---                 '[ ItemListing
---                  , WithStatus 401 String
---                  , WithStatus 404 String
---                  , WithStatus 500 DbError
---                  ]
---             )
---             : es
---         )
---         ( Union
---             '[ ItemListing
---              , WithStatus 401 String
---              , WithStatus 404 String
---              , WithStatus 500 DbError
---              ]
---         )
---   doUpdate listingId' params' userId' =
---     runErrorNoCallStack @DbError (ItemListing.updateStatus userId' listingId' params')
---       >>= either
---         ( throwUVerb @(WithStatus 500 DbError)
---             @[ ItemListing
---              , WithStatus 401 String
---              , WithStatus 404 String
---              , WithStatus 500 DbError
---              ]
---             . WithStatus @500
---         )
---         ( maybe
---             ( throwUVerb
---                 @(WithStatus 404 String)
---                 (WithStatus @404 "Item listing does not exist")
---             )
---             respond
---         )
---
+update
+  :: Maybe JSON.UserId
+  -> JSON.ItemListingId
+  -> JSON.UpdateItemListing
+  -> Handler'
+      ( Union
+          '[ JSON.ItemListing
+           , WithStatus 201 JSON.ItemListing
+           , -- TODO: Replace @String@ with something else more specific
+             WithStatus 401 String
+           , WithStatus 404 String
+           , WithStatus 500 JSON.ItemListingUpdate500
+           ]
+      )
+update userId listingId params = runUVerb $
+  case userId of
+    Just userId' -> do
+      result <-
+        runErrorNoCallStack @UsageError
+          . runErrorNoCallStack @Domain.ItemListingParseError
+          . runManageItemListingDB
+          $ ItemListing.updateItemListing
+            (coerce userId')
+            (coerce listingId)
+            ( fromJust
+                . Domain.mkUnitQuantity
+                . fromIntegral @Natural @Int32
+                <$> params.unit_quantity
+            )
+            params.active
+
+      case result of
+        (Left usageError) -> do
+          liftIO (print usageError)
+          (throwUVerb . WithStatus @500 . JSON.UpdateDbError . DbError) usageError
+        (Right (Left parseError)) ->
+          ( throwUVerb
+              . WithStatus @500
+              . JSON.UpdateParseError
+              . JSON.MkItemListingParseError'
+          )
+            parseError
+        (Right (Right itemListing)) -> do
+          liftIO (print itemListing)
+          maybe
+            (throwUVerb (WithStatus @404 @String "Item listing does not exist"))
+            (respond . JSON.serializeItemListing)
+            itemListing
+    Nothing -> throwUVerb (WithStatus @401 @String "Not allowed to do that")

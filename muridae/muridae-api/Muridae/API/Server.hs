@@ -7,15 +7,10 @@ import Data.Kind (Type)
 import Effectful (Eff, IOE, runEff)
 import Effectful.Error.Static (Error, runErrorNoCallStack)
 import Effectful.Reader.Static (runReader)
-import Muridae.DB (release, runDB)
-import Muridae.Environment
-  ( MuridaeEnv
-  , getMuridaeEnv
-  , pool
-  )
 -- , AdminRoutes (AdminRoutes, items)
 
 import Muridae.API.Handler.Item qualified as ItemHandler
+import Muridae.API.Handler.ItemListing qualified as ItemListingHandler
 import Muridae.API.Route
   ( APIv1 (APIv1, publicRoutes)
   , AdminRoutes (AdminRoutes, items)
@@ -23,17 +18,23 @@ import Muridae.API.Route
     ( PublicRoutes
     , items
     )
-  , adminRoutes, itemListings
+  , adminRoutes
+  , itemListings
   )
 import Muridae.API.Route.Admin.Item qualified as AdminItem
 import Muridae.API.Route.Item qualified as ItemRoute
+import Muridae.API.Route.ItemListing qualified as ItemListingRoute
 import Muridae.API.Types (Handler')
+import Muridae.DB (release, runDB)
+import Muridae.Environment
+  ( MuridaeEnv
+  , getMuridaeEnv
+  , pool
+  )
 import Network.Wai.Handler.Warp qualified as Warp
 import Servant (ServerError)
 import Servant.Server (Application, Handler)
 import Servant.Server.Generic (AsServerT, genericServeT)
-import qualified Muridae.API.Route.ItemListing as ItemListingRoute
-import qualified Muridae.API.Handler.ItemListing as ItemListingHandler
 
 -- TODO: Generate docs
 
@@ -59,6 +60,7 @@ muridaeAPIv1 =
       ItemListingRoute.Routes'
         { index = ItemListingHandler.index
         , create = ItemListingHandler.create
+        , update = ItemListingHandler.update
         }
 
     adminItemRoutes =

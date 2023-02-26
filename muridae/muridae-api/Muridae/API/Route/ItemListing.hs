@@ -5,14 +5,19 @@ import GHC.Generics (Generic)
 import Muridae.JSON.ItemListing.Types
   ( CreateItemListing
   , ItemListing
-  , ItemListingIndex500, ItemListingCreate500
+  , ItemListingCreate500
+  , ItemListingId
+  , ItemListingIndex500
+  , ItemListingUpdate500
+  , UpdateItemListing
   )
 import Muridae.JSON.User (UserId)
 import Servant.API
-  ( Header
+  ( Capture
+  , Header
   , JSON
   , ReqBody
-  , StdMethod (GET, POST)
+  , StdMethod (GET, PATCH, POST)
   , UVerb
   , WithStatus
   , (:>)
@@ -44,19 +49,20 @@ data Routes' mode = Routes'
              , WithStatus 401 String
              , WithStatus 500 ItemListingCreate500
              ]
-             -- , updateStatus
-             --     :: mode
-             --       :- Header "Current-User-Id" UserId
-             --       :> Capture "item_listing_id" ItemListingId
-             --       :> "status"
-             --       :> ReqBody '[JSON] ReqStatus
-             --       :> UVerb
-             --           'PATCH
-             --           '[JSON]
-             --           '[ WithStatus 200 ItemListing
-             --            , WithStatus 401 String
-             --            , WithStatus 404 String
-             --            , WithStatus 500 DbError
-             --            ]
+  , update
+      :: mode
+        :- Header "Current-User-Id" UserId
+        :> Capture "item_listing_id" ItemListingId
+        :> ReqBody '[JSON] UpdateItemListing
+        :> UVerb
+            'PATCH
+            '[JSON]
+            '[ ItemListing
+             , WithStatus 201 ItemListing
+            -- TODO: Use something more specific than @String@
+             , WithStatus 401 String
+             , WithStatus 404 String
+             , WithStatus 500 ItemListingUpdate500
+             ]
   }
   deriving stock (Generic)

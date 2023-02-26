@@ -87,8 +87,8 @@ library muridae-json
     , common-extensions
 
   exposed-modules:
-    Muridae.JSON.DbError
     Muridae.JSON
+    Muridae.JSON.DbError
     Muridae.JSON.Item
     Muridae.JSON.Item.Id
     Muridae.JSON.Item.Types
@@ -121,12 +121,13 @@ library muridae-db
     Muridae.DB.ItemListing
 
   build-depends:
-    , effectful-core     ^>=2.2
-    , hasql              ^>=1.6
-    , hasql-effectful    ^>=0.1
-    , hasql-pool         ^>=0.8
-    , hasql-th           ^>=0.4
-    , hasql-transaction  ^>=1.0
+    , effectful-core            ^>=2.2
+    , hasql                     ^>=1.6
+    , hasql-dynamic-statements  ^>=0.3
+    , hasql-effectful           ^>=0.1
+    , hasql-pool                ^>=0.8
+    , hasql-th                  ^>=0.4
+    , hasql-transaction         ^>=1.0
 
   -- , effectful          ^>=2.2
   -- , exceptions         ^>=0.10
@@ -175,9 +176,7 @@ executable muridae-server
     , common-extensions
 
   main-is:        Main.hs
-  build-depends:
-    , muridae-api
-
+  build-depends:  muridae-api
   hs-source-dirs: muridae-server
 
 test-suite muridae-test

@@ -13,4 +13,7 @@ instance HasStatus DbError where
 instance ToJSON DbError where
   toJSON :: DbError -> Value
   toJSON _usageError =
-    object [("message", String "DB ded")]
+    object
+      [ ("message", String "GNAWEX ran into a problem while communicating with its database.")
+      , ("help", String "There most likely isn't anything you can do. You could let the admin know.")
+      ]

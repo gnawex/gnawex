@@ -1,6 +1,7 @@
 module Muridae.ItemListing
   ( indexItemListings
   , createItemListing
+  , updateItemListing
   , runManageItemListingDB
   , parsePooledBuys
   , parsePooledSells
@@ -28,7 +29,7 @@ import Muridae.ItemListing.Types
   , ItemListing (ItemListing)
   , ItemListingParseError (ItemListingParseError)
   , ItemListingType (Buy, Sell)
-  , ManageItemListing (CreateItemListing, IndexItemListings)
+  , ManageItemListing (CreateItemListing, IndexItemListings, UpdateItemListing)
   , PooledBuyListing (PooledBuyListing)
   , PooledSellListing (PooledSellListing)
   , UnitQuantity
@@ -64,6 +65,16 @@ createItemListing
 createItemListing userId itemId listingType batchedBy unitQuantity =
   send . CreateItemListing userId itemId listingType batchedBy unitQuantity
 
+updateItemListing
+  :: (ManageItemListing :> es)
+  => UserId
+  -> ItemListingId
+  -> Maybe UnitQuantity
+  -> Maybe Bool
+  -> Eff es (Maybe ItemListing)
+updateItemListing userId itemId unitQuantity =
+  send . UpdateItemListing userId itemId unitQuantity
+
 -- TODO: Log effect?
 runManageItemListingDB
   :: forall (es :: [Effect]) (a :: Type)
@@ -87,6 +98,24 @@ runManageItemListingDB = interpret $ \_ -> \case
       >>= either
         throwError
         (maybe (throwError ItemListingParseError) pure . parseItemListing)
+  UpdateItemListing userId listingId unitQuantity active ->
+    -- TODO: Handle case where it update nothing
+    ItemListingDB.update
+      (coerce userId)
+      (coerce listingId)
+      (unUnitQuantity <$> unitQuantity)
+      active
+      >>= either
+        throwError
+        -- TODO: Just a temporary thing
+        ( \case
+            Just itemListing ->
+              maybe
+                (throwError ItemListingParseError)
+                (pure . Just)
+                (parseItemListing itemListing)
+            Nothing -> pure Nothing
+        )
 
 --------------------------------------------------------------------------------
 

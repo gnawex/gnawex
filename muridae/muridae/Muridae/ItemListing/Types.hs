@@ -84,6 +84,7 @@ data ItemListing = ItemListing
   , createdAt :: UTCTime
   , updatedAt :: Maybe UTCTime
   }
+  deriving stock (Eq, Show)
 
 data ManageItemListing :: Effect where
   IndexItemListings
@@ -96,6 +97,12 @@ data ManageItemListing :: Effect where
     -> UnitQuantity
     -> Cost
     -> ManageItemListing m ItemListing
+  UpdateItemListing
+    :: UserId
+    -> ItemListingId
+    -> Maybe UnitQuantity
+    -> Maybe Bool
+    -> ManageItemListing m (Maybe ItemListing)
 
 type instance DispatchOf ManageItemListing = 'Dynamic
 
@@ -146,5 +153,3 @@ mkIndividualCost num
 
 unIndividualCost :: IndividualCost -> Scientific
 unIndividualCost = coerce
-
-
