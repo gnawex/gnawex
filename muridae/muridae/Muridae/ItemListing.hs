@@ -57,10 +57,14 @@ indexItemListings
   => SortIndividualCost
   -> FilterByItemId
   -> ItemListingStatus
+  -> Maybe ItemListingType
   -> Eff es (Vector ItemListing)
-indexItemListings sortIndividualCost filterByItemId =
+indexItemListings sortIndividualCost filterByItemId filterByItemListingStatus =
   send
-    . IndexItemListings sortIndividualCost filterByItemId
+    . IndexItemListings
+      sortIndividualCost
+      filterByItemId
+      filterByItemListingStatus
 
 createItemListing
   :: forall (es :: [Effect])
@@ -95,26 +99,39 @@ runManageItemListingDB
   => Eff (ManageItemListing : es) a
   -> Eff es a
 runManageItemListingDB = interpret $ \_ -> \case
-  IndexItemListings sortByIndividualCost filterByItemId filterByStatus ->
-    let
-      orders :: [(Text, ItemListingDB.Order)]
-      orders =
-        case sortByIndividualCost of
-          Domain.Asc -> [("individual_cost", ItemListingDB.Asc)]
-          Domain.Desc -> [("individual_cost", ItemListingDB.Desc)]
-          Domain.Unordered -> []
+  IndexItemListings
+    sortByIndividualCost
+    filterByItemId
+    filterByStatus
+    filterByItemListingType ->
+      let
+        orders :: [(Text, ItemListingDB.Order)]
+        orders =
+          case sortByIndividualCost of
+            Domain.Asc -> [("individual_cost", ItemListingDB.Asc)]
+            Domain.Desc -> [("individual_cost", ItemListingDB.Desc)]
+            Domain.Unordered -> []
 
-      filterByItemId' = case filterByItemId of
-        Domain.FilterByItemId (Domain.ItemId itemId) -> Just itemId
-        Domain.NoItemIdFilter -> Nothing
+        filterByItemId' = case filterByItemId of
+          Domain.FilterByItemId (Domain.ItemId itemId) -> Just itemId
+          Domain.NoItemIdFilter -> Nothing
 
-      filterByStatus' = case filterByStatus of
-        Domain.Listed -> Just True
-        Domain.Delisted -> Just False
-        Domain.ListedAndDelisted -> Nothing
-     in
-      ItemListingDB.index orders filterByItemId' filterByStatus'
-        >>= either throwError parseItemListings
+        filterByStatus' = case filterByStatus of
+          Domain.Listed -> Just True
+          Domain.Delisted -> Just False
+          Domain.ListedAndDelisted -> Nothing
+
+        filterByItemListingType' = case filterByItemListingType of
+          Just Domain.Buy -> Just ItemListingDB.Buy
+          Just Domain.Sell -> Just ItemListingDB.Sell
+          Nothing -> Nothing
+       in
+        ItemListingDB.index
+          orders
+          filterByItemId'
+          filterByStatus'
+          filterByItemListingType'
+          >>= either throwError parseItemListings
   CreateItemListing userId itemId listingType batchedBy unitQuantity cost ->
     ItemListingDB.create
       (coerce userId)

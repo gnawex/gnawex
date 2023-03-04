@@ -38,13 +38,14 @@ index
   :: Maybe (Sort IndividualCost)
   -> Maybe JSON.ItemId
   -> Maybe Bool
+  -> Maybe JSON.ItemListingType
   -> Handler'
       ( Union
           '[ WithStatus 200 (Vector JSON.ItemListing)
            , WithStatus 500 JSON.ItemListingIndex500
            ]
       )
-index sortCost itemId isActive = do
+index sortCost itemId isActive itemListingType = do
   let
     itemId' = case itemId of
       Just (JSON.ItemId i) -> Domain.FilterByItemId (Domain.ItemId i)
@@ -55,10 +56,15 @@ index sortCost itemId isActive = do
       Just (Desc _) -> Domain.Desc
       Nothing -> Domain.Unordered
 
-    listingStatus = case isActive of
+    itemListingStatus' = case isActive of
       Just True -> Domain.Listed
       Just False -> Domain.Delisted
       Nothing -> Domain.ListedAndDelisted
+
+    itemListingType' = case itemListingType of
+      Just JSON.BUY -> Just Domain.Buy
+      Just JSON.SELL -> Just Domain.Sell
+      Nothing -> Nothing
 
   liftIO $ print sortCost
   result <-
@@ -68,7 +74,8 @@ index sortCost itemId isActive = do
           ItemListing.indexItemListings
             orderByIndividualCost
             itemId'
-            listingStatus
+            itemListingStatus'
+            itemListingType'
 
   runUVerb $ case result of
     (Left usageError) -> do

@@ -98,6 +98,7 @@ data ManageItemListing :: Effect where
     :: SortIndividualCost
     -> FilterByItemId
     -> ItemListingStatus
+    -> Maybe ItemListingType
     -> ManageItemListing m (Vector ItemListing)
   CreateItemListing
     :: UserId

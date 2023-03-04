@@ -119,6 +119,7 @@ library muridae-db
     , hasql-pool                ^>=0.8
     , hasql-th                  ^>=0.4
     , hasql-transaction         ^>=1.0
+    , hasql-implicits           ^>=0.1
 
   -- , effectful          ^>=2.2
   -- , exceptions         ^>=0.10

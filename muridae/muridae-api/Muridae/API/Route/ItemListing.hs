@@ -10,7 +10,7 @@ import Muridae.JSON.ItemListing.Types
   , ItemListingId
   , ItemListingIndex500
   , ItemListingUpdate500
-  , UpdateItemListing
+  , UpdateItemListing, ItemListingType
   )
 import Muridae.JSON.User (UserId)
 import Servant.API
@@ -38,6 +38,7 @@ data Routes' mode = Routes'
         :- QueryParam "sort" (Sort IndividualCost)
         :> QueryParam "item_id" ItemId
         :> QueryParam "active" Bool
+        :> QueryParam "type" ItemListingType
         :> UVerb
             'GET
             '[JSON]

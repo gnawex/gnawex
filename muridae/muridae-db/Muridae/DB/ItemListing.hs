@@ -1,6 +1,13 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Muridae.DB.ItemListing (index, create, update, Order (..)) where
+module Muridae.DB.ItemListing
+  ( index
+  , create
+  , update
+  , Order (..)
+  , ItemListingType (..)
+  )
+where
 
 import Data.Int (Int16, Int32, Int64)
 import Data.List (foldl')
@@ -40,6 +47,9 @@ import Hasql.Transaction.Sessions qualified as Session
 data Order = Asc | Desc
   deriving stock (Eq, Show)
 
+data ItemListingType = Buy | Sell
+  deriving stock (Eq, Show)
+
 index
   :: forall (es :: [Effect])
    . (DB :> es)
@@ -48,6 +58,7 @@ index
   -- direction to be ordered.
   -> Maybe Int64
   -> Maybe Bool
+  -> Maybe ItemListingType
   -> Eff
       es
       ( Either
@@ -69,17 +80,29 @@ index
               )
           )
       )
-index orderByIndividualCost filterByItemId =
+index orderByIndividualCost filterByItemId filterByItemListingStatus =
   Pool.use
     . Session.transaction Session.ReadCommitted Session.Read
     . Transaction.statement ()
-    . indexStatement orderByIndividualCost filterByItemId
+    . indexStatement
+      orderByIndividualCost
+      filterByItemId
+      filterByItemListingStatus
  where
-  indexStatement orders filterByItemId' filterByListingStatus =
-    dynamicallyParameterized
-      (indexSnippet orders filterByItemId' filterByListingStatus)
-      decoder
-      True
+  indexStatement
+    orders
+    filterByItemId'
+    filterByListingStatus
+    filterByItemListingType =
+      dynamicallyParameterized
+        ( indexSnippet
+            orders
+            filterByItemId'
+            filterByListingStatus
+            filterByItemListingType
+        )
+        decoder
+        True
 
   decoder =
     rowVector
@@ -99,41 +122,39 @@ index orderByIndividualCost filterByItemId =
           <*> column (nullable timestamptz)
       )
 
-  indexSnippet :: [(Text, Order)] -> Maybe Int64 -> Maybe Bool -> Snippet
-  indexSnippet orders filterByItemId' filterByListingStatus =
-    let
-      -- Is there a way to not do this
-      whereClause = case (filterByItemId', filterByListingStatus) of
-        (Just itemId, Just active) ->
-          " WHERE listings.tradable_item__id = "
-            <> Snippet.param itemId
-            <> " AND active = "
-            <> Snippet.param active
-        (Just itemId, Nothing) -> " WHERE listings.tradable_item__id = " <> Snippet.param itemId
-        (Nothing, Just active) -> " WHERE active = " <> Snippet.param active
-        (Nothing, Nothing) -> ""
-     in
-      mconcat
-        [ "SELECT"
-        , "    listings.id"
-        , ",   tradable_item__id"
-        , ",   user__id"
-        , ",   users.username"
-        , ",   type"
-        , ",   batched_by"
-        , ",   unit_quantity"
-        , ",   current_unit_quantity"
-        , ",   (cast(cost AS NUMERIC) / cast(batched_by AS NUMERIC)) AS individual_cost"
-        , ",   cost"
-        , ",   active"
-        , ",   listings.created_at"
-        , ",   listings.updated_at"
-        , "  FROM app.tradable_item_listings AS listings"
-        , "  LEFT JOIN app.users"
-        , "  ON users.id = user__id"
-        , whereClause
-        , ordersToSnippet orders
-        ]
+  indexSnippet
+    :: [(Text, Order)] -> Maybe Int64 -> Maybe Bool -> Maybe ItemListingType -> Snippet
+  indexSnippet orders filterByItemId' filterByListingStatus filterListingType =
+    mconcat
+      [ "SELECT"
+      , "    listings.id"
+      , ",   tradable_item__id"
+      , ",   user__id"
+      , ",   users.username"
+      , ",   type"
+      , ",   batched_by"
+      , ",   unit_quantity"
+      , ",   current_unit_quantity"
+      , ",   (cast(cost AS NUMERIC) / cast(batched_by AS NUMERIC)) AS individual_cost"
+      , ",   cost"
+      , ",   active"
+      , ",   listings.created_at"
+      , ",   listings.updated_at"
+      , "  FROM app.tradable_item_listings AS listings"
+      , "  LEFT JOIN app.users"
+      , "  ON users.id = user__id"
+      , "  WHERE true "
+      , foldMap ((<>) " AND tradable_item__id = " . Snippet.param) filterByItemId'
+      , foldMap ((<>) " AND active = " . Snippet.param) filterByListingStatus
+      , foldMap
+          ( \listingType ->
+              " AND type = "
+                <> Snippet.param @Text (serializeItemListingType listingType)
+                <> " :: app.LISTING_TYPE "
+          )
+          filterListingType
+      , ordersToSnippet orders
+      ]
 
   _query =
     [vectorStatement|
@@ -388,3 +409,8 @@ ordersToSnippet =
                   ]
       )
       Nothing
+
+serializeItemListingType :: ItemListingType -> Text
+serializeItemListingType = \case
+  Buy -> "buy"
+  Sell -> "sell"
