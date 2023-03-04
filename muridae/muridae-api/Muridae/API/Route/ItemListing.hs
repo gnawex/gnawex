@@ -26,6 +26,7 @@ import Servant.API
   )
 import Servant.API.Generic (type (:-))
 import Servant.API.NamedRoutes (NamedRoutes)
+import Muridae.JSON.Item.Id (ItemId)
 
 -- TODO: Make response types for common unauthorized/404 things
 
@@ -35,7 +36,7 @@ data Routes' mode = Routes'
   { index
       :: mode
         :- QueryParam "sort" (Sort IndividualCost)
-        :> QueryParam "item_id" UserId
+        :> QueryParam "item_id" ItemId
         :> QueryParam "active" Bool
         :> UVerb
             'GET

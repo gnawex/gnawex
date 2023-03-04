@@ -30,14 +30,13 @@ import Muridae.JSON.ItemListing.Types qualified as JSON
 import Muridae.JSON.User qualified as JSON
 import Muridae.User.Id qualified as Domain
 import Servant (Union, WithStatus (WithStatus), respond)
-import Muridae.JSON.User (UserId)
 
 -------------------------------------------------------------------------------
 -- Item listing handlers
 
 index
   :: Maybe (Sort IndividualCost)
-  -> Maybe UserId
+  -> Maybe JSON.ItemId
   -> Maybe Bool
   -> Handler'
       ( Union
@@ -45,20 +44,31 @@ index
            , WithStatus 500 JSON.ItemListingIndex500
            ]
       )
-index sortCost _userId _isActive = do
+index sortCost itemId isActive = do
+  let
+    itemId' = case itemId of
+      Just (JSON.ItemId i) -> Domain.FilterByItemId (Domain.ItemId i)
+      Nothing -> Domain.NoItemIdFilter
+
+    orderByIndividualCost = case sortCost of
+      Just (Asc _) -> Domain.Asc
+      Just (Desc _) -> Domain.Desc
+      Nothing -> Domain.Unordered
+
+    listingStatus = case isActive of
+      Just True -> Domain.Listed
+      Just False -> Domain.Delisted
+      Nothing -> Domain.ListedAndDelisted
+
   liftIO $ print sortCost
   result <-
     runErrorNoCallStack @UsageError $
       runErrorNoCallStack @Domain.ItemListingParseError $
         runManageItemListingDB $
           ItemListing.indexItemListings
-            (case sortCost of
-              Just (Asc _) -> Domain.Asc
-              Just (Desc _) -> Domain.Desc
-              Nothing -> Domain.Unordered
-            )
-            Domain.NoItemIdFilter
-            Domain.ListedAndDelisted
+            orderByIndividualCost
+            itemId'
+            listingStatus
 
   runUVerb $ case result of
     (Left usageError) -> do

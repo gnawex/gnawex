@@ -46,6 +46,8 @@ index
   => [(Text, Order)]
   -- ^ List of orders where @Text@ is the column name, and @Order@ is the
   -- direction to be ordered.
+  -> Maybe Int64
+  -> Maybe Bool
   -> Eff
       es
       ( Either
@@ -67,14 +69,17 @@ index
               )
           )
       )
-index =
+index orderByIndividualCost filterByItemId =
   Pool.use
     . Session.transaction Session.ReadCommitted Session.Read
     . Transaction.statement ()
-    . indexStatement
+    . indexStatement orderByIndividualCost filterByItemId
  where
-  indexStatement orders =
-    dynamicallyParameterized (indexSnippet orders) decoder True
+  indexStatement orders filterByItemId' filterByListingStatus =
+    dynamicallyParameterized
+      (indexSnippet orders filterByItemId' filterByListingStatus)
+      decoder
+      True
 
   decoder =
     rowVector
@@ -94,37 +99,41 @@ index =
           <*> column (nullable timestamptz)
       )
 
-  indexSnippet :: [(Text, Order)] -> Snippet
-  indexSnippet orders =
-    mconcat
-      [ "SELECT"
-      , "    listings.id"
-      , ",   tradable_item__id"
-      , ",   user__id"
-      , ",   users.username"
-      , ",   type"
-      , ",   batched_by"
-      , ",   unit_quantity"
-      , ",   current_unit_quantity"
-      , ",   (cast(cost AS NUMERIC) / cast(batched_by AS NUMERIC)) AS individual_cost"
-      , ",   cost"
-      , ",   active"
-      , ",   listings.created_at"
-      , ",   listings.updated_at"
-      , "  FROM app.tradable_item_listings AS listings"
-      , "  LEFT JOIN app.users"
-      , "  ON users.id = user__id"
-      , -- , "  WHERE "
-        -- , maybe
-        --     "active = true"
-        --     ( \itemId ->
-        --         " tradable_item__id = "
-        --           <> Snippet.param @Int64 itemId
-        --           <> ", active = true"
-        --     )
-        --     itemListingsFilter.byItemId
-        ordersToSnippet orders
-      ]
+  indexSnippet :: [(Text, Order)] -> Maybe Int64 -> Maybe Bool -> Snippet
+  indexSnippet orders filterByItemId' filterByListingStatus =
+    let
+      -- Is there a way to not do this
+      whereClause = case (filterByItemId', filterByListingStatus) of
+        (Just itemId, Just active) ->
+          " WHERE listings.tradable_item__id = "
+            <> Snippet.param itemId
+            <> " AND active = "
+            <> Snippet.param active
+        (Just itemId, Nothing) -> " WHERE listings.tradable_item__id = " <> Snippet.param itemId
+        (Nothing, Just active) -> " WHERE active = " <> Snippet.param active
+        (Nothing, Nothing) -> ""
+     in
+      mconcat
+        [ "SELECT"
+        , "    listings.id"
+        , ",   tradable_item__id"
+        , ",   user__id"
+        , ",   users.username"
+        , ",   type"
+        , ",   batched_by"
+        , ",   unit_quantity"
+        , ",   current_unit_quantity"
+        , ",   (cast(cost AS NUMERIC) / cast(batched_by AS NUMERIC)) AS individual_cost"
+        , ",   cost"
+        , ",   active"
+        , ",   listings.created_at"
+        , ",   listings.updated_at"
+        , "  FROM app.tradable_item_listings AS listings"
+        , "  LEFT JOIN app.users"
+        , "  ON users.id = user__id"
+        , whereClause
+        , ordersToSnippet orders
+        ]
 
   _query =
     [vectorStatement|

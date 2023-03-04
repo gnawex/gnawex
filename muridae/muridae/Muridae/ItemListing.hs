@@ -22,8 +22,8 @@ import Effectful.Error.Static (Error, throwError)
 import Muridae.DB (DB, UsageError)
 import Muridae.DB.ItemListing qualified as ItemListingDB
 import Muridae.Item.Id (ItemId (ItemId))
+import Muridae.Item.Id qualified as Domain
 import Muridae.ItemListing.Id (ItemListingId (ItemListingId))
-import Muridae.ItemListing.Types qualified as Domain
 import Muridae.ItemListing.Types
   ( BatchedBy
   , Cost
@@ -46,6 +46,7 @@ import Muridae.ItemListing.Types
   , unCost
   , unUnitQuantity
   )
+import Muridae.ItemListing.Types qualified as Domain
 import Muridae.User.Id (UserId (UserId))
 
 --------------------------------------------------------------------------------
@@ -94,7 +95,7 @@ runManageItemListingDB
   => Eff (ManageItemListing : es) a
   -> Eff es a
 runManageItemListingDB = interpret $ \_ -> \case
-  IndexItemListings sortByIndividualCost _filterByItemId _filterByStatus ->
+  IndexItemListings sortByIndividualCost filterByItemId filterByStatus ->
     let
       orders :: [(Text, ItemListingDB.Order)]
       orders =
@@ -102,8 +103,18 @@ runManageItemListingDB = interpret $ \_ -> \case
           Domain.Asc -> [("individual_cost", ItemListingDB.Asc)]
           Domain.Desc -> [("individual_cost", ItemListingDB.Desc)]
           Domain.Unordered -> []
+
+      filterByItemId' = case filterByItemId of
+        Domain.FilterByItemId (Domain.ItemId itemId) -> Just itemId
+        Domain.NoItemIdFilter -> Nothing
+
+      filterByStatus' = case filterByStatus of
+        Domain.Listed -> Just True
+        Domain.Delisted -> Just False
+        Domain.ListedAndDelisted -> Nothing
      in
-      ItemListingDB.index orders >>= either throwError parseItemListings
+      ItemListingDB.index orders filterByItemId' filterByStatus'
+        >>= either throwError parseItemListings
   CreateItemListing userId itemId listingType batchedBy unitQuantity cost ->
     ItemListingDB.create
       (coerce userId)
