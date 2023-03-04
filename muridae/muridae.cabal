@@ -2,13 +2,6 @@ cabal-version:      3.0
 name:               muridae
 version:            0.1.0.0
 
--- A short (one-line) description of the package.
--- synopsis:
-
--- A longer description of the package.
--- description:
-
--- A URL where users can report bugs.
 bug-reports:        https://github.com/gnawex/gnawex
 license:            AGPL-3.0-only
 author:             SEKUN
@@ -21,9 +14,6 @@ common common-default-language
 common common-base
   build-depends: base ^>=4.16
 
-common common-database
-  build-depends:
-
 common common-deps
   build-depends:
     , scientific  ^>=0.3
@@ -33,7 +23,8 @@ common common-deps
 
 -- , text-builder  ^>=0.6
 common common-warnings
-  ghc-options: -Wall -Werror -Wunused-packages
+  ghc-options: -Wall -Werror
+  -- -Wunused-packages
 
 common common-extensions
   default-extensions:
@@ -149,8 +140,10 @@ library muridae-api
     , servant            ^>=0.19
     , servant-effectful  ^>=0.0
     , servant-server     ^>=0.19
+    , text               ^>=2.0
     , vector             ^>=0.12
     , warp               ^>=3.3
+    , world-peace        ^>=1.0
 
   -- , exceptions         ^>=0.10
   exposed-modules:
@@ -158,6 +151,7 @@ library muridae-api
     Muridae.API.Handler.Item
     Muridae.API.Handler.ItemListing
     Muridae.API.Handler.User
+    Muridae.API.QueryParam
     Muridae.API.Route
     Muridae.API.Route.Admin.Item
     Muridae.API.Route.Item

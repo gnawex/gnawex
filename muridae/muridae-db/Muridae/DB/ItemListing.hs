@@ -1,8 +1,11 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Muridae.DB.ItemListing (index, create, update) where
+module Muridae.DB.ItemListing (index, create, update, Order (..)) where
 
 import Data.Int (Int16, Int32, Int64)
+import Data.List (foldl')
+import Data.Maybe (fromMaybe)
+import Data.Scientific (Scientific)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Vector (Vector)
@@ -17,7 +20,9 @@ import Hasql.Decoders
   , int8
   , nonNullable
   , nullable
+  , numeric
   , rowMaybe
+  , rowVector
   , text
   , timestamptz
   )
@@ -31,10 +36,17 @@ import Hasql.Transaction.Sessions qualified as Session
 
 -- TODO: ID, filter listing type, sort by (asc, desc): individual cost, current
 -- quantity, batched by
+
+data Order = Asc | Desc
+  deriving stock (Eq, Show)
+
 index
   :: forall (es :: [Effect])
    . (DB :> es)
-  => Eff
+  => [(Text, Order)]
+  -- ^ List of orders where @Text@ is the column name, and @Order@ is the
+  -- direction to be ordered.
+  -> Eff
       es
       ( Either
           UsageError
@@ -47,6 +59,7 @@ index
               , Int16
               , Int32
               , Int32
+              , Scientific
               , Int32
               , Bool
               , UTCTime
@@ -58,9 +71,62 @@ index =
   Pool.use
     . Session.transaction Session.ReadCommitted Session.Read
     . Transaction.statement ()
-    $ query
+    . indexStatement
  where
-  query =
+  indexStatement orders =
+    dynamicallyParameterized (indexSnippet orders) decoder True
+
+  decoder =
+    rowVector
+      ( (,,,,,,,,,,,,)
+          <$> column (nonNullable int8)
+          <*> column (nonNullable int8)
+          <*> column (nonNullable int8)
+          <*> column (nonNullable text)
+          <*> column (nonNullable text)
+          <*> column (nonNullable int2)
+          <*> column (nonNullable int4)
+          <*> column (nonNullable int4)
+          <*> column (nonNullable numeric)
+          <*> column (nonNullable int4)
+          <*> column (nonNullable bool)
+          <*> column (nonNullable timestamptz)
+          <*> column (nullable timestamptz)
+      )
+
+  indexSnippet :: [(Text, Order)] -> Snippet
+  indexSnippet orders =
+    mconcat
+      [ "SELECT"
+      , "    listings.id"
+      , ",   tradable_item__id"
+      , ",   user__id"
+      , ",   users.username"
+      , ",   type"
+      , ",   batched_by"
+      , ",   unit_quantity"
+      , ",   current_unit_quantity"
+      , ",   (cast(cost AS NUMERIC) / cast(batched_by AS NUMERIC)) AS individual_cost"
+      , ",   cost"
+      , ",   active"
+      , ",   listings.created_at"
+      , ",   listings.updated_at"
+      , "  FROM app.tradable_item_listings AS listings"
+      , "  LEFT JOIN app.users"
+      , "  ON users.id = user__id"
+      , -- , "  WHERE "
+        -- , maybe
+        --     "active = true"
+        --     ( \itemId ->
+        --         " tradable_item__id = "
+        --           <> Snippet.param @Int64 itemId
+        --           <> ", active = true"
+        --     )
+        --     itemListingsFilter.byItemId
+        ordersToSnippet orders
+      ]
+
+  _query =
     [vectorStatement|
         SELECT listings.id :: BIGINT
              , tradable_item__id :: BIGINT
@@ -100,6 +166,7 @@ create
           , Int16
           , Int32
           , Int32
+          , Scientific
           , Int32
           , Bool
           , UTCTime
@@ -118,6 +185,7 @@ create userId itemId listingType batchedBy unitQuantity cost =
       (userId, itemId, listingType, batchedBy, unitQuantity, cost)
       query
  where
+  -- TODO: Consider not using NUMERIC while performing operations
   query =
     [singletonStatement|
       WITH insert_listing AS (
@@ -150,6 +218,8 @@ create userId itemId listingType batchedBy unitQuantity cost =
             , batched_by :: SMALLINT
             , unit_quantity :: INTEGER
             , current_unit_quantity :: INTEGER
+            , (cast(cost AS NUMERIC) / cast(batched_by AS NUMERIC))
+                :: NUMERIC as individual_cost
             , cost :: INTEGER
             , active :: BOOLEAN
             , tradable_item_listings.created_at :: TIMESTAMPTZ
@@ -163,6 +233,7 @@ create userId itemId listingType batchedBy unitQuantity cost =
           , batched_by :: SMALLINT
           , unit_quantity :: INTEGER
           , current_unit_quantity :: INTEGER
+          , individual_cost :: NUMERIC
           , cost :: INTEGER
           , active :: BOOLEAN
           , insert_listing.created_at :: TIMESTAMPTZ
@@ -191,6 +262,7 @@ update
               , Int16
               , Int32
               , Int32
+              , Scientific
               , Int32
               , Bool
               , UTCTime
@@ -212,7 +284,7 @@ update userId listingId unitQuantity active =
 
   decoder =
     rowMaybe
-      ( (,,,,,,,,,,,)
+      ( (,,,,,,,,,,,,)
           <$> column (nonNullable int8)
           <*> column (nonNullable int8)
           <*> column (nonNullable int8)
@@ -221,6 +293,7 @@ update userId listingId unitQuantity active =
           <*> column (nonNullable int2)
           <*> column (nonNullable int4)
           <*> column (nonNullable int4)
+          <*> column (nonNullable numeric)
           <*> column (nonNullable int4)
           <*> column (nonNullable bool)
           <*> column (nonNullable timestamptz)
@@ -266,6 +339,7 @@ update userId listingId unitQuantity active =
       , ", batched_by"
       , ", unit_quantity"
       , ", current_unit_quantity"
+      , ", (cast(cost AS NUMERIC) / cast(batched_by AS NUMERIC)) AS individual_cost"
       , ", cost"
       , ", active"
       , ", update_listings.created_at"
@@ -274,3 +348,34 @@ update userId listingId unitQuantity active =
       , " LEFT JOIN app.users"
       , " ON update_listings.user__id = users.id"
       ]
+
+orderToSnippet :: Order -> Snippet
+orderToSnippet = \case
+  Asc -> "ASC"
+  Desc -> "DESC"
+
+ordersToSnippet :: [(Text, Order)] -> Snippet
+ordersToSnippet =
+  fromMaybe ""
+    . foldl'
+      ( \acc (colName, ord) ->
+          case acc of
+            Just snippet ->
+              Just $
+                mconcat
+                  [ snippet
+                  , ", "
+                  , Snippet.param colName
+                  , " "
+                  , orderToSnippet ord
+                  ]
+            Nothing ->
+              Just $
+                mconcat
+                  [ " ORDER BY "
+                  , "individual_cost" -- Snippet.param colName
+                  , " "
+                  , orderToSnippet ord
+                  ]
+      )
+      Nothing

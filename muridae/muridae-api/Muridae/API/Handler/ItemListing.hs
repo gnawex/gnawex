@@ -1,4 +1,9 @@
-module Muridae.API.Handler.ItemListing (index, create, update) where
+module Muridae.API.Handler.ItemListing
+  ( index
+  , create
+  , update
+  )
+where
 
 -------------------------------------------------------------------------------
 
@@ -10,6 +15,7 @@ import Effectful (Eff, liftIO, (:>))
 import Effectful.Error.Static (runErrorNoCallStack)
 import Effectful.Servant (runUVerb, throwUVerb)
 import GHC.Natural (Natural)
+import Muridae.API.QueryParam (IndividualCost, Sort (Asc, Desc))
 import Muridae.API.Types (Handler')
 import Muridae.DB (DB, UsageError)
 import Muridae.Item.Id qualified as Domain
@@ -24,22 +30,35 @@ import Muridae.JSON.ItemListing.Types qualified as JSON
 import Muridae.JSON.User qualified as JSON
 import Muridae.User.Id qualified as Domain
 import Servant (Union, WithStatus (WithStatus), respond)
+import Muridae.JSON.User (UserId)
 
 -------------------------------------------------------------------------------
 -- Item listing handlers
 
 index
-  :: Handler'
+  :: Maybe (Sort IndividualCost)
+  -> Maybe UserId
+  -> Maybe Bool
+  -> Handler'
       ( Union
           '[ WithStatus 200 (Vector JSON.ItemListing)
            , WithStatus 500 JSON.ItemListingIndex500
            ]
       )
-index = do
+index sortCost _userId _isActive = do
+  liftIO $ print sortCost
   result <-
     runErrorNoCallStack @UsageError $
       runErrorNoCallStack @Domain.ItemListingParseError $
-        runManageItemListingDB ItemListing.indexItemListings
+        runManageItemListingDB $
+          ItemListing.indexItemListings
+            (case sortCost of
+              Just (Asc _) -> Domain.Asc
+              Just (Desc _) -> Domain.Desc
+              Nothing -> Domain.Unordered
+            )
+            Domain.NoItemIdFilter
+            Domain.ListedAndDelisted
 
   runUVerb $ case result of
     (Left usageError) -> do

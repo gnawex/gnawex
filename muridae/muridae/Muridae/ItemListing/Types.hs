@@ -8,6 +8,9 @@ module Muridae.ItemListing.Types
   , ItemListingType (..)
   , ItemListingParseError (..)
   , ManageItemListing (..)
+  , ItemListingStatus (..)
+  , SortIndividualCost (..)
+  , FilterByItemId (..)
   , mkCost
   , mkBatchedBy
   , mkUnitQuantity
@@ -70,6 +73,9 @@ data PooledSellListing = PooledSellListing
 data ItemListingType = Buy | Sell
   deriving stock (Eq, Show)
 
+data ItemListingStatus = Listed | Delisted | ListedAndDelisted
+  deriving stock (Eq, Show)
+
 data ItemListing = ItemListing
   { id :: ItemListingId
   , tradableItemId :: ItemId
@@ -79,6 +85,7 @@ data ItemListing = ItemListing
   , batchedBy :: BatchedBy
   , unitQuantity :: UnitQuantity
   , currentUnitQUantity :: UnitQuantity
+  , individualCost :: IndividualCost
   , cost :: Cost
   , active :: Bool
   , createdAt :: UTCTime
@@ -88,7 +95,10 @@ data ItemListing = ItemListing
 
 data ManageItemListing :: Effect where
   IndexItemListings
-    :: ManageItemListing m (Vector ItemListing)
+    :: SortIndividualCost
+    -> FilterByItemId
+    -> ItemListingStatus
+    -> ManageItemListing m (Vector ItemListing)
   CreateItemListing
     :: UserId
     -> ItemId
@@ -103,6 +113,11 @@ data ManageItemListing :: Effect where
     -> Maybe UnitQuantity
     -> Maybe Bool
     -> ManageItemListing m (Maybe ItemListing)
+
+data SortIndividualCost = Asc | Desc | Unordered
+  deriving (Eq, Show)
+
+data FilterByItemId = FilterByItemId ItemId | NoItemIdFilter
 
 type instance DispatchOf ManageItemListing = 'Dynamic
 

@@ -38,6 +38,7 @@ serializeItemListing listing =
     , listing_type = serializeItemListingType listing.listingType
     , batched_by = Domain.unBatchedBy listing.batchedBy
     , unit_quantity = Domain.unUnitQuantity listing.unitQuantity
+    , individual_cost = Domain.unIndividualCost listing.individualCost
     , cost = Domain.unCost listing.cost
     , active = listing.active
     , created_at = listing.createdAt

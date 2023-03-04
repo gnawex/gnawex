@@ -2,6 +2,7 @@ module Muridae.API.Route.ItemListing (module Muridae.API.Route.ItemListing) wher
 
 import Data.Vector (Vector)
 import GHC.Generics (Generic)
+import Muridae.API.QueryParam (IndividualCost, Sort)
 import Muridae.JSON.ItemListing.Types
   ( CreateItemListing
   , ItemListing
@@ -16,6 +17,7 @@ import Servant.API
   ( Capture
   , Header
   , JSON
+  , QueryParam
   , ReqBody
   , StdMethod (GET, PATCH, POST)
   , UVerb
@@ -32,7 +34,10 @@ type Routes = NamedRoutes Routes'
 data Routes' mode = Routes'
   { index
       :: mode
-        :- UVerb
+        :- QueryParam "sort" (Sort IndividualCost)
+        :> QueryParam "item_id" UserId
+        :> QueryParam "active" Bool
+        :> UVerb
             'GET
             '[JSON]
             '[ WithStatus 200 (Vector ItemListing)
@@ -59,8 +64,8 @@ data Routes' mode = Routes'
             '[JSON]
             '[ ItemListing
              , WithStatus 201 ItemListing
-            -- TODO: Use something more specific than @String@
-             , WithStatus 401 String
+             , -- TODO: Use something more specific than @String@
+               WithStatus 401 String
              , WithStatus 404 String
              , WithStatus 500 ItemListingUpdate500
              ]

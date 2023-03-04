@@ -14,7 +14,7 @@ import Data.Aeson
   )
 import Data.Aeson.Types (Parser, prependFailure, typeMismatch)
 import Data.Int (Int16, Int32, Int64)
-import Data.Scientific (scientific)
+import Data.Scientific (scientific, Scientific)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Vector (Vector)
@@ -46,6 +46,7 @@ data ItemListing = ItemListing
   , listing_type :: ItemListingType
   , batched_by :: Int16
   , unit_quantity :: Int32
+  , individual_cost :: Scientific
   , cost :: Int32
   , active :: Bool
   , created_at :: UTCTime

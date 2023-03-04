@@ -23,15 +23,19 @@ import Muridae.DB (DB, UsageError)
 import Muridae.DB.ItemListing qualified as ItemListingDB
 import Muridae.Item.Id (ItemId (ItemId))
 import Muridae.ItemListing.Id (ItemListingId (ItemListingId))
+import Muridae.ItemListing.Types qualified as Domain
 import Muridae.ItemListing.Types
   ( BatchedBy
   , Cost
+  , FilterByItemId
   , ItemListing (ItemListing)
   , ItemListingParseError (ItemListingParseError)
+  , ItemListingStatus
   , ItemListingType (Buy, Sell)
   , ManageItemListing (CreateItemListing, IndexItemListings, UpdateItemListing)
   , PooledBuyListing (PooledBuyListing)
   , PooledSellListing (PooledSellListing)
+  , SortIndividualCost
   , UnitQuantity
   , mkBatchedBy
   , mkCost
@@ -49,8 +53,13 @@ import Muridae.User.Id (UserId (UserId))
 indexItemListings
   :: forall (es :: [Effect])
    . ManageItemListing :> es
-  => Eff es (Vector ItemListing)
-indexItemListings = send IndexItemListings
+  => SortIndividualCost
+  -> FilterByItemId
+  -> ItemListingStatus
+  -> Eff es (Vector ItemListing)
+indexItemListings sortIndividualCost filterByItemId =
+  send
+    . IndexItemListings sortIndividualCost filterByItemId
 
 createItemListing
   :: forall (es :: [Effect])
@@ -85,8 +94,16 @@ runManageItemListingDB
   => Eff (ManageItemListing : es) a
   -> Eff es a
 runManageItemListingDB = interpret $ \_ -> \case
-  IndexItemListings ->
-    ItemListingDB.index >>= either throwError parseItemListings
+  IndexItemListings sortByIndividualCost _filterByItemId _filterByStatus ->
+    let
+      orders :: [(Text, ItemListingDB.Order)]
+      orders =
+        case sortByIndividualCost of
+          Domain.Asc -> [("individual_cost", ItemListingDB.Asc)]
+          Domain.Desc -> [("individual_cost", ItemListingDB.Desc)]
+          Domain.Unordered -> []
+     in
+      ItemListingDB.index orders >>= either throwError parseItemListings
   CreateItemListing userId itemId listingType batchedBy unitQuantity cost ->
     ItemListingDB.create
       (coerce userId)
@@ -146,6 +163,7 @@ parseItemListing
      , Int16
      , Int32
      , Int32
+     , Scientific
      , Int32
      , Bool
      , UTCTime
@@ -161,6 +179,7 @@ parseItemListing
     , batchedBy
     , unitQuantity
     , currentUnitQuantity
+    , individualCost
     , cost
     , active
     , createdAt
@@ -175,6 +194,7 @@ parseItemListing
       <*> mkBatchedBy batchedBy
       <*> mkUnitQuantity unitQuantity
       <*> mkUnitQuantity currentUnitQuantity
+      <*> mkIndividualCost individualCost
       <*> mkCost cost
       <*> Just active
       <*> Just createdAt
@@ -198,6 +218,7 @@ parseItemListings
       , Int16
       , Int32
       , Int32
+      , Scientific
       , Int32
       , Bool
       , UTCTime
