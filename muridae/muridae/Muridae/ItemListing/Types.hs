@@ -33,6 +33,7 @@ import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Vector (Vector)
 import Effectful (Dispatch (Dynamic), DispatchOf, Effect)
+import Muridae.DB.ItemListing (ItemListingOpts)
 import Muridae.Item.Id (ItemId)
 import Muridae.ItemListing.Id (ItemListingId)
 import Muridae.User.Id (UserId)
@@ -95,10 +96,7 @@ data ItemListing = ItemListing
 
 data ManageItemListing :: Effect where
   IndexItemListings
-    :: SortIndividualCost
-    -> FilterByItemId
-    -> ItemListingStatus
-    -> Maybe ItemListingType
+    :: ItemListingOpts
     -> ManageItemListing m (Vector ItemListing)
   CreateItemListing
     :: UserId

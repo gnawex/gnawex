@@ -20,6 +20,7 @@ import Effectful (Eff, Effect, (:>))
 import Effectful.Dispatch.Dynamic (interpret, send)
 import Effectful.Error.Static (Error, throwError)
 import Muridae.DB (DB, UsageError)
+import Muridae.DB.ItemListing (ItemListingOpts (ItemListingOpts))
 import Muridae.DB.ItemListing qualified as ItemListingDB
 import Muridae.Item.Id (ItemId (ItemId))
 import Muridae.Item.Id qualified as Domain
@@ -59,12 +60,40 @@ indexItemListings
   -> ItemListingStatus
   -> Maybe ItemListingType
   -> Eff es (Vector ItemListing)
-indexItemListings sortIndividualCost filterByItemId filterByItemListingStatus =
-  send
-    . IndexItemListings
-      sortIndividualCost
-      filterByItemId
-      filterByItemListingStatus
+indexItemListings ordIndCost itemId status listingType =
+  let
+    ordIndCost' =
+      case ordIndCost of
+        Domain.Asc -> Just ItemListingDB.Asc
+        Domain.Desc -> Just ItemListingDB.Desc
+        Domain.Unordered -> Nothing
+
+    itemId' = case itemId of
+      Domain.FilterByItemId (Domain.ItemId i) -> Just i
+      Domain.NoItemIdFilter -> Nothing
+
+    status' = case status of
+      Domain.Listed -> Just True
+      Domain.Delisted -> Just False
+      Domain.ListedAndDelisted -> Nothing
+
+    listingType' = case listingType of
+      Just Domain.Buy -> Just ItemListingDB.Buy
+      Just Domain.Sell -> Just ItemListingDB.Sell
+      Nothing -> Nothing
+
+    itemListingOpts =
+      ItemListingOpts
+        { filterByItemId = itemId'
+        , filterByActive = status'
+        , filterByType = listingType'
+        , filterByIndividualCost = Nothing
+        , filterByIndividualCostRange = Nothing
+        , orderByCreatedAt = Nothing
+        , orderByIndividualCost = ordIndCost'
+        }
+   in
+    send (IndexItemListings itemListingOpts)
 
 createItemListing
   :: forall (es :: [Effect])
@@ -99,39 +128,8 @@ runManageItemListingDB
   => Eff (ManageItemListing : es) a
   -> Eff es a
 runManageItemListingDB = interpret $ \_ -> \case
-  IndexItemListings
-    sortByIndividualCost
-    filterByItemId
-    filterByStatus
-    filterByItemListingType ->
-      let
-        orders :: [(Text, ItemListingDB.Order)]
-        orders =
-          case sortByIndividualCost of
-            Domain.Asc -> [("individual_cost", ItemListingDB.Asc)]
-            Domain.Desc -> [("individual_cost", ItemListingDB.Desc)]
-            Domain.Unordered -> []
-
-        filterByItemId' = case filterByItemId of
-          Domain.FilterByItemId (Domain.ItemId itemId) -> Just itemId
-          Domain.NoItemIdFilter -> Nothing
-
-        filterByStatus' = case filterByStatus of
-          Domain.Listed -> Just True
-          Domain.Delisted -> Just False
-          Domain.ListedAndDelisted -> Nothing
-
-        filterByItemListingType' = case filterByItemListingType of
-          Just Domain.Buy -> Just ItemListingDB.Buy
-          Just Domain.Sell -> Just ItemListingDB.Sell
-          Nothing -> Nothing
-       in
-        ItemListingDB.index
-          orders
-          filterByItemId'
-          filterByStatus'
-          filterByItemListingType'
-          >>= either throwError parseItemListings
+  IndexItemListings opts ->
+      ItemListingDB.index opts >>= either throwError parseItemListings
   CreateItemListing userId itemId listingType batchedBy unitQuantity cost ->
     ItemListingDB.create
       (coerce userId)

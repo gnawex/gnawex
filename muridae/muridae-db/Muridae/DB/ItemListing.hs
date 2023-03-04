@@ -6,13 +6,19 @@ module Muridae.DB.ItemListing
   , update
   , Order (..)
   , ItemListingType (..)
+  , ItemListingOpts (..)
   )
 where
 
+import Control.Applicative ((<|>))
+import Data.Bool qualified as Bool
+import Data.ByteString (ByteString)
+import Data.ByteString qualified as ByteString
 import Data.Int (Int16, Int32, Int64)
 import Data.List (foldl')
-import Data.Maybe (fromMaybe)
+import Data.Maybe (isJust)
 import Data.Scientific (Scientific)
+import Data.String (IsString)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Vector (Vector)
@@ -50,15 +56,24 @@ data Order = Asc | Desc
 data ItemListingType = Buy | Sell
   deriving stock (Eq, Show)
 
+-- | Used for ordering, and/or filtering query results for item listings.
+data ItemListingOpts = ItemListingOpts
+  { filterByItemId :: Maybe Int64
+  , filterByActive :: Maybe Bool
+  , filterByType :: Maybe ItemListingType
+  , filterByIndividualCost :: Maybe Scientific
+  -- ^ TODO: Implement
+  , filterByIndividualCostRange :: Maybe (Scientific, Scientific)
+  -- ^ TODO: Implement
+  , orderByCreatedAt :: Maybe Order
+  -- ^ TODO: Implement
+  , orderByIndividualCost :: Maybe Order
+  }
+
 index
   :: forall (es :: [Effect])
    . (DB :> es)
-  => [(Text, Order)]
-  -- ^ List of orders where @Text@ is the column name, and @Order@ is the
-  -- direction to be ordered.
-  -> Maybe Int64
-  -> Maybe Bool
-  -> Maybe ItemListingType
+  => ItemListingOpts
   -> Eff
       es
       ( Either
@@ -80,29 +95,17 @@ index
               )
           )
       )
-index orderByIndividualCost filterByItemId filterByItemListingStatus =
+index =
   Pool.use
     . Session.transaction Session.ReadCommitted Session.Read
     . Transaction.statement ()
     . indexStatement
-      orderByIndividualCost
-      filterByItemId
-      filterByItemListingStatus
  where
-  indexStatement
-    orders
-    filterByItemId'
-    filterByListingStatus
-    filterByItemListingType =
-      dynamicallyParameterized
-        ( indexSnippet
-            orders
-            filterByItemId'
-            filterByListingStatus
-            filterByItemListingType
-        )
-        decoder
-        True
+  indexStatement opts =
+    dynamicallyParameterized
+      (indexSnippet opts)
+      decoder
+      True
 
   decoder =
     rowVector
@@ -123,38 +126,62 @@ index orderByIndividualCost filterByItemId filterByItemListingStatus =
       )
 
   indexSnippet
-    :: [(Text, Order)] -> Maybe Int64 -> Maybe Bool -> Maybe ItemListingType -> Snippet
-  indexSnippet orders filterByItemId' filterByListingStatus filterListingType =
-    mconcat
-      [ "SELECT"
-      , "    listings.id"
-      , ",   tradable_item__id"
-      , ",   user__id"
-      , ",   users.username"
-      , ",   type"
-      , ",   batched_by"
-      , ",   unit_quantity"
-      , ",   current_unit_quantity"
-      , ",   (cast(cost AS NUMERIC) / cast(batched_by AS NUMERIC)) AS individual_cost"
-      , ",   cost"
-      , ",   active"
-      , ",   listings.created_at"
-      , ",   listings.updated_at"
-      , "  FROM app.tradable_item_listings AS listings"
-      , "  LEFT JOIN app.users"
-      , "  ON users.id = user__id"
-      , "  WHERE true "
-      , foldMap ((<>) " AND tradable_item__id = " . Snippet.param) filterByItemId'
-      , foldMap ((<>) " AND active = " . Snippet.param) filterByListingStatus
-      , foldMap
-          ( \listingType ->
-              " AND type = "
-                <> Snippet.param @Text (serializeItemListingType listingType)
-                <> " :: app.LISTING_TYPE "
-          )
-          filterListingType
-      , ordersToSnippet orders
-      ]
+    :: ItemListingOpts -> Snippet
+  indexSnippet opts =
+    let
+      orderByCreatedAt :: Maybe ByteString
+      orderByCreatedAt =
+        (<>) " created_at " . serializeOrder @ByteString
+          <$> opts.orderByCreatedAt
+
+      orderByIndividualCost :: Maybe ByteString
+      orderByIndividualCost =
+        (<>) " individual_cost " . serializeOrder @ByteString
+          <$> opts.orderByIndividualCost
+
+      orderBys =
+        Snippet.sql . ByteString.intercalate ", " $
+          foldl'
+            (\acc el -> maybe acc (: acc) el)
+            []
+            [orderByIndividualCost, orderByCreatedAt]
+
+      hasOrdering :: Bool
+      hasOrdering = isJust (orderByIndividualCost <|> orderByCreatedAt)
+
+      orderByClause =
+        Bool.bool "" ("ORDER BY " <> orderBys <> " ") hasOrdering
+     in
+      mconcat
+        [ "SELECT"
+        , "    listings.id"
+        , ",   tradable_item__id"
+        , ",   user__id"
+        , ",   users.username"
+        , ",   type"
+        , ",   batched_by"
+        , ",   unit_quantity"
+        , ",   current_unit_quantity"
+        , ",   (cast(cost AS NUMERIC) / cast(batched_by AS NUMERIC)) AS individual_cost"
+        , ",   cost"
+        , ",   active"
+        , ",   listings.created_at"
+        , ",   listings.updated_at"
+        , "  FROM app.tradable_item_listings AS listings"
+        , "  LEFT JOIN app.users"
+        , "  ON users.id = user__id"
+        , "  WHERE true "
+        , foldMap ((<>) " AND tradable_item__id = " . Snippet.param) opts.filterByItemId
+        , foldMap ((<>) " AND active = " . Snippet.param) opts.filterByActive
+        , foldMap
+            ( \listingType ->
+                " AND type = "
+                  <> Snippet.param @Text (serializeItemListingType listingType)
+                  <> " :: app.LISTING_TYPE "
+            )
+            opts.filterByType
+        , orderByClause
+        ]
 
   _query =
     [vectorStatement|
@@ -379,38 +406,12 @@ update userId listingId unitQuantity active =
       , " ON update_listings.user__id = users.id"
       ]
 
-orderToSnippet :: Order -> Snippet
-orderToSnippet = \case
-  Asc -> "ASC"
-  Desc -> "DESC"
-
-ordersToSnippet :: [(Text, Order)] -> Snippet
-ordersToSnippet =
-  fromMaybe ""
-    . foldl'
-      ( \acc (colName, ord) ->
-          case acc of
-            Just snippet ->
-              Just $
-                mconcat
-                  [ snippet
-                  , ", "
-                  , Snippet.param colName
-                  , " "
-                  , orderToSnippet ord
-                  ]
-            Nothing ->
-              Just $
-                mconcat
-                  [ " ORDER BY "
-                  , "individual_cost" -- Snippet.param colName
-                  , " "
-                  , orderToSnippet ord
-                  ]
-      )
-      Nothing
-
-serializeItemListingType :: ItemListingType -> Text
+serializeItemListingType :: IsString a => ItemListingType -> a
 serializeItemListingType = \case
   Buy -> "buy"
   Sell -> "sell"
+
+serializeOrder :: IsString a => Order -> a
+serializeOrder = \case
+  Asc -> "ASC"
+  Desc -> "DESC"
