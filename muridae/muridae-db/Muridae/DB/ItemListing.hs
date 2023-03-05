@@ -248,8 +248,8 @@ create userId itemId listingType batchedBy unitQuantity cost =
       WITH insert_listing AS (
         INSERT INTO
           app.tradable_item_listings
-            ( tradable_item__id
-            , user__id
+            ( user__id
+            , tradable_item__id
             , type
             , batched_by
             , unit_quantity
@@ -268,7 +268,7 @@ create userId itemId listingType batchedBy unitQuantity cost =
             , true
             )
           RETURNING
-            tradable_item_listings.id :: BIGINT
+              tradable_item_listings.id :: BIGINT
             , tradable_item__id :: BIGINT
             , user__id :: BIGINT
             , type :: TEXT
@@ -282,7 +282,7 @@ create userId itemId listingType batchedBy unitQuantity cost =
             , tradable_item_listings.created_at :: TIMESTAMPTZ
             , tradable_item_listings.updated_at :: TIMESTAMPTZ?
       ) SELECT
-           insert_listing.id :: BIGINT
+            insert_listing.id :: BIGINT
           , tradable_item__id :: BIGINT
           , user__id :: BIGINT
           , users.username :: TEXT as username
