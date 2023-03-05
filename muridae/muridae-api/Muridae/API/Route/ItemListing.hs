@@ -52,7 +52,7 @@ data Routes' mode = Routes'
         :> UVerb
             'POST
             '[JSON]
-            '[ ItemListing
+            '[ WithStatus 201 ItemListing
              , WithStatus 401 String
              , WithStatus 500 ItemListingCreate500
              ]

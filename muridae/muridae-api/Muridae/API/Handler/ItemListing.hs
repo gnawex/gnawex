@@ -91,13 +91,13 @@ index sortCost itemId isActive itemListingType = do
     (Right (Right itemListings)) ->
       respond (WithStatus @200 $ JSON.serializeItemListing <$> itemListings)
 
--- -- TODO: Use auth context
+-- TODO: Use auth context
 create
   :: Maybe JSON.UserId
   -> JSON.CreateItemListing
   -> Handler'
       ( Union
-          '[ JSON.ItemListing
+          '[ WithStatus 201 JSON.ItemListing
            , WithStatus 401 String
            , WithStatus 500 JSON.ItemListingCreate500
            ]
@@ -131,7 +131,7 @@ create userId params = runUVerb $ do
           )
             parseError
         (Right (Right itemListing)) ->
-          respond (JSON.serializeItemListing itemListing)
+          (respond . WithStatus @201 . JSON.serializeItemListing) itemListing
  where
   runCreate
     :: DB :> es
