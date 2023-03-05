@@ -19,7 +19,7 @@ common common-deps
     , scientific  ^>=0.3
     , text        ^>=2.0
     , time        ^>=1.11
-    , vector      ^>=0.12
+    , vector      ^>=0.13
 
 -- , text-builder  ^>=0.6
 common common-warnings
@@ -143,8 +143,9 @@ library muridae-api
     , servant-effectful  ^>=0.0
     , servant-server     ^>=0.19
     , text               ^>=2.0
-    , vector             ^>=0.12
+    , vector             ^>=0.13
     , warp               ^>=3.3
+    , wai-logger         ^>=2.4
     , world-peace        ^>=1.0
 
   -- , exceptions         ^>=0.10
@@ -199,16 +200,5 @@ test-suite muridae-test
 
   -- Stuff to test
   build-depends:
-    , beam-core          ^>=0.10
-    , beam-postgres      ^>=0.5
-    , effectful-core     ^>=2.2
-    , http-client        ^>=0.7
-    , muridae
-    , postgresql-simple  ^>=0.6
-    , resource-pool      ^>=0.3
-    , servant-client     ^>=0.19
-    , servant-server     ^>=0.19
-    , wai                ^>=3.2
-    , warp               ^>=3.3
 
   build-tool-depends: tasty-discover:tasty-discover
