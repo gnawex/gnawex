@@ -32,6 +32,7 @@ import Muridae.Environment
   , pool
   )
 import Network.Wai.Handler.Warp qualified as Warp
+import Network.Wai.Logger (withStdoutLogger)
 import Servant (ServerError)
 import Servant.Server (Application, Handler)
 import Servant.Server.Generic (AsServerT, genericServeT)
@@ -86,7 +87,11 @@ runMuridae =
   bracket
     (runEff getMuridaeEnv)
     (runEff . shutdownMuridae)
-    (Warp.run 8081 . mkApplication)
+    ( \env -> withStdoutLogger $ \logger ->
+        Warp.runSettings (settings logger) $ mkApplication env
+    )
+ where
+  settings logger = Warp.setPort 8080 $ Warp.setLogger logger Warp.defaultSettings
 
 -- | Shuts down @muridae@ as well as destroys the DB pool
 shutdownMuridae :: MuridaeEnv -> Eff '[IOE] ()
