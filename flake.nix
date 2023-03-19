@@ -31,7 +31,7 @@
           muridaeProject =
             final.haskell-nix.project' {
               src = ./.;
-              compiler-nix-name = "ghc925";
+              compiler-nix-name = "ghc927";
 
               shell.tools = {
                 cabal = { };
@@ -44,18 +44,14 @@
               # Non-Haskell shell tools go here
               shell.buildInputs = with pkgs; [
                 haskellPackages.implicit-hie
-
                 # Nix
                 nil
                 nixpkgs-fmt
-
                 postgresql.lib
                 pgformatter
                 sqitchPg
                 perl534Packages.TAPParserSourceHandlerpgTAP
-
                 mkdocs-material-insiders
-
                 feedback.packages.${system}.default
               ];
               # This adds `js-unknown-ghcjs-cabal` to the shell.
@@ -69,12 +65,20 @@
         # crossPlatforms = p: [p.ghcjs];
       };
     in
-    flake // {
+    flake // rec {
       packages = rec {
         default = muridae-server;
         muridae-server = flake.packages."muridae:exe:muridae-server";
         muridae = flake.packages."muridae:lib:muridae";
+        muridae-db = flake.packages."muridae:lib:muridae-db";
+        muridae-json = flake.packages."muridae:lib:muridae-json";
+        muridae-api = flake.packages."muridae:lib:muridae-api";
         muridae-test = flake.packages."muridae:test:muridae-test";
+      };
+
+      apps.default = {
+        type = "app";
+        program = "${packages.muridae-server}/bin/muridae-server";
       };
 
       devShells = {

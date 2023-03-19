@@ -2,13 +2,6 @@ cabal-version:      3.0
 name:               muridae
 version:            0.1.0.0
 
--- A short (one-line) description of the package.
--- synopsis:
-
--- A longer description of the package.
--- description:
-
--- A URL where users can report bugs.
 bug-reports:        https://github.com/gnawex/gnawex
 license:            AGPL-3.0-only
 author:             SEKUN
@@ -21,16 +14,17 @@ common common-default-language
 common common-base
   build-depends: base ^>=4.16
 
-common common-database
-  build-depends:
-
 common common-deps
   build-depends:
-    , text  ^>=2.0
-    , time  ^>=1.11
+    , scientific  ^>=0.3
+    , text        ^>=2.0
+    , time        ^>=1.11
+    , vector      ^>=0.13
 
+-- , text-builder  ^>=0.6
 common common-warnings
   ghc-options: -Wall -Werror
+  -- -Wunused-packages
 
 common common-extensions
   default-extensions:
@@ -45,6 +39,7 @@ common common-extensions
     LambdaCase
     OverloadedRecordDot
     OverloadedStrings
+    StrictData
     TypeFamilies
 
 library
@@ -56,59 +51,119 @@ library
     , common-extensions
 
   exposed-modules:
-    Effectful.Beam
-    Muridae.Environment
     Muridae.Item
-    Muridae.Item.Model
+    Muridae.Item.Id
     Muridae.Item.Types
     Muridae.ItemListing
-    Muridae.ItemListing.Model
+    Muridae.ItemListing.Id
     Muridae.ItemListing.Types
-    MuridaeWeb.Handler.Item
-    MuridaeWeb.Handler.Item.Types
-    MuridaeWeb.Handler.ItemListing
-    MuridaeWeb.Handler.ItemListing.Types
-    MuridaeWeb.Handler.User
-    MuridaeWeb.JSON.PooledListing
-    MuridaeWeb.Route
-    MuridaeWeb.Route.Admin.Item
-    MuridaeWeb.Route.Item
-    MuridaeWeb.Route.ItemListing
-    MuridaeWeb.Server
-
-  other-modules:
-    DB
-    DB.Types
-    Effectful.Servant
     Muridae.ItemTxn
-    Muridae.ItemTxn.Model
     Muridae.ItemTxn.Types
     Muridae.User
-    Muridae.User.Model
+    Muridae.User.Id
     Muridae.User.Types
-    MuridaeWeb.Types
 
   build-depends:
-    , aeson              ^>=2.1
-    , beam-core          ^>=0.10
-    , beam-postgres      ^>=0.5
-    , bytestring         ^>=0.11
-    , effectful          ^>=2.2
+    , effectful-core  ^>=2.2
+    , muridae-db
+
+  hs-source-dirs:  muridae
+
+library muridae-json
+  import:
+    common-base
+    , common-default-language
+    , common-deps
+    , common-warnings
+    , common-extensions
+
+  exposed-modules:
+    Muridae.JSON
+    Muridae.JSON.DbError
+    Muridae.JSON.Item
+    Muridae.JSON.Item.Id
+    Muridae.JSON.Item.Types
+    Muridae.JSON.ItemListing
+    Muridae.JSON.ItemListing.Types
+    Muridae.JSON.PooledListing
+    Muridae.JSON.PooledListing.Types
+    Muridae.JSON.User
+
+  build-depends:
+    , aeson       ^>=2.1
+    , muridae
+    , muridae-db
+    , servant     ^>=0.19
+
+  -- Remove this after
+  hs-source-dirs:  muridae-json
+
+library muridae-db
+  import:
+    common-base
+    , common-default-language
+    , common-deps
+    , common-warnings
+    , common-extensions
+
+  exposed-modules:
+    Muridae.DB
+    Muridae.DB.Item
+    Muridae.DB.ItemListing
+
+  build-depends:
+    , effectful-core            ^>=2.2
+    , hasql                     ^>=1.6
+    , hasql-dynamic-statements  ^>=0.3
+    , hasql-effectful           ^>=0.1
+    , hasql-pool                ^>=0.8
+    , hasql-th                  ^>=0.4
+    , hasql-transaction         ^>=1.0
+    , hasql-implicits           ^>=0.1
+    , bytestring                ^>=0.11
+
+  -- , effectful          ^>=2.2
+  -- , exceptions         ^>=0.10
+  hs-source-dirs:  muridae-db
+
+library muridae-api
+  import:
+    common-base
+    , common-default-language
+    , common-warnings
+    , common-extensions
+
+  build-depends:
     , effectful-core     ^>=2.2
-    , exceptions         ^>=0.10
     , mtl                ^>=2.2
-    , postgresql-simple  ^>=0.6
-    , resource-pool      ^>=0.3
+    , muridae
+    , muridae-db
+    , muridae-json
     , servant            ^>=0.19
     , servant-effectful  ^>=0.0
     , servant-server     ^>=0.19
-    , text-builder       ^>=0.6
-    , unliftio           ^>=0.2
-    , uuid-types         ^>=1.0
-    , wai                ^>=3.2
+    , text               ^>=2.0
+    , vector             ^>=0.13
     , warp               ^>=3.3
+    , wai-logger         ^>=2.4
+    , world-peace        ^>=1.0
 
-  hs-source-dirs:  muridae
+  -- , exceptions         ^>=0.10
+  exposed-modules:
+    Effectful.Servant
+    Muridae.API.Handler.Item
+    Muridae.API.Handler.ItemListing
+    Muridae.API.Handler.User
+    Muridae.API.QueryParam
+    Muridae.API.Route
+    Muridae.API.Route.Admin.Item
+    Muridae.API.Route.Item
+    Muridae.API.Route.ItemListing
+    Muridae.API.Server
+    Muridae.API.Types
+    Muridae.Environment
+
+  hs-source-dirs:  muridae-api
 
 executable muridae-server
   import:
@@ -118,11 +173,7 @@ executable muridae-server
     , common-extensions
 
   main-is:        Main.hs
-  build-depends:
-    , muridae
-    , wai      ^>=3.2
-    , warp     ^>=3.3
-
+  build-depends:  muridae-api
   hs-source-dirs: muridae-server
 
 test-suite muridae-test
@@ -149,16 +200,5 @@ test-suite muridae-test
 
   -- Stuff to test
   build-depends:
-    , beam-core          ^>=0.10
-    , beam-postgres      ^>=0.5
-    , effectful-core     ^>=2.2
-    , http-client        ^>=0.7
-    , muridae
-    , postgresql-simple  ^>=0.6
-    , resource-pool      ^>=0.3
-    , servant-client     ^>=0.19
-    , servant-server     ^>=0.19
-    , wai                ^>=3.2
-    , warp               ^>=3.3
 
   build-tool-depends: tasty-discover:tasty-discover

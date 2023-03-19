@@ -1,72 +1,143 @@
-module Muridae.Item (list, create_, findDetails_) where
+module Muridae.Item (runManageItemDB, indexItems, showItem, createItem) where
 
 import Data.Coerce (coerce)
-import Data.Functor ((<&>))
-import Data.Functor.Identity (Identity)
-import Effectful (Eff, type (:>))
-import Effectful.Beam (DB, DbError, queryDebug)
-import Effectful.Error.Static (Error)
-import Muridae.Item.Model qualified as ItemModel
+import Data.Int (Int16, Int32, Int64)
+import Data.Scientific (Scientific)
+import Data.Text (Text)
+import Data.Time (UTCTime)
+import Data.Vector (Vector)
+import Effectful (Eff, IOE, liftIO, type (:>))
+import Effectful.Dispatch.Dynamic (interpret, send)
+import Muridae.DB (DB, UsageError)
+import Muridae.DB.Item qualified as ItemDB
+import Muridae.Item.Id (ItemId (ItemId))
 import Muridae.Item.Types
-  ( Item
-      ( _created_at
-      , _deleted_at
-      , _description
-      , _id
-      , _name
-      , _updated_at
-      , _wiki_link
-      )
-  , ItemId (ItemId)
+  ( Item (Item)
+  , ItemDesc (ItemDesc)
+  , ItemName (ItemName)
+  , ItemWikiLink (ItemWikiLink)
+  , ManageItem (CreateItem, IndexItems, ShowItem)
   )
-import Muridae.ItemListing.Model qualified as ItemListingModel
-import Muridae.ItemListing.Types
-  ( PooledBuyListing
-  , PooledSellListing
-  , mkPooledBuyListing
-  , mkPooledSellListing
-  )
-import MuridaeWeb.Handler.Item.Types qualified as Handler
+import Muridae.ItemListing (parsePooledBuys, parsePooledSells)
+import Muridae.ItemListing.Types (PooledBuyListing, PooledSellListing)
 
 --------------------------------------------------------------------------------
 
-list :: (DB :> es, Error DbError :> es) => Eff es [Handler.Item]
-list = queryDebug putStrLn ItemModel.all <&> fmap parseDBItem
+indexItems
+  :: ManageItem :> es
+  => Eff es (Either UsageError (Vector Item))
+indexItems = send IndexItems
 
-create_ :: (DB :> es, Error DbError :> es) => Handler.ReqItem -> Eff es ()
-create_ params =
-  queryDebug putStrLn (ItemModel.create params)
-
--- | Finds an item's details including its pooled buy and sell listings
-findDetails_
-  :: (DB :> es, Error DbError :> es)
-  => Handler.ItemId
+showItem
+  :: ManageItem :> es
+  => ItemId
   -> Eff
       es
-      (Maybe (Item Identity, [PooledBuyListing], [PooledSellListing]))
-findDetails_ itemId =
-  queryDebug putStrLn $ do
-    item <- ItemModel.find itemId
+      ( Either
+          UsageError
+          ( Maybe
+              ( Item
+              , Vector PooledBuyListing
+              , Vector PooledSellListing
+              )
+          )
+      )
+showItem itemId = send (ShowItem itemId)
 
-    (pooledBuys, pooledSells) <-
-      ItemListingModel.getPooledListingsUnderItem (coerce itemId)
+createItem
+  :: (ManageItem :> es)
+  => ItemName
+  -> ItemDesc
+  -> ItemWikiLink
+  -> Eff es (Either UsageError Item)
+createItem name desc = send . CreateItem name desc
 
-    let
-      pooledBuys' = mapM mkPooledBuyListing pooledBuys
-      pooledSells' = mapM mkPooledSellListing pooledSells
+--------------------------------------------------------------------------------
+-- Item handler
 
-    pure $ pure (,,) <*> item <*> pooledBuys' <*> pooledSells'
+runManageItemDB
+  :: (IOE :> es, DB :> es)
+  => Eff (ManageItem : es) (Either UsageError a)
+  -> Eff es (Either UsageError a)
+runManageItemDB = interpret $ \_ -> \case
+  IndexItems ->
+    ItemDB.index >>= either (pure . Left) (pure . Right . fmap parseItem)
+  ShowItem (ItemId itemId) ->
+    ItemDB.find itemId
+      >>= either
+        -- FIXME: Use proper logging
+        (\e -> liftIO (print e) >> pure (Left e))
+        (pure . Right . (parseItemAndPooledListings =<<))
+  CreateItem name description wikiLink ->
+    ItemDB.create (coerce name) (coerce description) (coerce wikiLink)
+      >>= either (pure . Left) (pure . Right . parseItem)
 
 --------------------------------------------------------------------------------
 
-parseDBItem :: Item Identity -> Handler.Item
-parseDBItem dbItem =
-  Handler.Item
-    { id = coerce dbItem._id
-    , name = dbItem._name
-    , description = dbItem._description
-    , wiki_link = dbItem._wiki_link
-    , created_at = dbItem._created_at
-    , updated_at = dbItem._updated_at
-    , deleted_at = dbItem._deleted_at
-    }
+parseItemAndPooledListings
+  :: ( Int64
+     , Text
+     , Text
+     , Text
+     , UTCTime
+     , Maybe UTCTime
+     , Maybe UTCTime
+     , Vector (Int32, Int16, Int64, Scientific)
+     , Vector (Int32, Int16, Int64, Scientific)
+     )
+  -> Maybe (Item, Vector PooledBuyListing, Vector PooledSellListing)
+parseItemAndPooledListings
+  ( itemId
+    , name
+    , desc
+    , wikiLink
+    , createdAt
+    , updatedAt
+    , deletedAt
+    , buys
+    , sells
+    ) =
+    pure (,,)
+      <*> Just
+        ( parseItem
+            ( itemId
+            , name
+            , desc
+            , wikiLink
+            , createdAt
+            , updatedAt
+            , deletedAt
+            )
+        )
+      -- TODO: Change it so that it actually says it failed to parse rather than
+      -- say an item does not exist
+      <*> (Just buys >>= mapM parsePooledBuys)
+      <*> (Just sells >>= mapM parsePooledSells)
+
+parseItem
+  :: ( Int64
+     , Text
+     , Text
+     , Text
+     , UTCTime
+     , Maybe UTCTime
+     , Maybe UTCTime
+     )
+  -> Item
+parseItem
+  ( itemId
+    , name
+    , description
+    , wikiLink
+    , createdAt
+    , updatedAt
+    , deletedAt
+    ) =
+    Item
+      (ItemId itemId)
+      name
+      description
+      wikiLink
+      createdAt
+      updatedAt
+      deletedAt

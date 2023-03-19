@@ -1,108 +1,264 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
 module Muridae.ItemListing
-  ( list
-  , create
-  , itemListings
-  , updateStatus
+  ( indexItemListings
+  , createItemListing
+  , updateItemListing
+  , runManageItemListingDB
+  , parsePooledBuys
+  , parsePooledSells
+  , serializeItemListingType
   )
 where
 
 import Data.Coerce (coerce)
-import Data.Functor ((<&>))
-import Data.Functor.Identity (Identity)
-import Data.Int (Int32)
-import Effectful (Eff, Effect, type (:>))
-import Effectful.Beam (DB, DbError, authQueryDebug, queryDebug)
-import Effectful.Error.Static (Error)
-import Muridae.Item.Types (Item, ItemId (ItemId), PrimaryKey (ItemPk))
-import Muridae.ItemListing.Model qualified as ItemListing
+import Data.Int (Int16, Int32, Int64)
+import Data.Kind (Type)
+import Data.Scientific (Scientific)
+import Data.Text (Text)
+import Data.Time (UTCTime)
+import Data.Vector (Vector)
+import Effectful (Eff, Effect, (:>))
+import Effectful.Dispatch.Dynamic (interpret, send)
+import Effectful.Error.Static (Error, throwError)
+import Muridae.DB (DB, UsageError)
+import Muridae.DB.ItemListing (ItemListingOpts (ItemListingOpts))
+import Muridae.DB.ItemListing qualified as ItemListingDB
+import Muridae.Item.Id (ItemId (ItemId))
+import Muridae.Item.Id qualified as Domain
+import Muridae.ItemListing.Id (ItemListingId (ItemListingId))
 import Muridae.ItemListing.Types
-  ( FilterItemListingType
-  , ItemListingId (ItemListingId)
-  , ListingType (Buy, Sell)
+  ( BatchedBy
+  , Cost
+  , FilterByItemId
+  , ItemListing (ItemListing)
+  , ItemListingParseError (ItemListingParseError)
+  , ItemListingStatus
+  , ItemListingType (Buy, Sell)
+  , ManageItemListing (CreateItemListing, IndexItemListings, UpdateItemListing)
+  , PooledBuyListing (PooledBuyListing)
+  , PooledSellListing (PooledSellListing)
+  , SortIndividualCost
+  , UnitQuantity
+  , mkBatchedBy
+  , mkCost
+  , mkIndividualCost
+  , mkUnitQuantity
+  , mkUnitQuantity'
+  , unBatchedBy
+  , unCost
+  , unUnitQuantity
   )
-import Muridae.ItemListing.Types qualified as DB
-import Muridae.User.Types (PrimaryKey (UserPk), UserId (UserId))
-import MuridaeWeb.Handler.Item.Types qualified as Handler
-import MuridaeWeb.Handler.ItemListing.Types
-  ( CreateItemListing
-  , ItemListingId (ItemListingId)
-  , ItemListingType (BUY, SELL)
-  , ReqStatus
-  )
-import MuridaeWeb.Handler.ItemListing.Types qualified as Handler
-import MuridaeWeb.Handler.User (UserId (UserId))
-import MuridaeWeb.Handler.User qualified as UserHandler
+import Muridae.ItemListing.Types qualified as Domain
+import Muridae.User.Id (UserId (UserId))
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-list
+indexItemListings
   :: forall (es :: [Effect])
-   . (DB :> es, Error DbError :> es)
-  => FilterItemListingType
-  -> Eff es [Handler.ItemListing]
-list filterType =
-  queryDebug putStrLn (ItemListing.listAll Nothing filterType)
-    >>= \listing -> pure $ parseDBItemListing <$> listing
+   . ManageItemListing :> es
+  => SortIndividualCost
+  -> FilterByItemId
+  -> ItemListingStatus
+  -> Maybe ItemListingType
+  -> Eff es (Vector ItemListing)
+indexItemListings ordIndCost itemId status listingType =
+  let
+    ordIndCost' =
+      case ordIndCost of
+        Domain.Asc -> Just ItemListingDB.Asc
+        Domain.Desc -> Just ItemListingDB.Desc
+        Domain.Unordered -> Nothing
 
-itemListings
+    itemId' = case itemId of
+      Domain.FilterByItemId (Domain.ItemId i) -> Just i
+      Domain.NoItemIdFilter -> Nothing
+
+    status' = case status of
+      Domain.Listed -> Just True
+      Domain.Delisted -> Just False
+      Domain.ListedAndDelisted -> Nothing
+
+    listingType' = case listingType of
+      Just Domain.Buy -> Just ItemListingDB.Buy
+      Just Domain.Sell -> Just ItemListingDB.Sell
+      Nothing -> Nothing
+
+    itemListingOpts =
+      ItemListingOpts
+        { filterByItemId = itemId'
+        , filterByActive = status'
+        , filterByType = listingType'
+        , filterByIndividualCost = Nothing
+        , filterByIndividualCostRange = Nothing
+        , orderByCreatedAt = Nothing
+        , orderByIndividualCost = ordIndCost'
+        }
+   in
+    send (IndexItemListings itemListingOpts)
+
+createItemListing
   :: forall (es :: [Effect])
-   . (DB :> es, Error DbError :> es)
-  => ItemId
-  -> FilterItemListingType
-  -> Eff es [Handler.ItemListing]
-itemListings itemId filterType =
-  queryDebug putStrLn (ItemListing.listAll (Just itemId) filterType)
-    >>= \listing -> pure $ parseDBItemListing <$> listing
+   . ManageItemListing :> es
+  => UserId
+  -> ItemId
+  -> ItemListingType
+  -> BatchedBy
+  -> UnitQuantity
+  -> Cost
+  -> Eff es ItemListing
+createItemListing userId itemId listingType batchedBy unitQuantity =
+  send . CreateItemListing userId itemId listingType batchedBy unitQuantity
 
-create
-  :: (DB :> es, Error DbError :> es)
-  => UserHandler.UserId
-  -> CreateItemListing
-  -> Eff es [(DB.ItemListing Identity, Int32, Int32)]
-create userId params = do
-  authQueryDebug putStrLn (coerce userId) $ do
-    listing <- ItemListing.create userId params
-    matchedListings <- ItemListing.findMatches listing
+updateItemListing
+  :: (ManageItemListing :> es)
+  => UserId
+  -> ItemListingId
+  -> Maybe UnitQuantity
+  -> Maybe Bool
+  -> Eff es (Maybe ItemListing)
+updateItemListing userId itemId unitQuantity =
+  send . UpdateItemListing userId itemId unitQuantity
 
-    ItemListing.match listing matchedListings
+-- TODO: Log effect?
+runManageItemListingDB
+  :: forall (es :: [Effect]) (a :: Type)
+   . ( DB :> es
+     , Error ItemListingParseError :> es
+     , Error UsageError :> es
+     )
+  => Eff (ManageItemListing : es) a
+  -> Eff es a
+runManageItemListingDB = interpret $ \_ -> \case
+  IndexItemListings opts ->
+      ItemListingDB.index opts >>= either throwError parseItemListings
+  CreateItemListing userId itemId listingType batchedBy unitQuantity cost ->
+    ItemListingDB.create
+      (coerce userId)
+      (coerce itemId)
+      (serializeItemListingType listingType)
+      (unBatchedBy batchedBy)
+      (unUnitQuantity unitQuantity)
+      (unCost cost)
+      >>= either
+        throwError
+        (maybe (throwError ItemListingParseError) pure . parseItemListing)
+  UpdateItemListing userId listingId unitQuantity active ->
+    -- TODO: Handle case where it update nothing
+    ItemListingDB.update
+      (coerce userId)
+      (coerce listingId)
+      (unUnitQuantity <$> unitQuantity)
+      active
+      >>= either
+        throwError
+        -- TODO: Just a temporary thing
+        ( \case
+            Just itemListing ->
+              maybe
+                (throwError ItemListingParseError)
+                (pure . Just)
+                (parseItemListing itemListing)
+            Nothing -> pure Nothing
+        )
 
-updateStatus
-  :: (DB :> es, Error DbError :> es)
-  => UserHandler.UserId
-  -> Handler.ItemListingId
-  -> ReqStatus
-  -> Eff es (Maybe Handler.ItemListing)
-updateStatus userId listingId params =
-  queryDebug
-    putStrLn
-    (ItemListing.updateStatus userId listingId params)
-    <&> fmap parseDBItemListing
+--------------------------------------------------------------------------------
 
--------------------------------------------------------------------------------
+parsePooledBuys
+  :: (Int32, Int16, Int64, Scientific) -> Maybe PooledBuyListing
+parsePooledBuys (cost, batchedBy, summedUnitQuantity, individualCost) =
+  PooledBuyListing
+    <$> mkCost cost
+    <*> mkBatchedBy batchedBy
+    <*> mkUnitQuantity' summedUnitQuantity
+    <*> mkIndividualCost individualCost
 
-parseDBItemListing :: DB.ItemListing Identity -> Handler.ItemListing
-parseDBItemListing dbItemListing =
-  Handler.ItemListing
-    { id = coerce dbItemListing._id
-    , tradable_item_id =
-        coerce
-          @(PrimaryKey Item Identity)
-          @Handler.ItemId
-          dbItemListing._tradable_item
-    , owner_id = coerce dbItemListing._user
-    , listing_type = fromDbListingType dbItemListing._type
-    , batched_by = dbItemListing._batched_by
-    , unit_quantity = dbItemListing._unit_quantity
-    , cost = dbItemListing._cost
-    , active = dbItemListing._active
-    , created_at = dbItemListing._created_at
-    , updated_at = dbItemListing._updated_at
-    }
+parsePooledSells
+  :: (Int32, Int16, Int64, Scientific) -> Maybe PooledSellListing
+parsePooledSells (cost, batchedBy, summedUnitQuantity, individualCost) =
+  PooledSellListing
+    <$> mkCost cost
+    <*> mkBatchedBy batchedBy
+    <*> mkUnitQuantity' summedUnitQuantity
+    <*> mkIndividualCost individualCost
 
-fromDbListingType :: ListingType -> ItemListingType
-fromDbListingType dbListingType =
-  case dbListingType of
-    Buy -> BUY
-    Sell -> SELL
+parseItemListing
+  :: ( Int64
+     , Int64
+     , Int64
+     , Text
+     , Text
+     , Int16
+     , Int32
+     , Int32
+     , Scientific
+     , Int32
+     , Bool
+     , UTCTime
+     , Maybe UTCTime
+     )
+  -> Maybe ItemListing
+parseItemListing
+  ( listingId
+    , itemId
+    , userId
+    , username
+    , listingType
+    , batchedBy
+    , unitQuantity
+    , currentUnitQuantity
+    , individualCost
+    , cost
+    , active
+    , createdAt
+    , updatedAt
+    ) =
+    ItemListing
+      <$> Just (ItemListingId listingId)
+      <*> Just (ItemId itemId)
+      <*> Just (UserId userId)
+      <*> Just username
+      <*> parseItemListingType listingType
+      <*> mkBatchedBy batchedBy
+      <*> mkUnitQuantity unitQuantity
+      <*> mkUnitQuantity currentUnitQuantity
+      <*> mkIndividualCost individualCost
+      <*> mkCost cost
+      <*> Just active
+      <*> Just createdAt
+      <*> Just updatedAt
+
+parseItemListingType :: Text -> Maybe ItemListingType
+parseItemListingType = \case
+  "buy" -> Just Buy
+  "sell" -> Just Sell
+  _ -> Nothing
+
+parseItemListings
+  :: forall (es :: [Effect])
+   . (Error ItemListingParseError :> es)
+  => Vector
+      ( Int64
+      , Int64
+      , Int64
+      , Text
+      , Text
+      , Int16
+      , Int32
+      , Int32
+      , Scientific
+      , Int32
+      , Bool
+      , UTCTime
+      , Maybe UTCTime
+      )
+  -> Eff es (Vector ItemListing)
+parseItemListings =
+  maybe
+    (throwError @ItemListingParseError ItemListingParseError)
+    pure
+    . mapM parseItemListing
+
+-- | Serializes @ItemListingType@ into @Text@
+serializeItemListingType :: ItemListingType -> Text
+serializeItemListingType = \case
+  Buy -> "buy"
+  Sell -> "sell"

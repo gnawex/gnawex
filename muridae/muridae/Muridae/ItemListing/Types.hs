@@ -1,191 +1,169 @@
 module Muridae.ItemListing.Types
-  ( ItemListing (..)
-  , ItemSellListing
-  , ItemBuyListing
-  , ItemListingId (..)
-  , ListingType (..)
-  , PooledBuyListing (..)
+  ( PooledBuyListing (..)
   , PooledSellListing (..)
-  , PrimaryKey (..)
-  , FilterItemListingType (..)
-  , mkItemSellListing
-  , mkItemBuyListing
-  , unItemSellListing
-  , unItemBuyListing
-  , mkPooledBuyListing
-  , mkPooledSellListing
+  , Cost
+  , BatchedBy
+  , UnitQuantity
+  , ItemListing (..)
+  , ItemListingType (..)
+  , ItemListingParseError (..)
+  , ManageItemListing (..)
+  , ItemListingStatus (..)
+  , SortIndividualCost (..)
+  , FilterByItemId (..)
+  , mkCost
+  , mkBatchedBy
+  , mkUnitQuantity
+  , mkUnitQuantity'
+  , mkIndividualCost
+  , unCost
+  , unBatchedBy
+  , unUnitQuantity
+  , unUnitQuantity'
+  , unIndividualCost
   )
 where
 
+--------------------------------------------------------------------------------
+
 import Data.Coerce (coerce)
-import Data.Functor.Identity (Identity)
-import Data.Int (Int16, Int32)
-import Data.Kind (Type)
+import Data.Int (Int16, Int32, Int64)
+import Data.Scientific (Scientific)
+import Data.Text (Text)
 import Data.Time (UTCTime)
-import Database.Beam
-  ( Beamable
-  , Columnar
-  , FromBackendRow
-  , HasSqlEqualityCheck
-  , Table (PrimaryKey)
-  , primaryKey
-  )
-import Database.Beam.Backend (HasSqlValueSyntax (sqlValueSyntax))
-import Database.Beam.Postgres
-  ( Postgres
-  , ResultError (ConversionFailed, Incompatible, UnexpectedNull)
-  )
-import Database.Beam.Postgres.CustomTypes (pgEnumValueSyntax)
-import Database.Beam.Postgres.Syntax (PgValueSyntax)
-import Database.PostgreSQL.Simple.FromField
-  ( FromField (fromField)
-  , returnError
-  , typename
-  )
-import GHC.Generics (Generic)
-import Muridae.Item.Types (Item)
-import Muridae.User.Types (User)
+import Data.Vector (Vector)
+import Effectful (Dispatch (Dynamic), DispatchOf, Effect)
+import Muridae.DB.ItemListing (ItemListingOpts)
+import Muridae.Item.Id (ItemId)
+import Muridae.ItemListing.Id (ItemListingId)
+import Muridae.User.Id (UserId)
 
--------------------------------------------------------------------------------
--- Types
+--------------------------------------------------------------------------------
 
-data ItemListing f = ItemListing
-  { _id :: Columnar f ItemListingId
-  , _tradable_item :: PrimaryKey Item f
-  , _user :: PrimaryKey User f
-  , _type :: Columnar f ListingType
-  , _batched_by :: Columnar f Int16
-  , _unit_quantity :: Columnar f Int32
-  , _current_unit_quantity :: Columnar f Int32
-  , _cost :: Columnar f Int32
-  , _active :: Columnar f Bool
-  , _created_at :: Columnar f UTCTime
-  , _updated_at :: Columnar f (Maybe UTCTime)
-  }
-  deriving stock (Generic)
-  deriving anyclass (Beamable)
+newtype Cost = Cost Int32
+  deriving stock (Eq, Show)
 
-newtype ItemSellListing f = ItemSellListing (ItemListing f)
+newtype BatchedBy = BatchedBy Int16
+  deriving stock (Eq, Show)
 
-newtype ItemBuyListing f = ItemBuyListing (ItemListing f)
+newtype UnitQuantity = UnitQuantity Int32
+  deriving stock (Eq, Show)
 
-newtype ItemListingId = ItemListingId Int32
-  deriving stock (Generic, Show)
-  deriving
-    ( FromBackendRow Postgres
-    , HasSqlEqualityCheck Postgres
-    , HasSqlValueSyntax PgValueSyntax
-    )
-    via Int32
+newtype SummedUnitQuantity = SummedUnitQuantity Int64
+  deriving stock (Eq, Show)
 
-data ListingType = Buy | Sell
-  deriving stock (Eq, Generic, Show)
-  deriving anyclass (HasSqlEqualityCheck Postgres)
+newtype IndividualCost = IndividualCost Scientific
+  deriving stock (Eq, Show)
 
 data PooledBuyListing = PooledBuyListing
-  { cost :: Int32
-  , batchedBy :: Int16
-  , unitQuantity :: Int32
+  { cost :: Cost
+  , batchedBy :: BatchedBy
+  , unitQuantity :: SummedUnitQuantity
+  , individualCost :: IndividualCost
   }
+  deriving stock (Eq, Show)
 
 data PooledSellListing = PooledSellListing
-  { cost :: Int32
-  , batchedBy :: Int16
-  , unitQuantity :: Int32
+  { cost :: Cost
+  , batchedBy :: BatchedBy
+  , unitQuantity :: SummedUnitQuantity
+  , individualCost :: IndividualCost
   }
+  deriving stock (Eq, Show)
 
--- | Valid states when filtering item listings given its type
-data FilterItemListingType
-  = ByBuy
-  -- ^ Filters out sell item listings, keeping only buy listings
-  | BySell
-  -- ^ Filters out buy item listings, keeping only sell listings
-  | ByBoth
-  -- ^ Filters in both buy and sell item listings
+data ItemListingType = Buy | Sell
+  deriving stock (Eq, Show)
 
--------------------------------------------------------------------------------
--- Instances
+data ItemListingStatus = Listed | Delisted | ListedAndDelisted
+  deriving stock (Eq, Show)
 
-deriving instance Show (ItemListing Identity)
+data ItemListing = ItemListing
+  { id :: ItemListingId
+  , tradableItemId :: ItemId
+  , userId :: UserId
+  , username :: Text
+  , listingType :: ItemListingType
+  , batchedBy :: BatchedBy
+  , unitQuantity :: UnitQuantity
+  , currentUnitQUantity :: UnitQuantity
+  , individualCost :: IndividualCost
+  , cost :: Cost
+  , active :: Bool
+  , createdAt :: UTCTime
+  , updatedAt :: Maybe UTCTime
+  }
+  deriving stock (Eq, Show)
 
-deriving instance Show (PrimaryKey ItemListing Identity)
+data ManageItemListing :: Effect where
+  IndexItemListings
+    :: ItemListingOpts
+    -> ManageItemListing m (Vector ItemListing)
+  CreateItemListing
+    :: UserId
+    -> ItemId
+    -> ItemListingType
+    -> BatchedBy
+    -> UnitQuantity
+    -> Cost
+    -> ManageItemListing m ItemListing
+  UpdateItemListing
+    :: UserId
+    -> ItemListingId
+    -> Maybe UnitQuantity
+    -> Maybe Bool
+    -> ManageItemListing m (Maybe ItemListing)
 
-instance Table ItemListing where
-  newtype PrimaryKey ItemListing f
-    = ItemListingPk (Columnar f ItemListingId)
-    deriving stock (Generic)
+data SortIndividualCost = Asc | Desc | Unordered
+  deriving (Eq, Show)
 
-  primaryKey
-    :: forall (column :: Type -> Type)
-     . ItemListing column
-    -> PrimaryKey ItemListing column
-  primaryKey listing = ItemListingPk (listing._id)
+data FilterByItemId = FilterByItemId ItemId | NoItemIdFilter
 
-instance Beamable (PrimaryKey ItemListing)
+type instance DispatchOf ManageItemListing = 'Dynamic
 
-instance FromBackendRow Postgres ListingType
+--------------------------------------------------------------------------------
+-- Errors
 
-instance FromField ListingType where
-  fromField f mbValue = do
-    fieldType <- typename f
-    case fieldType of
-      "listing_type" -> do
-        case mbValue of
-          Nothing ->
-            returnError UnexpectedNull f ""
-          Just value ->
-            case value of
-              "buy" ->
-                pure Buy
-              "sell" ->
-                pure Sell
-              _ ->
-                returnError
-                  ConversionFailed
-                  f
-                  "Could not 'read' value for 'ListingType'"
-      _ ->
-        returnError Incompatible f ""
+data ItemListingParseError = ItemListingParseError
+  deriving stock (Eq, Show)
 
-instance HasSqlValueSyntax PgValueSyntax ListingType where
-  sqlValueSyntax = pgEnumValueSyntax $ \case
-    Buy ->
-      "buy"
-    Sell ->
-      "sell"
+--------------------------------------------------------------------------------
 
--------------------------------------------------------------------------------
-
-mkItemSellListing :: ItemListing Identity -> Maybe (ItemSellListing Identity)
-mkItemSellListing listing =
-  \case
-    Sell -> pure (ItemSellListing listing)
-    Buy -> Nothing
-    $ listing._type
-
-mkItemBuyListing :: ItemListing Identity -> Maybe (ItemBuyListing Identity)
-mkItemBuyListing listing =
-  \case
-    Buy -> pure (ItemBuyListing listing)
-    Sell -> Nothing
-    $ listing._type
-
-unItemSellListing :: forall (f :: Type -> Type). ItemSellListing f -> ItemListing f
-unItemSellListing = coerce
-
-unItemBuyListing :: forall (f :: Type -> Type). ItemBuyListing f -> ItemListing f
-unItemBuyListing = coerce
-
-mkPooledBuyListing
-  :: (ListingType, Int32, Int16, Int32) -> Maybe PooledBuyListing
-mkPooledBuyListing (type_, cost, batchedBy, unitQuantity)
-  | and [type_ == Buy, cost > 0, batchedBy > 0, unitQuantity > 0] =
-      Just (PooledBuyListing cost batchedBy unitQuantity)
+mkCost :: Int32 -> Maybe Cost
+mkCost num
+  | num > 0 = Just (Cost num)
   | otherwise = Nothing
 
-mkPooledSellListing
-  :: (ListingType, Int32, Int16, Int32) -> Maybe PooledSellListing
-mkPooledSellListing (type_, cost, batchedBy, unitQuantity)
-  | and [type_ == Sell, cost > 0, batchedBy > 0, unitQuantity > 0] =
-      Just (PooledSellListing cost batchedBy unitQuantity)
+unCost :: Cost -> Int32
+unCost = coerce
+
+mkBatchedBy :: Int16 -> Maybe BatchedBy
+mkBatchedBy num
+  | num > 0 = Just (BatchedBy num)
   | otherwise = Nothing
+
+unBatchedBy :: BatchedBy -> Int16
+unBatchedBy = coerce
+
+mkUnitQuantity :: Int32 -> Maybe UnitQuantity
+mkUnitQuantity num
+  | num > 0 = Just (UnitQuantity num)
+  | otherwise = Nothing
+
+unUnitQuantity :: UnitQuantity -> Int32
+unUnitQuantity = coerce
+
+mkUnitQuantity' :: Int64 -> Maybe SummedUnitQuantity
+mkUnitQuantity' num
+  | num > 0 = Just (SummedUnitQuantity num)
+  | otherwise = Nothing
+
+unUnitQuantity' :: SummedUnitQuantity -> Int64
+unUnitQuantity' = coerce
+
+mkIndividualCost :: Scientific -> Maybe IndividualCost
+mkIndividualCost num
+  | num > 0 = Just (IndividualCost num)
+  | otherwise = Nothing
+
+unIndividualCost :: IndividualCost -> Scientific
+unIndividualCost = coerce
