@@ -44,18 +44,14 @@
               # Non-Haskell shell tools go here
               shell.buildInputs = with pkgs; [
                 haskellPackages.implicit-hie
-
                 # Nix
                 nil
                 nixpkgs-fmt
-
                 postgresql.lib
                 pgformatter
                 sqitchPg
                 perl534Packages.TAPParserSourceHandlerpgTAP
-
                 mkdocs-material-insiders
-
                 feedback.packages.${system}.default
               ];
               # This adds `js-unknown-ghcjs-cabal` to the shell.

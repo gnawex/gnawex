@@ -3,14 +3,14 @@ cradle:
     - path: "./muridae/muridae"
       component: "lib:muridae"
 
-    - path: "./muridae/muridae-db"
-      component: "lib:muridae-db"
-
     - path: "./muridae/muridae-json"
-      component: "lib:muridae-json"
+      component: "muridae:lib:muridae-json"
+
+    - path: "./muridae/muridae-db"
+      component: "muridae:lib:muridae-db"
 
     - path: "./muridae/muridae-api"
-      component: "lib:muridae-api"
+      component: "muridae:lib:muridae-api"
 
     - path: "./muridae/muridae-server/Main.hs"
       component: "muridae:exe:muridae-server"
