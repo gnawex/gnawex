@@ -31,7 +31,7 @@
           muridaeProject =
             final.haskell-nix.project' {
               src = ./.;
-              compiler-nix-name = "ghc925";
+              compiler-nix-name = "ghc927";
 
               shell.tools = {
                 cabal = { };
