@@ -2,87 +2,77 @@
   description = "An independent marketplate for MouseHunt";
 
   inputs = {
-    haskellNix.url = "github:input-output-hk/haskell.nix";
-    nixpkgs.follows = "haskellNix/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.11";
     mkdocs-material.url = "github:sekunho/mkdocs-material";
     flake-utils.url = "github:numtide/flake-utils";
-    feedback.url = "github:NorfairKing/feedback";
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
+    fenix.url = "github:nix-community/fenix";
+    naersk.url = "github:nix-community/naersk";
   };
 
   outputs =
     { self
-    , haskellNix
     , nixpkgs
     , mkdocs-material
     , flake-utils
-    , feedback
     , pre-commit-hooks
+    , fenix
+    , naersk
     }:
     flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
     let
       mkdocs-material-insiders =
         mkdocs-material.packages.${system}.mkdocs-material-insiders;
 
-      overlays = [
-        haskellNix.overlay
-        (final: prev: {
-          # This overlay adds our project to pkgs
-          muridaeProject =
-            final.haskell-nix.project' {
-              src = ./.;
-              compiler-nix-name = "ghc927";
+      overlays = [ ];
 
-              shell.tools = {
-                cabal = { };
-                hlint = { };
-                haskell-language-server = { };
-                fourmolu = { };
-                cabal-fmt = { };
-              };
+      pkgs = import nixpkgs { inherit system overlays; };
 
-              # Non-Haskell shell tools go here
-              shell.buildInputs = with pkgs; [
-                haskellPackages.implicit-hie
-                # Nix
-                nil
-                nixpkgs-fmt
-                postgresql.lib
-                pgformatter
-                sqitchPg
-                perl534Packages.TAPParserSourceHandlerpgTAP
-                mkdocs-material-insiders
-                feedback.packages.${system}.default
-              ];
-              # This adds `js-unknown-ghcjs-cabal` to the shell.
-              # shell.crossPlatforms = p: [p.ghcjs];
-            };
-        })
+      fenix' = fenix.packages.${system};
+
+      toolchain = with fenix'; combine [
+        stable.rustc
+        stable.cargo
+        targets.x86_64-unknown-linux-musl.stable.rust-std
       ];
-      pkgs = import nixpkgs { inherit system overlays; inherit (haskellNix) config; };
-      flake = pkgs.muridaeProject.flake {
-        # This adds support for `nix build .#js-unknown-ghcjs:muridae:exe:muridae`
-        # crossPlatforms = p: [p.ghcjs];
+
+      naersk' = naersk.lib.${system}.override {
+        cargo = toolchain;
+        rustc = toolchain;
       };
     in
-    flake // rec {
+    {
       packages = rec {
-        default = muridae-server;
-        muridae-server = flake.packages."muridae:exe:muridae-server";
-        muridae = flake.packages."muridae:lib:muridae";
-        muridae-db = flake.packages."muridae:lib:muridae-db";
-        muridae-json = flake.packages."muridae:lib:muridae-json";
-        muridae-api = flake.packages."muridae:lib:muridae-api";
-        muridae-test = flake.packages."muridae:test:muridae-test";
-      };
+        default = gnawex;
 
-      apps.default = {
-        type = "app";
-        program = "${packages.muridae-server}/bin/muridae-server";
+        gnawex = naersk'.buildPackage {
+          pname = "gnawex";
+          version = "0.1.0";
+          src = ./.;
+          doCheck = false;
+          nativeBuildInputs = with pkgs; [ openssl pkg-config ];
+        };
       };
 
       devShells = {
-        default = flake.devShells.default;
+        default =
+          let
+            rustPackages = with fenix'.stable; [
+              rustc
+              cargo
+              clippy
+              rustfmt
+              pkgs.rust-analyzer
+              pkgs.cargo-flamegraph
+            ];
+          in
+          pkgs.mkShell {
+            buildInputs = with pkgs; [
+              nil
+              nixpkgs-fmt
+            ] ++ rustPackages;
+          };
+
         ci = pkgs.mkShell { buildInputs = [ mkdocs-material-insiders ]; };
 
         ci-db = pkgs.mkShell {

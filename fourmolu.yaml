@@ -1,7 +1,0 @@
-function-arrows: leading
-record-brace-space: true
-let-style: newline
-indentation: 2
-respectful: false
-haddock-style: single-line
-import-export-style: leading

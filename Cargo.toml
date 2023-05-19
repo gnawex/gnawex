@@ -1,0 +1,27 @@
+[workspace]
+members = [ "crates/*" ]
+
+[workspace.package]
+version = "0.1.0"
+authors = [ "sekun <software@sekun.net>" ]
+edition = "2021"
+license = "AGPL-3.0-only"
+repository = "https://github.com/gnawex/gnawex"
+readme = "README.md"
+
+[workspace.dependencies]
+moneyman = { path = "crates/gnawex_postgres", version = "0.1" }
+
+## Date/time stuff
+chrono = "0.4"
+
+## For less error boilerplate
+thiserror = "1.0"
+
+## CLI
+clap = { version = "4.2", features = ["derive"] }
+
+[profile.release]
+opt-level = 'z'
+lto = true
+codegen-units = 1
