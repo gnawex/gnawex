@@ -8,6 +8,7 @@
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     fenix.url = "github:nix-community/fenix";
     naersk.url = "github:nix-community/naersk";
+    devenv.url = "github:cachix/devenv";
   };
 
   outputs =
@@ -18,21 +19,31 @@
     , pre-commit-hooks
     , fenix
     , naersk
-    }:
+    , devenv
+    } @ inputs:
     flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
     let
-      mkdocs-material-insiders =
-        mkdocs-material.packages.${system}.mkdocs-material-insiders;
+      mkdocs' =
+        mkdocs-material.packages.${system};
 
-      overlays = [ ];
+      rustOverlay = self: super: {
+        rustc = toolchain;
+        cargo = toolchain;
+        clippy = toolchain;
+        rustfmt = toolchain;
+        rust-src = toolchain;
+      };
 
+      overlays = [ rustOverlay ];
       pkgs = import nixpkgs { inherit system overlays; };
-
       fenix' = fenix.packages.${system};
 
       toolchain = with fenix'; combine [
         stable.rustc
         stable.cargo
+        stable.clippy
+        stable.rustfmt
+        stable.rust-analyzer
         targets.x86_64-unknown-linux-musl.stable.rust-std
       ];
 
@@ -55,25 +66,37 @@
       };
 
       devShells = {
-        default =
-          let
-            rustPackages = with fenix'.stable; [
-              rustc
-              cargo
-              clippy
-              rustfmt
-              pkgs.rust-analyzer
-              pkgs.cargo-flamegraph
-            ];
-          in
-          pkgs.mkShell {
-            buildInputs = with pkgs; [
-              nil
-              nixpkgs-fmt
-            ] ++ rustPackages;
-          };
+        default = devenv.lib.mkShell {
+          inherit inputs pkgs;
 
-        ci = pkgs.mkShell { buildInputs = [ mkdocs-material-insiders ]; };
+          modules = [
+            ({ pkgs, ... }: {
+              packages = with pkgs; [
+                nil
+                nixpkgs-fmt
+                cargo-flamegraph
+                mkdocs'.mkdocs-material-insiders
+              ];
+              languages.nix.enable = true;
+
+              languages.rust = {
+                packages = {
+                  inherit (pkgs)
+                    cargo
+                    rustc
+                    rust-analyzer
+                    clippy
+                    rustfmt
+                    rust-src;
+                };
+                enable = true;
+              };
+            })
+
+          ];
+        };
+
+        ci = pkgs.mkShell { buildInputs = [ mkdocs'.mkdocs-material-insiders ]; };
 
         ci-db = pkgs.mkShell {
           buildInputs = with pkgs; [
