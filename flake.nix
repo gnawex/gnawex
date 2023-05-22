@@ -3,7 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.11";
-    mkdocs-material.url = "github:sekunho/mkdocs-material";
+    mkdocs-material.url = "github:sekunho/mkdocs-material/update-to-9";
     flake-utils.url = "github:numtide/flake-utils";
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     fenix.url = "github:nix-community/fenix";
@@ -70,12 +70,14 @@
           inherit inputs pkgs;
 
           modules = [
-            ({ pkgs, ... }: {
+            ({ pkgs, config, ... }: {
+              # TODO: Can't add mkdocs-material to shell packages because of:
+              # https://github.com/cachix/devenv/issues/601
+              # The workaround is to use the CI shell to run `mkdocs serve`.
               packages = with pkgs; [
                 nil
                 nixpkgs-fmt
                 cargo-flamegraph
-                mkdocs'.mkdocs-material-insiders
               ];
               languages.nix.enable = true;
 
@@ -92,7 +94,6 @@
                 enable = true;
               };
             })
-
           ];
         };
 

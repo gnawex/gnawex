@@ -8,11 +8,11 @@
         "pre-commit-hooks": "pre-commit-hooks"
       },
       "locked": {
-        "lastModified": 1684458496,
-        "narHash": "sha256-7Mrm9s5epmySTGjsVjsfRW6McbZus+GE3KdyNDqq6No=",
+        "lastModified": 1684536222,
+        "narHash": "sha256-jbcTwWLSNZQPmf8+PKtw+3RgwMxbSarMlerIH8feGdw=",
         "owner": "cachix",
         "repo": "devenv",
-        "rev": "d7b03a73dcc9761829bec9c72ab43ce5ac8bbad9",
+        "rev": "2f1d49aeee1378c44293ca2f61bf3a9004986fb7",
         "type": "github"
       },
       "original": {
@@ -181,15 +181,16 @@
         "nixpkgs": "nixpkgs_3"
       },
       "locked": {
-        "lastModified": 1671973612,
-        "narHash": "sha256-akdWeHmfwUaqEo44YHDgi1RZhEG3RixWSbnHzTI+VpA=",
+        "lastModified": 1684660611,
+        "narHash": "sha256-46+y9tz44ihKbkR+FQ2JCWWh1WRPGUReaY0iox7WRUM=",
         "owner": "sekunho",
         "repo": "mkdocs-material",
-        "rev": "0ec10eee77c120d9e9aa2adc847e4ee686258111",
+        "rev": "9d9d757e640d09da24809eff871ecaed0de94b96",
         "type": "github"
       },
       "original": {
         "owner": "sekunho",
+        "ref": "update-to-9",
         "repo": "mkdocs-material",
         "type": "github"
       }
@@ -347,11 +348,11 @@
     },
     "nixpkgs_5": {
       "locked": {
-        "lastModified": 1684398685,
-        "narHash": "sha256-TRE62m91iZ5ArVMgA+uj22Yda8JoQuuhc9uwZ+NoX+0=",
+        "lastModified": 1684580438,
+        "narHash": "sha256-LUPswmDn6fXP3lEBJFA2Id8PkcYDgzUilevWackYVvQ=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "628d4bb6e9f4f0c30cfd9b23d3c1cdcec9d3cb5c",
+        "rev": "7dc71aef32e8faf065cb171700792cf8a65c152d",
         "type": "github"
       },
       "original": {
