@@ -1,6 +1,6 @@
 #!/usr/local/bin/bash
 
-function seed-db --description "Seeds `gnawex_db`" {
+function seed {
   case $1 in
     dev)
       echo "===========> Seeding dev db"
@@ -23,16 +23,18 @@ function seed-db --description "Seeds `gnawex_db`" {
       psql \
         --user postgres \
         --dbname=gnawex_db \
-        --command "\copy listings FROM 'seeds/listings.csv' delimiter ',' csv header" 
+        --command "\copy listings FROM 'seeds/listings.csv' delimiter ',' csv header"
       echo "-----------> Done"
+      exit;;
 
     prod)
       echo "===========> Seeding prod db"
       echo "Oh yeah, haven't implemented this yet. Seeding nothing!"
+      exit;;
 
     *)
       echo Unknown argument. Available args: dev, prod
-
+      exit;;
   esac
 }
 
