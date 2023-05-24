@@ -5,7 +5,6 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.11";
     mkdocs-material.url = "github:sekunho/mkdocs-material/update-to-9";
     flake-utils.url = "github:numtide/flake-utils";
-    pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
     fenix.url = "github:nix-community/fenix";
     naersk.url = "github:nix-community/naersk";
     devenv.url = "github:cachix/devenv";
@@ -16,7 +15,6 @@
     , nixpkgs
     , mkdocs-material
     , flake-utils
-    , pre-commit-hooks
     , fenix
     , naersk
     , devenv
@@ -79,19 +77,33 @@
                 nixpkgs-fmt
                 cargo-flamegraph
               ];
-              languages.nix.enable = true;
 
-              languages.rust = {
-                packages = {
-                  inherit (pkgs)
-                    cargo
-                    rustc
-                    rust-analyzer
-                    clippy
-                    rustfmt
-                    rust-src;
+              pre-commit.hooks = {
+                cargo-check.enable = true;
+                clippy.enable = true;
+                rustfmt.enable = true;
+                nixpkgs-fmt.enable = true;
+                shellcheck.enable = true;
+                statix.enable = true;
+                yamllint.enable = true;
+                taplo.enable = true;
+              };
+
+              languages = {
+                nix.enable = true;
+
+                rust = {
+                  packages = {
+                    inherit (pkgs)
+                      cargo
+                      rustc
+                      rust-analyzer
+                      clippy
+                      rustfmt
+                      rust-src;
+                  };
+                  enable = true;
                 };
-                enable = true;
               };
             })
           ];
