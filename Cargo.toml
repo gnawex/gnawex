@@ -9,11 +9,19 @@ repository = "https://github.com/gnawex/gnawex"
 readme = "README.md"
 
 [workspace.dependencies]
+gnawex = { path = "crates/gnawex", version = "0.1" }
 gnawex_core = { path = "crates/gnawex_core", version = "0.1" }
 
 ## Postgres
 tokio-postgres = "0.7"
-postgres-types = "0.2"
+postgres-types = { version = "0.2", features = ["derive"] }
+deadpool-postgres = { version = "0.10", features = ["serde"] }
+
+## Serialization/Deserialization
+serde = "1.0"
+
+## Configuration
+config = "0.13"
 
 ## Async
 tokio = { version = "1.28", features = ["full"] }

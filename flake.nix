@@ -2,7 +2,7 @@
   description = "An independent marketplate for MouseHunt";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.05";
     mkdocs-material.url = "github:sekunho/mkdocs-material/update-to-9";
     flake-utils.url = "github:numtide/flake-utils";
     fenix.url = "github:nix-community/fenix";
@@ -78,6 +78,7 @@
                 nil
                 nixpkgs-fmt
                 cargo-flamegraph
+                sqitchPg
               ];
 
               pre-commit.hooks = {
@@ -87,14 +88,32 @@
                 nixpkgs-fmt.enable = true;
                 shellcheck.enable = true;
                 statix.enable = true;
-                yamllint.enable = true;
                 taplo.enable = true;
+              };
+
+              services = {
+                postgres = {
+                  enable = true;
+                  package = pkgs.postgresql_15;
+                  listen_addresses = "127.0.0.1";
+
+                  initialScript = ''
+                    CREATE USER gnawex SUPERUSER;
+                  '';
+
+                  initialDatabases = [
+                    { name = "gnawex_development"; }
+                    { name = "gnawex_test"; }
+                  ];
+                };
               };
 
               languages = {
                 nix.enable = true;
 
                 rust = {
+                  enable = true;
+
                   packages = {
                     inherit (pkgs)
                       cargo
@@ -104,7 +123,6 @@
                       rustfmt
                       rust-src;
                   };
-                  enable = true;
                 };
               };
             })

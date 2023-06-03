@@ -1,3 +1,5 @@
+---
+
 name: CI
 
 on:
@@ -42,11 +44,11 @@ jobs:
         with:
           extra_nix_config: |
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-            trusted-public-keys = hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
-            substituters = https://cache.iog.io https://cache.zw3rk.com https://cache.nixos.org/
+            trusted-public-keys = hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= # yamllint disable-line
+            substituters = https://cache.iog.io https://cache.nixos.org/ # yamllint disable-line
 
-      - name: Create gnawex_db
-        run: createdb gnawex_db
+      - name: Create gnawex_development
+        run: createdb gnawex_development
 
       - name: Checkout pgtap
         uses: actions/checkout@v2
@@ -57,7 +59,13 @@ jobs:
 
       - name: Install pgtap
         working-directory: pgtap
-        run: make && psql --host localhost --username postgres --dbname gnawex_db --file sql/pgtap.sql
+        run: |
+          make && \
+            psql \
+              --host localhost \
+              --username postgres \
+              --dbname gnawex_development \
+              --file sql/pgtap.sql
 
       - name: Check if DB migrations work
         run: |
