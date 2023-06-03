@@ -29,6 +29,7 @@
         cargo = toolchain;
         clippy = toolchain;
         rustfmt = toolchain;
+        rust-analyzer = toolchain;
         rust-src = toolchain;
       };
 
@@ -42,6 +43,7 @@
         stable.clippy
         stable.rustfmt
         stable.rust-analyzer
+        stable.rust-src
         targets.x86_64-unknown-linux-musl.stable.rust-std
       ];
 
