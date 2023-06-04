@@ -44,8 +44,8 @@ jobs:
         with:
           extra_nix_config: |
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-            trusted-public-keys = hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= # yamllint disable-line
-            substituters = https://cache.iog.io https://cache.nixos.org/ # yamllint disable-line
+            trusted-public-keys = hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+            substituters = https://cache.iog.io https://cache.nixos.org/
 
       - name: Create gnawex_development
         run: createdb gnawex_development
@@ -71,6 +71,11 @@ jobs:
         run: |
           nix develop .#devShells.x86_64-linux.ci-db \
             --command sqitch deploy
+
+      - name: Run gnawex_core tests
+        run: |
+          nix develop .#devShells.x86_64-linux.ci-db \
+            --command cargo test --package gnawex_core -- --test-threads=1
 
       - name: Check if DB migrations revert work
         run: |

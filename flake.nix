@@ -133,6 +133,8 @@
 
         ci-db = pkgs.mkShell {
           buildInputs = with pkgs; [
+            fenix'.stable.rustc
+            fenix'.stable.cargo
             sqitchPg
             perl534Packages.TAPParserSourceHandlerpgTAP
           ];
