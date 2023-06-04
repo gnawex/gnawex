@@ -46,15 +46,15 @@ jobs:
             trusted-public-keys = hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
             substituters = https://cache.iog.io https://cache.nixos.org/
 
-      - name: Create gnawex_development
-        run: createdb gnawex_development
+      - name: Create gnawex_test
+        run: createdb gnawex_test
 
       - name: Create DB user
         run: |
           psql \
             --host localhost \
             --username postgres \
-            --dbname gnawex_development \
+            --dbname gnawex_test \
             --command "CREATE USER gnawex SUPERUSER LOGIN PASSWORD 'gnawex'"
 
       - name: Checkout pgtap
@@ -71,13 +71,13 @@ jobs:
             psql \
               --host localhost \
               --username postgres \
-              --dbname gnawex_development \
+              --dbname gnawex_test \
               --file sql/pgtap.sql
 
       - name: Check if DB migrations work
         run: |
           nix develop .#devShells.x86_64-linux.ci-db \
-            --command sqitch deploy
+            --command sqitch deploy --db-name gnawex_test
 
       - name: Run gnawex_core tests
         run: |
@@ -87,6 +87,6 @@ jobs:
       - name: Check if DB migrations revert work
         run: |
           nix develop .#devShells.x86_64-linux.ci-db \
-            --command sqitch revert
+            --command sqitch revert --db-name gnawex_test
 
       # TODO: Run pg_tap tests
