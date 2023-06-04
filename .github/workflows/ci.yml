@@ -57,6 +57,14 @@ jobs:
             --dbname gnawex_test \
             --command "CREATE USER gnawex SUPERUSER LOGIN PASSWORD 'gnawex'"
 
+      - name: Create DB user
+        run: |
+          psql \
+            --host localhost \
+            --username postgres \
+            --dbname gnawex_development \
+            --command "CREATE USER gnawex SUPERUSER LOGIN PASSWORD 'gnawex'"
+
       - name: Checkout pgtap
         uses: actions/checkout@v2
         with:
