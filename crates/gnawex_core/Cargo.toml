@@ -6,5 +6,7 @@ edition = "2021"
 [dependencies]
 tokio-postgres = { workspace = true }
 postgres-types = { workspace = true }
+deadpool-postgres = { workspace = true }
+serde = { workspace = true }
 tokio = { workspace = true }
 futures = { workspace = true }
