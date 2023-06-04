@@ -62,7 +62,7 @@ jobs:
           psql \
             --host localhost \
             --username postgres \
-            --dbname gnawex_development \
+            --dbname gnawex_test \
             --command "CREATE USER gnawex SUPERUSER LOGIN PASSWORD 'gnawex'"
 
       - name: Checkout pgtap
