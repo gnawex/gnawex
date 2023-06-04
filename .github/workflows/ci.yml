@@ -10,7 +10,7 @@ on:
   pull_request:
 
 jobs:
-  test-db-migrations:
+  test:
     runs-on: ubuntu-22.04
 
     # Service containers to run with `container-job`
@@ -19,7 +19,6 @@ jobs:
       postgres:
         # Docker Hub image
         image: postgres:15
-        # Provide the password for postgres
         env:
           POSTGRES_PASSWORD: postgres
         # Set health checks to wait until postgres has started
@@ -49,6 +48,14 @@ jobs:
 
       - name: Create gnawex_development
         run: createdb gnawex_development
+
+      - name: Create DB user
+        run: |
+          psql \
+            --host localhost \
+            --username postgres \
+            --dbname gnawex_development \
+            --command "CREATE USER gnawex SUPERUSER LOGIN PASSWORD 'gnawex'"
 
       - name: Checkout pgtap
         uses: actions/checkout@v2

@@ -98,7 +98,7 @@
                   listen_addresses = "127.0.0.1";
 
                   initialScript = ''
-                    CREATE USER gnawex SUPERUSER;
+                    CREATE USER gnawex SUPERUSER LOGIN PASSWORD 'gnawex';
                   '';
 
                   initialDatabases = [

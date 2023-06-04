@@ -117,7 +117,7 @@ mod tests {
             "gnawex_test".to_string(),
             5432,
             "gnawex".to_string(),
-            None,
+            Some("gnawex".to_string()),
             None,
         )
         .expect("Failed to create DB handle");
