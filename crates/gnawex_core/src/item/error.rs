@@ -1,13 +1,4 @@
-use crate::db;
-
-/// Failed to parse a DB tradable item into an `Item`
-#[derive(Debug)]
-pub struct ParseError {
-    /// The table field that failed to parse
-    pub field: String,
-    /// The reason why it failed
-    pub cause: String,
-}
+use crate::{db, error::ParseError};
 
 /// Unable to list items
 #[derive(Debug)]

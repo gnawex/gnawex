@@ -1,44 +1,49 @@
 use postgres_types::{FromSql, ToSql};
 use tokio_postgres::Row;
 
-use crate::db;
+use crate::{db, error::ParseError};
 
-use self::error::{CreateItemError, GetItemError, ListItemsError, ParseError};
+use self::error::{CreateItemError, GetItemError, ListItemsError};
 
 pub mod error;
+pub mod listing;
 
 #[derive(Debug, PartialEq)]
 pub struct Item {
-    id: ItemId,
+    id: Id,
     name: String,
     description: String,
     wiki_link: String,
 }
 
 #[derive(Debug, FromSql, ToSql, PartialEq)]
-pub struct ItemId(pub i64);
+pub struct Id(pub i64);
 
 impl TryFrom<Row> for Item {
     type Error = ParseError;
 
     /// Parses a Postgres row into an `Item`
     fn try_from(value: Row) -> Result<Self, Self::Error> {
-        let id: ItemId = value.try_get("id").map_err(|e| ParseError {
+        let id: Id = value.try_get("id").map_err(|e| ParseError {
+            table: "app.tradable_items".into(),
             field: "id".into(),
             cause: e.to_string(),
         })?;
 
         let name: String = value.try_get("name").map_err(|e| ParseError {
+            table: "app.tradable_items".into(),
             field: "name".into(),
             cause: e.to_string(),
         })?;
 
         let description: String = value.try_get("description").map_err(|e| ParseError {
+            table: "app.tradable_items".into(),
             field: "description".into(),
             cause: e.to_string(),
         })?;
 
         let wiki_link: String = value.try_get("wiki_link").map_err(|e| ParseError {
+            table: "app.tradable_items".into(),
             field: "wiki_link".into(),
             cause: e.to_string(),
         })?;
@@ -67,7 +72,7 @@ pub async fn list_items(db_handle: &db::Handle) -> Result<Vec<Item>, ListItemsEr
         .map_err(ListItemsError::from)
 }
 
-pub async fn get_item(db_handle: &db::Handle, item_id: ItemId) -> Result<Item, GetItemError> {
+pub async fn get_item(db_handle: &db::Handle, item_id: Id) -> Result<Item, GetItemError> {
     let client = db_handle.get_client().await?;
     let item = client
         .query_one(
@@ -106,6 +111,7 @@ pub async fn create_item(
     Item::try_from(item).map_err(CreateItemError::from)
 }
 
+// TODO: Move to own file
 #[cfg(test)]
 mod tests {
     use crate::db;
@@ -194,7 +200,7 @@ mod tests {
 
         assert_eq!(
             item::Item {
-                id: item::ItemId(1),
+                id: item::Id(1),
                 name: "Adorned Empyrean Jewel".to_string(),
                 description: "Just farm bro".to_string(),
                 wiki_link: "https://mhwiki.com".to_string()
@@ -204,7 +210,7 @@ mod tests {
 
         assert_eq!(
             item::Item {
-                id: item::ItemId(2),
+                id: item::Id(2),
                 name: "Timesplit Rune".to_string(),
                 description: "Time machine type beat".to_string(),
                 wiki_link: "https://mhwiki.com".to_string()
@@ -214,7 +220,7 @@ mod tests {
 
         assert_eq!(
             item::Item {
-                id: item::ItemId(3),
+                id: item::Id(3),
                 name: "Gilded Treasure Scroll".to_string(),
                 description: "Shiny".to_string(),
                 wiki_link: "https://mhwiki.com".to_string()
