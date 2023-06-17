@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use deadpool_postgres::Transaction;
 use postgres_types as pg;
 use postgres_types::{FromSql, ToSql};
@@ -17,6 +18,13 @@ pub struct Buy {
     // TODO: Replace with `UserId` when `User` module is created
     user_id: i64,
     item_id: item::Id,
+    batched_by: i16,
+    unit_quantity: i32,
+    current_unit_quantity: i32,
+    cost: i32,
+    active: bool,
+    created_at: DateTime<Utc>,
+    updated_at: Option<DateTime<Utc>>,
 }
 
 impl Buy {
@@ -44,11 +52,13 @@ impl TryFrom<Row> for Buy {
                     field: "id".into(),
                     cause: e.to_string(),
                 })?;
+
                 let user_id: i64 = value.try_get("user__id").map_err(|e| ParseError {
                     table: "app.tradable_item_listings".into(),
                     field: "user__id".into(),
                     cause: e.to_string(),
                 })?;
+
                 let item_id: item::Id =
                     value.try_get("tradable_item__id").map_err(|e| ParseError {
                         table: "app.tradable_item_listings".into(),
@@ -56,10 +66,65 @@ impl TryFrom<Row> for Buy {
                         cause: e.to_string(),
                     })?;
 
+                let batched_by: i16 = value.try_get("batched_by").map_err(|e| ParseError {
+                    table: "app.tradable_item_listings".into(),
+                    field: "batched_by".into(),
+                    cause: e.to_string(),
+                })?;
+
+                let unit_quantity: i32 =
+                    value.try_get("unit_quantity").map_err(|e| ParseError {
+                        table: "app.tradable_item_listings".into(),
+                        field: "unit_quantity".into(),
+                        cause: e.to_string(),
+                    })?;
+
+                let current_unit_quantity: i32 =
+                    value
+                        .try_get("current_unit_quantity")
+                        .map_err(|e| ParseError {
+                            table: "app.tradable_item_listings".into(),
+                            field: "current_unit_quantity".into(),
+                            cause: e.to_string(),
+                        })?;
+
+                let cost: i32 = value.try_get("cost").map_err(|e| ParseError {
+                    table: "app.tradable_item_listings".into(),
+                    field: "cost".into(),
+                    cause: e.to_string(),
+                })?;
+
+                let active: bool = value.try_get("active").map_err(|e| ParseError {
+                    table: "app.tradable_item_listings".into(),
+                    field: "active".into(),
+                    cause: e.to_string(),
+                })?;
+
+                let created_at: DateTime<Utc> =
+                    value.try_get("created_at").map_err(|e| ParseError {
+                        table: "app.tradable_item_listings".into(),
+                        field: "created_at".into(),
+                        cause: e.to_string(),
+                    })?;
+
+                let updated_at: Option<DateTime<Utc>> =
+                    value.try_get("updated_at").map_err(|e| ParseError {
+                        table: "app.tradable_item_listings".into(),
+                        field: "updated_at".into(),
+                        cause: e.to_string(),
+                    })?;
+
                 Ok(Self {
                     id,
                     user_id,
                     item_id,
+                    batched_by,
+                    unit_quantity,
+                    current_unit_quantity,
+                    cost,
+                    active,
+                    created_at,
+                    updated_at,
                 })
             }
 
@@ -79,6 +144,13 @@ pub struct Sell {
     // TODO: Replace with `UserId` when `User` module is created
     user_id: i64,
     item_id: item::Id,
+    batched_by: i16,
+    unit_quantity: i32,
+    current_unit_quantity: i32,
+    cost: i32,
+    active: bool,
+    created_at: DateTime<Utc>,
+    updated_at: Option<DateTime<Utc>>,
 }
 
 impl TryFrom<Row> for Sell {
@@ -98,11 +170,13 @@ impl TryFrom<Row> for Sell {
                     field: "id".into(),
                     cause: e.to_string(),
                 })?;
+
                 let user_id: i64 = value.try_get("user__id").map_err(|e| ParseError {
                     table: "app.tradable_item_listings".into(),
                     field: "user__id".into(),
                     cause: e.to_string(),
                 })?;
+
                 let item_id: item::Id =
                     value.try_get("tradable_item__id").map_err(|e| ParseError {
                         table: "app.tradable_item_listings".into(),
@@ -110,10 +184,79 @@ impl TryFrom<Row> for Sell {
                         cause: e.to_string(),
                     })?;
 
+                let created_at: DateTime<Utc> =
+                    value.try_get("created_at").map_err(|e| ParseError {
+                        table: "app.tradable_item_listings".into(),
+                        field: "created_at".into(),
+                        cause: e.to_string(),
+                    })?;
+
+                let updated_at: Option<DateTime<Utc>> =
+                    value.try_get("updated_at").map_err(|e| ParseError {
+                        table: "app.tradable_item_listings".into(),
+                        field: "updated_at".into(),
+                        cause: e.to_string(),
+                    })?;
+
+                let batched_by: i16 = value.try_get("batched_by").map_err(|e| ParseError {
+                    table: "app.tradable_item_listings".into(),
+                    field: "batched_by".into(),
+                    cause: e.to_string(),
+                })?;
+
+                let unit_quantity: i32 =
+                    value.try_get("unit_quantity").map_err(|e| ParseError {
+                        table: "app.tradable_item_listings".into(),
+                        field: "unit_quantity".into(),
+                        cause: e.to_string(),
+                    })?;
+
+                let current_unit_quantity: i32 =
+                    value
+                        .try_get("current_unit_quantity")
+                        .map_err(|e| ParseError {
+                            table: "app.tradable_item_listings".into(),
+                            field: "current_unit_quantity".into(),
+                            cause: e.to_string(),
+                        })?;
+
+                let cost: i32 = value.try_get("cost").map_err(|e| ParseError {
+                    table: "app.tradable_item_listings".into(),
+                    field: "cost".into(),
+                    cause: e.to_string(),
+                })?;
+
+                let active: bool = value.try_get("active").map_err(|e| ParseError {
+                    table: "app.tradable_item_listings".into(),
+                    field: "active".into(),
+                    cause: e.to_string(),
+                })?;
+
+                let created_at: DateTime<Utc> =
+                    value.try_get("created_at").map_err(|e| ParseError {
+                        table: "app.tradable_item_listings".into(),
+                        field: "created_at".into(),
+                        cause: e.to_string(),
+                    })?;
+
+                let updated_at: Option<DateTime<Utc>> =
+                    value.try_get("updated_at").map_err(|e| ParseError {
+                        table: "app.tradable_item_listings".into(),
+                        field: "updated_at".into(),
+                        cause: e.to_string(),
+                    })?;
+
                 Ok(Self {
                     id,
                     user_id,
                     item_id,
+                    batched_by,
+                    unit_quantity,
+                    current_unit_quantity,
+                    cost,
+                    active,
+                    created_at,
+                    updated_at,
                 })
             }
 

@@ -13,7 +13,7 @@ gnawex = { path = "crates/gnawex", version = "0.1" }
 gnawex_core = { path = "crates/gnawex_core", version = "0.1" }
 
 ## Postgres
-tokio-postgres = "0.7"
+tokio-postgres = { version = "0.7", features = ["with-chrono-0_4"] }
 postgres-types = { version = "0.2", features = ["derive"] }
 deadpool-postgres = { version = "0.10", features = ["serde"] }
 
@@ -28,13 +28,17 @@ tokio = { version = "1.28", features = ["full"] }
 futures = "0.3"
 
 ## Date/time stuff
-chrono = "0.4"
+chrono = { version = "0.4" }
 
 ## For less error boilerplate
 thiserror = "1.0"
 
 ## CLI
 clap = { version = "4.2", features = ["derive"] }
+
+## Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [profile.release]
 opt-level = 'z'
