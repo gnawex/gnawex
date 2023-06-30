@@ -302,6 +302,7 @@ dependencies = [
 name = "gnawex_core"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "chrono",
  "deadpool-postgres",
  "futures",
@@ -309,6 +310,7 @@ dependencies = [
  "serde",
  "tokio",
  "tokio-postgres",
+ "tracing",
 ]
 
 [[package]]

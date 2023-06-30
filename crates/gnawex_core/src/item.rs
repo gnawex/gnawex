@@ -16,7 +16,8 @@ pub struct Item {
     wiki_link: String,
 }
 
-#[derive(Debug, FromSql, ToSql, PartialEq)]
+#[derive(Clone, Copy, Debug, FromSql, ToSql, PartialEq)]
+#[postgres(transparent)]
 pub struct Id(pub i64);
 
 impl TryFrom<Row> for Item {

@@ -1,15 +1,57 @@
+use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use deadpool_postgres::Transaction;
-use postgres_types as pg;
 use postgres_types::{FromSql, ToSql};
 use serde::Serialize;
 use tokio_postgres::Row;
 
 use crate::error::ParseError;
-use crate::{db, item};
+use crate::{db, item, user};
 
-#[derive(Debug, FromSql, ToSql, PartialEq)]
-pub struct Id(pub i64);
+pub mod buy;
+pub mod sell;
+pub(crate) mod sql;
+
+// ----------------------------------------------------------------------------
+// Types
+
+/// Common behaviours for item listings
+#[async_trait]
+pub trait Listing {
+    /// Creates, and matches the created listing with a relevant listing.
+    async fn create_and_match(
+        db_handle: &db::Handle,
+        params: CreateListing,
+    ) -> Result<Self, CreateListingError>
+    where
+        Self: Sized;
+
+    /// Delists an active listing. Once delisted, it will not be a part of the
+    /// pool of listings that can be matched.
+    fn delist(self, db_handle: &db::Handle, user_id: i64) -> Result<Self, DelistError>
+    where
+        Self: Sized;
+
+    /// Reduces the current unit quantity of a listing. Once reduced to zero, it
+    /// automatically closes the listing as there are no more quantities to be
+    /// matched with.
+    fn reduce_current_unit_quantity(
+        self,
+        db_handle: &db::Handle,
+        new_current_quantity: i32,
+    ) -> Result<Self, AdjustQuantityError>
+    where
+        Self: Sized;
+
+    fn get_type() -> Type;
+
+    /// What type of listing is needed to match with the listing.
+    fn get_matching_type() -> Type;
+
+    fn get_item_id(&self) -> item::Id;
+    fn get_user_id(&self) -> i64;
+    fn get_batched_by(&self) -> i16;
+    fn get_cost(&self) -> i32;
+}
 
 /// Represents a buy listing
 #[derive(Debug)]
@@ -27,11 +69,135 @@ pub struct Buy {
     updated_at: Option<DateTime<Utc>>,
 }
 
-impl Buy {
-    /// Attempts to match a buy listing with an equivalent sell listing. If it
-    /// finds no matches, then it proceeds as normal.
-    async fn match_listing(self, mut _txn: Transaction<'_>) -> Result<Buy, tokio_postgres::Error> {
+#[derive(Debug)]
+pub struct Sell {
+    id: Id,
+    // TODO: Replace with `UserId` when `User` module is created
+    user_id: i64,
+    item_id: item::Id,
+    batched_by: i16,
+    unit_quantity: i32,
+    current_unit_quantity: i32,
+    cost: i32,
+    active: bool,
+    created_at: DateTime<Utc>,
+    updated_at: Option<DateTime<Utc>>,
+}
+
+// ID of a listing
+#[derive(Debug, FromSql, ToSql, PartialEq)]
+#[postgres(transparent)]
+pub struct Id(pub i64);
+
+pub struct AdjustQuantityError;
+pub struct DelistError;
+
+// FIXME: Qualify with schema name `app`. Blocked until this issue is resolved:
+// https://github.com/sfackler/rust-postgres/issues/627
+#[derive(Debug, FromSql, ToSql, Serialize)]
+#[postgres(name = "listing_type")]
+pub enum Type {
+    #[postgres(name = "buy")]
+    Buy,
+    #[postgres(name = "sell")]
+    Sell,
+}
+
+#[derive(Debug)]
+pub struct CreateListing {
+    pub item_id: item::Id,
+    pub user_id: i64,
+    pub batched_by: i16,
+    pub unit_quantity: i32,
+    pub cost: i32,
+}
+
+pub async fn create_and_match<L: Listing>(
+    db_handle: &db::Handle,
+    params: CreateListing,
+) -> Result<L, CreateListingError> {
+    L::create_and_match(db_handle, params).await
+}
+
+/// Possible failure scenarios when trying to create a listing.
+#[derive(Debug)]
+pub enum CreateListingError {
+    /// Something bad happened while communicating with the database.
+    Db(tokio_postgres::Error),
+    /// Failed to get a DB connection
+    GetClient(db::GetClientError),
+    /// Failed to parse the row into a `Buy`/`Sell` but the DB request succeeded.
+    Parse(ParseError),
+}
+
+// ----------------------------------------------------------------------------
+// Trait impls
+
+// Buy
+#[async_trait]
+impl Listing for Buy {
+    async fn create_and_match(
+        db_handle: &crate::db::Handle,
+        params: CreateListing,
+    ) -> Result<Self, CreateListingError>
+    where
+        Self: Sized,
+    {
+        let mut client = db_handle.get_client().await?;
+        let txn = client.transaction().await?;
+        let buy = do_create::<Buy>(&txn, params).await?;
+
+        tracing::info!("Created listing: {:#?}", buy);
+
+        let row: Vec<Sell> = do_match(&txn, &buy).await?;
+
+        tracing::info!("{:#?}", row);
+
+        txn.rollback().await?;
+
         todo!()
+    }
+
+    fn delist(self, db_handle: &crate::db::Handle, user_id: i64) -> Result<Self, DelistError>
+    where
+        Self: Sized,
+    {
+        todo!()
+    }
+
+    fn reduce_current_unit_quantity(
+        self,
+        db_handle: &crate::db::Handle,
+        new_current_quantity: i32,
+    ) -> Result<Self, AdjustQuantityError>
+    where
+        Self: Sized,
+    {
+        todo!()
+    }
+
+    fn get_type() -> Type {
+        Type::Buy
+    }
+
+    fn get_matching_type() -> Type {
+        Type::Sell
+    }
+
+    fn get_cost(&self) -> i32 {
+        self.cost
+    }
+
+    fn get_batched_by(&self) -> i16 {
+        self.batched_by
+    }
+
+    fn get_user_id(&self) -> i64 {
+        self.user_id
+    }
+
+    fn get_item_id(&self) -> item::Id {
+        self.item_id
     }
 }
 
@@ -138,19 +304,73 @@ impl TryFrom<Row> for Buy {
     }
 }
 
-#[derive(Debug)]
-pub struct Sell {
-    id: Id,
-    // TODO: Replace with `UserId` when `User` module is created
-    user_id: i64,
-    item_id: item::Id,
-    batched_by: i16,
-    unit_quantity: i32,
-    current_unit_quantity: i32,
-    cost: i32,
-    active: bool,
-    created_at: DateTime<Utc>,
-    updated_at: Option<DateTime<Utc>>,
+// Sell
+
+#[async_trait]
+impl Listing for Sell {
+    async fn create_and_match(
+        db_handle: &crate::db::Handle,
+        params: CreateListing,
+    ) -> Result<Self, CreateListingError>
+    where
+        Self: Sized,
+    {
+        let mut client = db_handle.get_client().await?;
+        let txn = client.transaction().await?;
+        let buy = do_create::<Buy>(&txn, params).await?;
+
+        tracing::info!("Created listing: {:#?}", buy);
+
+        let row: Vec<Sell> = do_match(&txn, &buy).await?;
+
+        tracing::info!("{:#?}", row);
+
+        txn.rollback().await?;
+
+        todo!()
+    }
+
+    fn delist(self, db_handle: &crate::db::Handle, user_id: i64) -> Result<Self, DelistError>
+    where
+        Self: Sized,
+    {
+        todo!()
+    }
+
+    fn reduce_current_unit_quantity(
+        self,
+        db_handle: &crate::db::Handle,
+        new_current_quantity: i32,
+    ) -> Result<Self, AdjustQuantityError>
+    where
+        Self: Sized,
+    {
+        todo!()
+    }
+
+    fn get_type() -> Type {
+        Type::Sell
+    }
+
+    fn get_matching_type() -> Type {
+        Type::Buy
+    }
+
+    fn get_cost(&self) -> i32 {
+        self.cost
+    }
+
+    fn get_batched_by(&self) -> i16 {
+        self.batched_by
+    }
+
+    fn get_user_id(&self) -> i64 {
+        self.user_id
+    }
+
+    fn get_item_id(&self) -> item::Id {
+        self.item_id
+    }
 }
 
 impl TryFrom<Row> for Sell {
@@ -270,16 +490,7 @@ impl TryFrom<Row> for Sell {
     }
 }
 
-/// Possible failure scenarios when trying to create a listing.
-#[derive(Debug)]
-pub enum CreateListingError {
-    /// Something bad happened while communicating with the database.
-    Db(tokio_postgres::Error),
-    /// Failed to get a DB connection
-    GetClient(db::GetClientError),
-    /// Failed to parse the row into a `Buy`/`Sell` but the DB request succeeded.
-    Parse(ParseError),
-}
+// CreateListingError
 
 impl From<tokio_postgres::Error> for CreateListingError {
     fn from(err: tokio_postgres::Error) -> Self {
@@ -299,76 +510,91 @@ impl From<ParseError> for CreateListingError {
     }
 }
 
-// FIXME: Qualify with schema name `app`. Blocked until this issue is resolved:
-// https://github.com/sfackler/rust-postgres/issues/627
-#[derive(Debug, FromSql, ToSql, Serialize)]
-#[postgres(name = "listing_type")]
-enum Type {
-    #[postgres(name = "buy")]
-    Buy,
-    #[postgres(name = "sell")]
-    Sell,
+// ----------------------------------------------------------------------------
+// Associated functions
+
+// ----------------------------------------------------------------------------
+// Functions
+
+/// Attempts to match one or more listings to the given listing. If the given
+/// listing cannot be fulfilled with just one available matching listing, it
+/// will keep looking for listings until:
+///
+/// 1. There are no more available matching listings; or
+/// 2. The given listing was completely fulfilled
+async fn do_match<'t, CandidateListing, MatchedListing>(
+    txn: &deadpool_postgres::Transaction<'t>,
+    listing: &CandidateListing,
+) -> Result<Vec<MatchedListing>, tokio_postgres::Error>
+where
+    CandidateListing: Listing + TryFrom<Row> + std::fmt::Debug,
+    <CandidateListing as TryFrom<Row>>::Error: std::fmt::Debug,
+    MatchedListing: Listing + TryFrom<Row> + std::fmt::Debug,
+    <MatchedListing as TryFrom<Row>>::Error: std::fmt::Debug,
+{
+    user::set_current_user(txn).await?;
+    let statement = txn.prepare(sql::MATCH_LISTING).await?;
+
+    let rows = txn
+        .query(
+            &statement,
+            &[
+                &listing.get_item_id(),
+                &listing.get_user_id(),
+                &<CandidateListing as Listing>::get_matching_type(),
+                &listing.get_batched_by(),
+                &listing.get_cost(),
+            ],
+        )
+        .await?;
+
+    let listings: Result<Vec<MatchedListing>, _> = rows
+        .into_iter()
+        .map(|r| MatchedListing::try_from(r))
+        .collect();
+
+    tracing::info!("{:#?}", listings);
+
+    Ok(Vec::new())
 }
 
-/// Creates a buy listing, and attempts to match it with an equivalent sell
-/// listing automatically.
-pub async fn create_buy(db_handle: &db::Handle) -> Result<Buy, CreateListingError> {
-    let mut client = db_handle.get_client().await?;
-    let txn = client.transaction().await?;
-    let buy_row = do_create(&txn, Type::Buy).await?;
-    let buy = Buy::try_from(buy_row)?;
+/// Creates an item listing
+async fn do_create<'t, L>(
+    txn: &deadpool_postgres::Transaction<'t>,
+    params: CreateListing,
+) -> Result<L, CreateListingError>
+where
+    L: Listing + TryFrom<Row>,
+    CreateListingError: From<<L>::Error>,
+{
+    user::set_current_user(txn).await?;
 
-    txn.commit().await?;
+    let statement = txn.prepare(sql::CREATE_LISTING).await?;
 
-    Ok(buy)
-}
+    tracing::info!("{:?}", statement.params());
+    tracing::info!("{:?}", params);
 
-pub async fn create_sell(db_handle: &db::Handle) -> Result<Sell, CreateListingError> {
-    let mut client = db_handle.get_client().await?;
-    let txn = client.transaction().await?;
-    let sell_row = do_create(&txn, Type::Sell).await?;
-    let sell = Sell::try_from(sell_row)?;
+    let row = txn
+        .query_one(
+            &statement,
+            &[
+                // Item ID
+                &params.item_id,
+                // User ID
+                &params.user_id,
+                // Listing type
+                &L::get_type(),
+                // Batched by quantity
+                &params.batched_by,
+                // Unit quantity
+                &params.unit_quantity,
+                // Individual cost
+                &params.cost,
+            ],
+        )
+        .await?;
 
-    txn.commit().await?;
+    let listing = L::try_from(row)?;
 
-    Ok(sell)
-}
-
-/// It's a general version of creating a listing.
-async fn do_create(
-    txn: &Transaction<'_>,
-    listing_type: Type,
-) -> Result<Row, tokio_postgres::Error> {
-    let create_query = "
-        INSERT INTO app.tradable_item_listings
-            ( tradable_item__id
-            , user__id
-            , type
-            , batched_by
-            , unit_quantity
-            , current_unit_quantity
-            , cost
-            , active
-            )
-            VALUES ($1, $2, $3, $4, $5, $5, $6, true)
-            RETURNING *
-        ";
-
-    set_current_user(&txn).await?;
-
-    let statement = txn.prepare(create_query).await?;
-
-    txn.query_one(
-        &statement,
-        &[&1_i64, &2_i64, &listing_type, &1_i16, &5_i32, &200_i32],
-    )
-    .await
-}
-
-// TODO: Move this to user module
-async fn set_current_user(txn: &Transaction<'_>) -> Result<u64, tokio_postgres::Error> {
-    let query = "SELECT set_config('auth.user_id', $1, true)";
-    let statement = txn.prepare_typed(query, &[pg::Type::TEXT]).await.unwrap();
-
-    txn.execute(&statement, &[&2_i64.to_string()]).await
+    Ok(listing)
 }

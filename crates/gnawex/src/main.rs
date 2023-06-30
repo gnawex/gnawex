@@ -1,4 +1,10 @@
-use gnawex_core::{db, item};
+use gnawex_core::{
+    db,
+    item::{
+        self,
+        listing::{self, CreateListing},
+    },
+};
 
 #[tokio::main]
 async fn main() {
@@ -16,9 +22,18 @@ async fn main() {
     )
     .unwrap();
 
-    let buy = item::listing::create_buy(&db_handle).await.unwrap();
-    let sell = item::listing::create_sell(&db_handle).await.unwrap();
+    let buy = listing::create_and_match::<listing::Buy>(
+        &db_handle,
+        CreateListing {
+            item_id: item::Id(1),
+            user_id: 2,
+            batched_by: 1,
+            unit_quantity: 5,
+            cost: 200,
+        },
+    )
+    .await
+    .unwrap();
 
     tracing::info!("buy: {:?}", buy);
-    tracing::info!("sell: {:?}", sell);
 }

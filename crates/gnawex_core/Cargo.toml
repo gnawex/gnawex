@@ -15,6 +15,10 @@ serde = { workspace = true }
 # Async runtime
 tokio = { workspace = true }
 futures = { workspace = true }
+async-trait = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
 
 # Date/time
 chrono = { workspace = true }
