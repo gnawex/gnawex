@@ -7,8 +7,6 @@ use tokio_postgres::Row;
 use crate::error::ParseError;
 use crate::{db, item, user};
 
-pub mod buy;
-pub mod sell;
 pub(crate) mod sql;
 
 // ----------------------------------------------------------------------------
@@ -158,7 +156,7 @@ impl Listing for Buy {
         todo!()
     }
 
-    fn delist(self, db_handle: &crate::db::Handle, user_id: i64) -> Result<Self, DelistError>
+    fn delist(self, _db_handle: &crate::db::Handle, _user_id: i64) -> Result<Self, DelistError>
     where
         Self: Sized,
     {
@@ -167,8 +165,8 @@ impl Listing for Buy {
 
     fn reduce_current_unit_quantity(
         self,
-        db_handle: &crate::db::Handle,
-        new_current_quantity: i32,
+        _db_handle: &crate::db::Handle,
+        _new_current_quantity: i32,
     ) -> Result<Self, AdjustQuantityError>
     where
         Self: Sized,
