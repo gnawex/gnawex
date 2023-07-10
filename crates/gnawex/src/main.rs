@@ -1,3 +1,4 @@
+use askama::Template;
 use gnawex_core::{
     db,
     item::{
@@ -6,8 +7,19 @@ use gnawex_core::{
     },
 };
 
+use gnawex_html::hello::HelloTemplate;
+
 #[tokio::main]
 async fn main() {
+    let hello = HelloTemplate {
+        name: "Hey".to_string(),
+        title: "GNAWEX".to_string(),
+    };
+
+    println!("{}", hello.render().unwrap());
+
+    // Others
+
     let subscriber = tracing_subscriber::FmtSubscriber::new();
 
     tracing::subscriber::set_global_default(subscriber).unwrap();

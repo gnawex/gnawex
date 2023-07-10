@@ -336,7 +336,9 @@ dependencies = [
 name = "gnawex"
 version = "0.1.0"
 dependencies = [
+ "askama",
  "gnawex_core",
+ "gnawex_html",
  "tokio",
  "tracing",
  "tracing-subscriber",

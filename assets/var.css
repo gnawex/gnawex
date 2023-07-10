@@ -1,0 +1,95 @@
+:root {
+    /* Basic units */
+    --0: 0px;
+    --1: 0.25rem;
+    --2: 0.5rem;
+    --3: 0.75rem;
+    --4: 1rem;
+    --5: 1.5rem;
+
+    /* Fractions */
+    --1-2: 50%;
+    --1-3: 33.333333%;
+    --2-3: 66.6666667%;
+    --3-5: 60%;
+    --11-12: 91.666667%;
+
+    /* Percentages */
+    --full: 100%;
+
+    /* Font families */
+    --font-family-normal: "helvetica neue", arial, sans-serif;
+
+    /* Font sizes */
+    --font-xs: 0.75rem;
+    --font-xs-lh: 1rem;
+    --font-sm: 0.875rem;
+    --font-sm-lh: 1.25rem;
+    --font-base: 1rem;
+    --font-base-lh: 1.5rem;
+    --font-xl: 1.25rem;
+    --font-xl-lh: 1.75rem;
+    --font-3xl: 1.875rem;
+    --font-3xl-lh: 2.25rem;
+
+    /* Font weights */
+    --font-thin: 100;
+    --font-extralight: 200;
+    --font-light: 300;
+    --font-normal: 400;
+    --font-medium: 500;
+    --font-semibold: 600;
+    --font-bold: 700;
+    --font-extrabold: 800;
+    --font-black: 900;
+
+    /* Colors */
+    --link: #2b64d4;
+    --link-visited: #5f86d4;
+    --dark-link: #8ab1ff;
+    --dark-link-visited: #4f8aff;
+
+    --gray-50: rgb(249 250 251);
+    --gray-100: rgb(243 244 246);
+    --gray-200: rgb(229 231 235);
+    --gray-300: rgb(209 213 219);
+    --gray-400: rgb(156 163 175);
+    --gray-500: rgb(107 114 128);
+    --gray-600: rgb(75 85 99);
+    --gray-700: rgb(55 65 81);
+    --gray-800: rgb(31 41 55);
+    --gray-900: rgb(17 24 39);
+    --gray-950: rgb(3 7 18);
+
+    --neutral-300: rgb(212 212 212);
+    --neutral-400: rgb(163 163 163);
+    --neutral-500: rgb(115 115 115);
+    --neutral-600: rgb(82 82 82);
+    --neutral-700: rgb(64 64 64);
+    --neutral-800: rgb(38 38 38);
+    --neutral-900: rgb(23 23 23);
+    --neutral-950: rgb(10 10 10);
+
+    --red-50: rgb(254 242 242);
+    --red-100: rgb(254 226 226);
+    --red-200: rgb(254 202 202);
+    --red-300: rgb(252 165 165);
+    --red-400: rgb(248 113 113);
+    --red-500: rgb(239 68 68);
+    --red-600: rgb(220 38 38);
+    --red-700: rgb(185 28 28);
+    --red-800: rgb(153 27 27);
+    --red-900: rgb(127 29 29);
+    --red-950: rgb(69 10 10);
+
+    /* Breakpoints (use min-width in media queries). Though you can't use this
+     * in media queries because of course you can't!!!!!!!!!!!!!!!!! */
+    --bp-sm: 640px;
+    --bp-md: 768px;
+    --bp-lg: 1024px;
+    --bp-xl: 1280px;
+    --bp-2xl: 1536px;
+    --tablet: var(--bp-sm);
+    --laptop: var(--bp-lg);
+    --desktop: var(--bp-xl);
+}
