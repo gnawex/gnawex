@@ -47,9 +47,12 @@ fn app() -> Router {
 
 async fn item_index(State(state): State<Arc<AppState>>) -> ItemIndexPage {
     // TODO: Error handling. Render an error page instead
+    tracing::info!("hey");
     let items = gnawex_core::item::list_items(&state.db_handle)
         .await
         .unwrap();
+
+    tracing::info!("{:#?}", items);
 
     gnawex_html::app::ItemIndexPage {
         items,

@@ -1,8 +1,6 @@
 {% extends "app.html" %}
 
-{% block title %}
-huh
-{% endblock %}
+{% block title %}{{ item.name }} | Gnawnian Exchange{% endblock %}
 
 {% block app_content %}
 <div>
@@ -33,6 +31,7 @@ huh
           pattern="[0-9]*"
           placeholder="Batches"
           label="Batches"
+          required
         />
         <input
           class="input input--full"
@@ -41,6 +40,7 @@ huh
           pattern="[0-9]*"
           placeholder="Quantity per batch"
           label="Quantity per batch"
+          required
         />
         <input
           class="input input--full"
@@ -49,10 +49,11 @@ huh
           pattern="[0-9]*"
           placeholder="Cost"
           label="Cost per batch in SB+"
+          required
         />
 
-        <select class="select select--full">
-          <option disabled selected invalid>Select order type</option>
+        <select class="select select--full" required>
+          <option disabled selected hidden>Select order type</option>
           <option>BUY</option>
           <option>SELL</option>
         </select>

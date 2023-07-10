@@ -5,14 +5,14 @@
 {% block app_content %}
 <div>
   <form action="/items"  method="post">
-    <input type="text" class="input input--full" placeholder="Timesplit Rune" />
+    <input type="text" class="input input--full" placeholder="Search for an item by name..." />
   </form>
 
   {% if items.len() > 0 -%}
   <ul class="ul ul--dashed">
       {% for item in items %}
         <li class="item_list__item">
-          <a href="/items/timesplit-rune" class="item_list__item__primary link">
+          <a href="/items/{{ item.id }}" class="item_list__item__primary link">
             {{ item.name }}
           </a>
         </li>

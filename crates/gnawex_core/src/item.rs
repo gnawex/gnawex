@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use postgres_types::{FromSql, ToSql};
 use tokio_postgres::Row;
 
@@ -20,6 +22,12 @@ pub struct Item {
 #[derive(Clone, Copy, Debug, FromSql, ToSql, PartialEq)]
 #[postgres(transparent)]
 pub struct Id(pub i64);
+
+impl Display for Id {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 impl TryFrom<Row> for Item {
     type Error = ParseError;
@@ -63,7 +71,7 @@ impl TryFrom<Row> for Item {
 pub async fn list_items(db_handle: &db::Handle) -> Result<Vec<Item>, ListItemsError> {
     let client = db_handle.get_client().await?;
     let items = client
-        .query("SELECT * FROM app.tradable_items ORDER BY id ASC", &[])
+        .query("SELECT * FROM app.tradable_items ORDER BY name ASC", &[])
         .await
         .map_err(ListItemsError::from)?;
 
