@@ -5,15 +5,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- <meta name="csrf-token" content="fBEPOAx9OzUkHHQJDhxYHHE8L0t5JHte9SwWS9YEU-3YlX4hBSwz-S-8"> -->
+    <link rel="stylesheet" href="/assets/reset.css">
     {% block head %}{% endblock %}
-    <!-- <link rel="stylesheet" href="/assets/reset.css"> -->
-    <!-- <link rel="stylesheet" href="/assets/app.css"> -->
-    <!-- <script defer type="text/javascript" src="/assets/app.js"> -->
-    <!-- </script> -->
   </head>
-  <body>
-    <div id="content">
-      {% block content %}<p>Placeholder content</p>{% endblock %}
-    </div>
+  <body class="theme adaptive">
+    <main>
+      {% block content %}
+        Placeholder
+      {% endblock %}
+    </main>
   </body>
 </html>

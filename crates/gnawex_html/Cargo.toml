@@ -5,3 +5,5 @@ edition = "2021"
 
 [dependencies]
 askama = { workspace = true }
+askama_axum = { workspace = true }
+gnawex_core = { workspace = true }

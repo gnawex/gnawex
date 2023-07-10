@@ -221,7 +221,7 @@ select.select--full {
 @media (prefers-color-scheme: dark) {
   .theme.adaptive {
     background: #0c0c0c;
-    color: white;
+    color: var(--neutral-400);
   }
 
   .footer__link {

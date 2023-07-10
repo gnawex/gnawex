@@ -1,0 +1,28 @@
+{% extends "app.html" %}
+
+{% block app_content %}
+<div>
+  <form action="/items"  method="post">
+    <input type="text" class="input input--full" placeholder="Timesplit Rune" />
+  </form>
+
+  {% if items.len() > 0 -%}
+  <ol class="item_list">
+      {% for item in items %}
+        <li class="item_list__item">
+          <a href="/items/timesplit-rune" class="item_list__item__primary link">
+            {{ item.name }}
+          </a>
+          <div class="item_list__item__secondary">
+            last traded today
+          </div>
+        </li>
+      {% endfor %}
+  </ol>
+  {% else -%}
+  <span>
+    There's nothing here...
+  </span>
+  {% endif -%}
+</div>
+{% endblock %}
