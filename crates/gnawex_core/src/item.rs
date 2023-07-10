@@ -220,9 +220,9 @@ mod tests {
 
         assert_eq!(
             item::Item {
-                id: item::Id(2),
-                name: "Timesplit Rune".to_string(),
-                description: "Time machine type beat".to_string(),
+                id: item::Id(3),
+                name: "Gilded Treasure Scroll".to_string(),
+                description: "Shiny".to_string(),
                 wiki_link: "https://mhwiki.com".to_string()
             },
             iter.next().unwrap()
@@ -230,9 +230,9 @@ mod tests {
 
         assert_eq!(
             item::Item {
-                id: item::Id(3),
-                name: "Gilded Treasure Scroll".to_string(),
-                description: "Shiny".to_string(),
+                id: item::Id(2),
+                name: "Timesplit Rune".to_string(),
+                description: "Time machine type beat".to_string(),
                 wiki_link: "https://mhwiki.com".to_string()
             },
             iter.next().unwrap()
