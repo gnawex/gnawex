@@ -78,6 +78,7 @@
                 nil
                 nixpkgs-fmt
                 cargo-flamegraph
+                cargo-watch
                 sqitchPg
               ];
 

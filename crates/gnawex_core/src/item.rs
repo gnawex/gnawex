@@ -6,14 +6,15 @@ use crate::{db, error::ParseError};
 use self::error::{CreateItemError, GetItemError, ListItemsError};
 
 pub mod error;
+pub mod grouped_order;
 pub mod listing;
 
 #[derive(Debug, PartialEq)]
 pub struct Item {
-    id: Id,
-    name: String,
-    description: String,
-    wiki_link: String,
+    pub id: Id,
+    pub name: String,
+    pub description: String,
+    pub wiki_link: String,
 }
 
 #[derive(Clone, Copy, Debug, FromSql, ToSql, PartialEq)]

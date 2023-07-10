@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% call super() %}
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="/assets/app.css">
+{% endblock %}
+
+
+{% block content %}
+  <div class="app_container">
+    <nav class="app_nav">
+      <div class="app_nav__primary">
+        <a href="/" class="logo"><img src="/assets/logo.svg"/></a>
+        <a href="/items">Items</a>
+        <a href="/search">Search</a>
+      </div>
+
+      <div class="app_nav__secondary">
+        <a href="/session/login">Login</a>
+      </div>
+    </nav>
+
+    {% block app_content %}
+    {% endblock %}
+  </div>
+{% endblock %}

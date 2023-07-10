@@ -9,15 +9,33 @@ repository = "https://github.com/gnawex/gnawex"
 readme = "README.md"
 
 [workspace.dependencies]
-## Internal crates
+# Internal crates
+
+## Entry-point of the GNAWEX server
 gnawex = { path = "crates/gnawex", version = "0.1" }
+
+## Core logic
 gnawex_core = { path = "crates/gnawex_core", version = "0.1" }
+
+## HTML templates and components
 gnawex_html = { path = "crates/gnawex_html", version = "0.1" }
+
+## GNAWEX server
+gnawex_server = { path = "crates/gnawex_server", version = "0.1" }
+
+# External crates
 
 ## Postgres
 tokio-postgres = { version = "0.7", features = ["with-chrono-0_4"] }
 postgres-types = { version = "0.2", features = ["derive"] }
 deadpool-postgres = { version = "0.10", features = ["serde"] }
+
+## HTTP
+hyper = { version = "0.14", features = ["full"] }
+axum = { version = "0.6", features = [] }
+axum-extra = { version = "0.7", features = [] }
+tower = { version = "0.4", features = ["util"] }
+tower-http = { version = "0.4", features = ["fs"] }
 
 ## Serialization/Deserialization
 serde = "1.0"

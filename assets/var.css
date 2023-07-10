@@ -82,6 +82,20 @@
     --red-900: rgb(127 29 29);
     --red-950: rgb(69 10 10);
 
+    --amber-50: rgb(255 251 235);
+    --amber-100: rgb(254 243 199);
+    --amber-200: rgb(253 230 138);
+    --amber-300: rgb(252 211 77);
+    --amber-400: rgb(251 191 36);
+    --amber-500: rgb(245 158 11);
+    --amber-600: rgb(217 119 6);
+    --amber-700: rgb(180 83 9);
+    --amber-800: rgb(146 64 14);
+    --amber-900: rgb(120 53 15);
+    --amber-950: rgb(69 26 3);
+
+    --brand: #fdd231;
+
     /* Breakpoints (use min-width in media queries). Though you can't use this
      * in media queries because of course you can't!!!!!!!!!!!!!!!!! */
     --bp-sm: 640px;

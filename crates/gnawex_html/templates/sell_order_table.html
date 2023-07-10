@@ -1,0 +1,35 @@
+<table class="table" cellspacing="0">
+  <caption>
+    <span class="tooltip" title="These are grouped SELL orders by amount per batch and cost, not individual SELL orders">
+      Sell orders
+    </span>
+  </caption>
+  <thead>
+    <tr>
+      <th scope="col">Batches</th>
+      <th scope="col">Amount per batch</th>
+      <th scope="col">Cost</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for order in grouped_sell_orders %}
+    <tr
+      id="sell-1"
+      data-type="BUY"
+      data-cost=""
+      data-batches=""
+      data-batchedby="">
+      <td scope="row">
+        {{ order.batches }}
+      </td>
+
+      <td scope="row">
+        {{ order.batchedby }}
+      </td>
+      <td scope="row">
+        {{ order.cost }}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
