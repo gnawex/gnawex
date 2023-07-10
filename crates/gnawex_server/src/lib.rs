@@ -48,6 +48,7 @@ async fn item_index(State(state): State<Arc<AppState>>) -> ItemIndexPage {
 
     gnawex_html::app::ItemIndexPage {
         items,
+        title: "Items".to_string(),
         next_page: Some(3),
         prev_page: Some(1),
     }
