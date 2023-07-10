@@ -6,3 +6,9 @@ edition = "2021"
 [dependencies]
 tokio = { workspace = true }
 gnawex_core = { workspace = true }
+gnawex_html = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Temporary
+askama = { workspace = true }

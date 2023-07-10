@@ -84,6 +84,11 @@ jobs:
           nix develop .#devShells.x86_64-linux.ci-db \
             --command cargo test --package gnawex_core -- --test-threads=1
 
+      - name: Run gnawex_core tests
+        run: |
+          nix develop .#devShells.x86_64-linux.ci-db \
+            --command cargo test --package gnawex_core -- --test-threads=1
+
       - name: Check if DB migrations revert work
         run: |
           nix develop .#devShells.x86_64-linux.ci-db \

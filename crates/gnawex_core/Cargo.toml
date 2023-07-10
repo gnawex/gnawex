@@ -4,9 +4,21 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+# Database & connection pooling
 tokio-postgres = { workspace = true }
 postgres-types = { workspace = true }
 deadpool-postgres = { workspace = true }
+
+# Serialization/deserialization
 serde = { workspace = true }
+
+# Async runtime
 tokio = { workspace = true }
 futures = { workspace = true }
+async-trait = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+
+# Date/time
+chrono = { workspace = true }
