@@ -1,0 +1,81 @@
+{% extends "app.html" %}
+
+{% block title %}
+huh
+{% endblock %}
+
+{% block app_content %}
+<div>
+  <div class="item-details" style="">
+    <div class="item-details__heading">
+      Timesplit Rune
+    </div>
+    <div class="item-details__subheading">
+      <span class=""><span id="last_price">220</span> SB</span>
+      |
+      <a class="link link--sm" href="/">Wiki</a>
+      |
+      <a class="link link--sm" href="/">MouseHunt Info Page</a>
+    </div>
+  </div>
+
+  <div style="margin-top: var(--4); width: 100%;">
+    <form
+      id="item-order-form"
+      action="/"
+      method="post"
+    >
+      <div>
+        <input
+          class="input input--full"
+          type="text"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          placeholder="Batches"
+          label="Batches"
+        />
+        <input
+          class="input input--full"
+          type="text"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          placeholder="Quantity per batch"
+          label="Quantity per batch"
+        />
+        <input
+          class="input input--full"
+          type="text"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          placeholder="Cost"
+          label="Cost per batch in SB+"
+        />
+
+        <select class="select select--full">
+          <option disabled selected invalid>Select order type</option>
+          <option>BUY</option>
+          <option>SELL</option>
+        </select>
+      </div>
+
+      <button
+        class="button button--full"
+        type="submit"
+        style="margin-top: var(--3);"
+      >
+        Create order
+      </button>
+    </.form>
+  </div>
+
+  <div id="pooled-item-listings">
+    <div>
+      {% include "buy_order_table.html" %}
+    </div>
+
+    <div>
+      {% include "sell_order_table.html" %}
+    </div>
+  </div>
+</div>
+{% endblock %}

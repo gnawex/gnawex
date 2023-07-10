@@ -1,5 +1,9 @@
-use axum::{extract::State, routing::get, Router, Server};
-use gnawex_html::app::ItemIndexPage;
+use axum::{
+    extract::{Path, State},
+    routing::get,
+    Router, Server,
+};
+use gnawex_html::app::{ItemIndexPage, ItemShowPage};
 use std::{net::SocketAddr, sync::Arc};
 use tower_http::services::ServeDir;
 
@@ -36,6 +40,7 @@ fn app() -> Router {
 
     Router::new()
         .route("/items", get(item_index))
+        .route("/items/:id", get(item_show))
         .nest_service("/assets", ServeDir::new("assets"))
         .with_state(app_state)
 }
@@ -48,9 +53,27 @@ async fn item_index(State(state): State<Arc<AppState>>) -> ItemIndexPage {
 
     gnawex_html::app::ItemIndexPage {
         items,
-        title: "Items".to_string(),
         next_page: Some(3),
         prev_page: Some(1),
+    }
+}
+
+async fn item_show(Path(id): Path<i64>, State(state): State<Arc<AppState>>) -> ItemShowPage {
+    let item = gnawex_core::item::get_item(&state.db_handle, gnawex_core::item::Id(id))
+        .await
+        .unwrap();
+
+    let grouped_orders = gnawex_core::item::grouped_order::get_grouped_orders_by_item_id(
+        &state.db_handle,
+        gnawex_core::item::Id(id),
+    )
+    .await
+    .unwrap();
+
+    gnawex_html::app::ItemShowPage {
+        item,
+        grouped_buy_orders: grouped_orders.buy_orders,
+        grouped_sell_orders: grouped_orders.sell_orders,
     }
 }
 

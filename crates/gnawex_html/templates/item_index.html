@@ -1,5 +1,7 @@
 {% extends "app.html" %}
 
+{% block title %}Items | Gnawnian Exchange{% endblock %}
+
 {% block app_content %}
 <div>
   <form action="/items"  method="post">
@@ -7,18 +9,15 @@
   </form>
 
   {% if items.len() > 0 -%}
-  <ol class="item_list">
+  <ul class="ul ul--dashed">
       {% for item in items %}
         <li class="item_list__item">
           <a href="/items/timesplit-rune" class="item_list__item__primary link">
             {{ item.name }}
           </a>
-          <div class="item_list__item__secondary">
-            last traded today
-          </div>
         </li>
       {% endfor %}
-  </ol>
+  </ul>
   {% else -%}
   <span>
     There's nothing here...

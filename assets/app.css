@@ -4,6 +4,15 @@
   min-height: 28px;
 }
 
+.ul {
+  list-style-type: none;
+  padding-left: var(--0);
+}
+
+.ul--dashed > li:before {
+  content: "-";
+}
+
 body {
   font-family: var(--font-family-normal);
   font-size: var(--font-base);
@@ -15,12 +24,16 @@ body {
   line-height: var(--font-3xl-lh);
 }
 
-a {
-  text-decoration: none;
-}
-
 .link {
   color: var(--link-visited);
+  font-size: var(--font-base);
+  line-height: var(--font-base-lh);
+  text-underline-offset: var(--1);
+}
+
+.link--sm {
+  font-size: var(--font-sm);
+  line-height: var(--font-sm-lh);
 }
 
 .link:visited {
@@ -36,8 +49,8 @@ a {
 .item-details__heading {
   text-align: center;
   font-weight: var(--font-semibold);
-  font-size: var(--font-xl);
-  line-height: var(--font-xl-lh);
+  font-size: var(--font-base);
+  line-height: var(--font-base-lh);
   color: var(--neutral-300);
 }
 
@@ -46,12 +59,11 @@ a {
   font-size: var(--font-sm);
   line-height: var(--font-sm-lh);
   justify-content: center;
+  align-items: center;
 }
 
-.item-details__subheading * + *:before {
-  content: "|";
-  color: var(--neutral-400);
-  padding: 0 var(--1);
+.item-details__subheading > * {
+  margin: 0 var(--1);
 }
 
 .theme {
@@ -74,7 +86,7 @@ a {
 
 .heading {
   font-size: var(--font-xl);
-  line-geiht: var(--font-xl-lh);
+  line-height: var(--font-xl-lh);
   color: var(--neutral-300);
 }
 
@@ -117,6 +129,10 @@ a {
   cursor: pointer;
 }
 
+.button--full {
+  width: var(--full);
+}
+
 .app_container {
   margin-left: auto;
   margin-right: auto;
@@ -132,6 +148,7 @@ a {
   justify-content: space-between;
   font-family: var(--font-family-normal);
   font-weight: var(--font-semibold);
+  text-underline-offset: var(--1);
 }
 
 .app_nav__primary {
@@ -151,25 +168,6 @@ a {
 }
 
 .app_nav__secondary a {
-  color: var(--neutral-400);
-}
-
-.item_list {
-  list-style-type: none;
-  padding-left: var(--0);
-}
-
-.item_list li {
-  margin-bottom: var(--3);
-}
-
-.item_list__item__primary {
-  font-weight: var(--font-semibold);
-}
-
-.item_list__item__secondary {
-  font-size: var(--font-sm);
-  line-height: var(--font-sm-lh);
   color: var(--neutral-400);
 }
 
@@ -274,7 +272,6 @@ select.select--full {
 
   .link {
     color: var(--dark-link);
-    text-decoration: none;
   }
 
   .link:visited {
