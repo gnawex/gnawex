@@ -147,7 +147,6 @@ body {
   display: flex;
   justify-content: space-between;
   font-family: var(--font-family-normal);
-  font-weight: var(--font-semibold);
   text-underline-offset: var(--1);
 }
 
@@ -210,7 +209,12 @@ select.select--full {
 }
 
 .footer * {
-  margin-right: var(--3);
+  margin-left: var(--3);
+  text-align: right;
+}
+
+.footer__link {
+  text-underline-offset: var(--1);
 }
 
 @-moz-document url-prefix() {
