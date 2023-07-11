@@ -1,0 +1,2 @@
+DROP TABLE item_order_transactions;
+DROP TYPE ITEM_ORDER_TRANSACTION_STATUS;

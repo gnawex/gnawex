@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.05";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     mkdocs-material.url = "github:sekunho/mkdocs-material/update-to-9";
     flake-utils.url = "github:numtide/flake-utils";
     fenix.url = "github:nix-community/fenix";
@@ -13,6 +14,7 @@
   outputs =
     { self
     , nixpkgs
+    , nixpkgs-unstable
     , mkdocs-material
     , flake-utils
     , fenix
@@ -35,6 +37,7 @@
 
       overlays = [ rustOverlay ];
       pkgs = import nixpkgs { inherit system overlays; };
+      pkgs' = import nixpkgs { inherit system; overlays = [ ]; };
       fenix' = fenix.packages.${system};
 
       toolchain = with fenix'; combine [
@@ -80,7 +83,12 @@
                 cargo-flamegraph
                 cargo-watch
                 sqitchPg
+                pkgs'.diesel-cli
               ];
+
+              env = {
+                DATABASE_URL = "postgres://gnawex:gnawex@127.0.0.1/gnawex_development";
+              };
 
               pre-commit.hooks = {
                 cargo-check.enable = true;
