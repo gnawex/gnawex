@@ -3,7 +3,7 @@ use std::fmt::Display;
 use postgres_types::{FromSql, ToSql};
 use tokio_postgres::Row;
 
-use crate::{db, error::ParseError};
+use crate::{db, error::ParseError, sql};
 
 use self::error::{CreateItemError, GetItemError, ListItemsError};
 
@@ -69,7 +69,7 @@ impl TryFrom<Row> for Item {
 pub async fn list_items(db_handle: &db::Handle) -> Result<Vec<Item>, ListItemsError> {
     let client = db_handle.get_client().await?;
     let items = client
-        .query("SELECT * FROM app.tradable_items ORDER BY name ASC", &[])
+        .query(sql::item::INDEX_ITEMS, &[])
         .await
         .map_err(ListItemsError::from)?;
 
@@ -83,10 +83,7 @@ pub async fn list_items(db_handle: &db::Handle) -> Result<Vec<Item>, ListItemsEr
 pub async fn get_item(db_handle: &db::Handle, item_id: Id) -> Result<Item, GetItemError> {
     let client = db_handle.get_client().await?;
     let item = client
-        .query_one(
-            "SELECT * FROM app.tradable_items WHERE id = $1",
-            &[&item_id.0],
-        )
+        .query_one(sql::item::GET_ITEM, &[&item_id.0])
         .await
         .map_err(GetItemError::from)?;
 
