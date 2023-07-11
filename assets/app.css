@@ -156,7 +156,7 @@ body {
 }
 
 .app_nav__primary a {
-  margin-right: var(--3);
+  margin-right: var(--2);
   color: var(--neutral-400);
 }
 
@@ -167,7 +167,7 @@ body {
 }
 
 .app_nav__secondary a {
-  margin-left: var(--3);
+  margin-left: var(--1);
   color: var(--neutral-400);
 }
 
