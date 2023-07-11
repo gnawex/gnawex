@@ -43,7 +43,7 @@ body {
 #item-order-form > div {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-gap: var(--2);
+  grid-column-gap: var(--2);
 }
 
 .item-details__heading {
@@ -167,6 +167,7 @@ body {
 }
 
 .app_nav__secondary a {
+  margin-left: var(--3);
   color: var(--neutral-400);
 }
 

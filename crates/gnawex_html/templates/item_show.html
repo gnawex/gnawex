@@ -24,39 +24,52 @@
       method="post"
     >
       <div>
-        <input
-          class="input input--full"
-          type="text"
-          inputmode="numeric"
-          pattern="[0-9]*"
-          placeholder="Batches"
-          label="Batches"
-          required
-        />
-        <input
-          class="input input--full"
-          type="text"
-          inputmode="numeric"
-          pattern="[0-9]*"
-          placeholder="Quantity per batch"
-          label="Quantity per batch"
-          required
-        />
-        <input
-          class="input input--full"
-          type="text"
-          inputmode="numeric"
-          pattern="[0-9]*"
-          placeholder="Cost"
-          label="Cost per batch in SB+"
-          required
-        />
+        <div>
+          <label class="label" for="batches">Batches</label>
+          <input
+            class="input input--full"
+            name="batches"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            placeholder="Batches"
+            required
+          />
+        </div>
 
-        <select class="select select--full" required>
-          <option disabled selected hidden>Select order type</option>
-          <option>BUY</option>
-          <option>SELL</option>
-        </select>
+        <div>
+          <label class="label" for="batchedby">Quantity per batch</label>
+          <input
+            class="input input--full"
+            name="batchedby"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            placeholder="Batch size"
+            required
+          />
+        </div>
+        <div>
+          <label class="label" for="cost">Cost in SB+</label>
+          <input
+            class="input input--full"
+            name="cost"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            placeholder="Cost"
+            required
+          />
+        </div>
+
+        <div>
+          <label class="label" for="type">Order type</label>
+          <select class="select select--full" for="type" required>
+            <option disabled selected hidden>Select order type</option>
+            <option value="BUY">BUY</option>
+            <option value="SELL">SELL</option>
+          </select>
+        </div>
       </div>
 
       <button
