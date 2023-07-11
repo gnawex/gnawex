@@ -8,8 +8,6 @@ use crate::{db, error::ParseError};
 use self::error::{CreateItemError, GetItemError, ListItemsError};
 
 pub mod error;
-pub mod grouped_order;
-pub mod listing;
 
 #[derive(Debug, PartialEq)]
 pub struct Item {

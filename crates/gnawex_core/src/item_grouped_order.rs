@@ -113,16 +113,10 @@ pub async fn get_grouped_orders_by_item_id(
 ) -> Result<GroupedOrders, tokio_postgres::Error> {
     let mut client = db_handle.get_client().await.unwrap();
     let txn = client.transaction().await.unwrap();
-    let buy_statement = txn.prepare(AUTH_LIST_GROUPED_BUY_ORDERS).await.unwrap();
-    let sell_statement = txn.prepare(AUTH_LIST_GROUPED_SELL_ORDERS).await.unwrap();
-    let buy_rows = txn
-        .query(&buy_statement, &[&item_id, &2_i64])
-        .await
-        .unwrap();
-    let sell_rows = txn
-        .query(&sell_statement, &[&item_id, &2_i64])
-        .await
-        .unwrap();
+    let buy_statement = txn.prepare(LIST_GROUPED_BUY_ORDERS).await.unwrap();
+    let sell_statement = txn.prepare(LIST_GROUPED_SELL_ORDERS).await.unwrap();
+    let buy_rows = txn.query(&buy_statement, &[&item_id]).await.unwrap();
+    let sell_rows = txn.query(&sell_statement, &[&item_id]).await.unwrap();
 
     txn.commit().await?;
 
