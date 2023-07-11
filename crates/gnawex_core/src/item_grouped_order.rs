@@ -1,4 +1,4 @@
-use crate::{db, error::ParseError};
+use crate::{db, error::ParseError, sql};
 use tokio_postgres::Row;
 
 #[derive(Debug)]
@@ -43,78 +43,29 @@ impl TryFrom<Row> for GroupedOrder {
     }
 }
 
-const AUTH_LIST_GROUPED_BUY_ORDERS: &str = "
-    SELECT sum(current_unit_quantity)
-         , tradable_item__id
-         , batched_by
-         , cost
-      FROM app.tradable_item_listings
-      WHERE tradable_item__id = $1
-        AND user__id <> $2
-        AND type = 'buy'
-        AND active = true
-      GROUP BY tradable_item__id
-             , batched_by
-             , cost
-      ORDER BY cost DESC
-";
-
-const AUTH_LIST_GROUPED_SELL_ORDERS: &str = "
-    SELECT sum(current_unit_quantity)
-         , tradable_item__id
-         , batched_by
-         , cost
-      FROM app.tradable_item_listings
-      WHERE tradable_item__id = $1
-        AND user__id <> $2
-        AND type = 'sell'
-        AND active = true
-      GROUP BY tradable_item__id
-             , batched_by
-             , cost
-      ORDER BY cost ASC
-";
-
-const LIST_GROUPED_BUY_ORDERS: &str = "
-    SELECT sum(current_unit_quantity)
-         , tradable_item__id
-         , batched_by
-         , cost
-      FROM app.tradable_item_listings
-      WHERE tradable_item__id = $1
-        AND type = 'buy'
-        AND active = true
-      GROUP BY tradable_item__id
-             , batched_by
-             , cost
-      ORDER BY cost DESC
-";
-
-const LIST_GROUPED_SELL_ORDERS: &str = "
-    SELECT sum(current_unit_quantity)
-         , tradable_item__id
-         , batched_by
-         , cost
-      FROM app.tradable_item_listings
-      WHERE tradable_item__id = $1
-        AND type = 'sell'
-        AND active = true
-      GROUP BY tradable_item__id
-             , batched_by
-             , cost
-      ORDER BY cost ASC
-";
-
 // TODO: Use proper error type
 // TODO: Make a public version of this where it doesn't filter user ID
 pub async fn get_grouped_orders_by_item_id(
     db_handle: &db::Handle,
     item_id: crate::item::Id,
 ) -> Result<GroupedOrders, tokio_postgres::Error> {
+    // TODO: Clean up unwraps
     let mut client = db_handle.get_client().await.unwrap();
     let txn = client.transaction().await.unwrap();
-    let buy_statement = txn.prepare(LIST_GROUPED_BUY_ORDERS).await.unwrap();
-    let sell_statement = txn.prepare(LIST_GROUPED_SELL_ORDERS).await.unwrap();
+    let user_statement = txn.prepare(sql::user::SET_CURRENT_USER_ID).await.unwrap();
+    let buy_statement = txn
+        .prepare(sql::item_grouped_order::AUTH_LIST_GROUPED_BUY_ORDERS)
+        .await
+        .unwrap();
+    let sell_statement = txn
+        .prepare(sql::item_grouped_order::AUTH_LIST_GROUPED_SELL_ORDERS)
+        .await
+        .unwrap();
+
+    txn.execute(&user_statement, &[&String::from("1")])
+        .await
+        .unwrap();
+
     let buy_rows = txn.query(&buy_statement, &[&item_id]).await.unwrap();
     let sell_rows = txn.query(&sell_statement, &[&item_id]).await.unwrap();
 
