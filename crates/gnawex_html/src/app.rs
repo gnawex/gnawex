@@ -1,5 +1,6 @@
 use askama::Template;
-use gnawex_core::item::{grouped_order::GroupedOrder, Item};
+use gnawex_core::item::Item;
+use gnawex_core::item_grouped_order::GroupedOrder;
 
 #[derive(Template)]
 #[template(path = "item_index.html")]

@@ -66,7 +66,7 @@ async fn item_show(Path(id): Path<i64>, State(state): State<Arc<AppState>>) -> I
         .await
         .unwrap();
 
-    let grouped_orders = gnawex_core::item::grouped_order::get_grouped_orders_by_item_id(
+    let grouped_orders = gnawex_core::item_grouped_order::get_grouped_orders_by_item_id(
         &state.db_handle,
         gnawex_core::item::Id(id),
     )
