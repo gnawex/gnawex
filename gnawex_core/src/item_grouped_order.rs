@@ -8,6 +8,7 @@ pub struct GroupedOrder {
     pub cost: i32,
 }
 
+#[derive(Debug)]
 pub struct GroupedOrders {
     pub buy_orders: Vec<GroupedOrder>,
     pub sell_orders: Vec<GroupedOrder>,
