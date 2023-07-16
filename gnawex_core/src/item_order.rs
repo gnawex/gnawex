@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use postgres_types::{FromSql, ToSql};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tokio_postgres::Row;
 
 use crate::error::ParseError;
@@ -90,8 +90,8 @@ pub struct DelistError;
 
 // FIXME: Qualify with schema name `app`. Blocked until this issue is resolved:
 // https://github.com/sfackler/rust-postgres/issues/627
-#[derive(Debug, FromSql, ToSql, Serialize)]
-#[postgres(name = "order_type")]
+#[derive(Debug, Deserialize, FromSql, ToSql, Serialize)]
+#[postgres(name = "listing_type")]
 pub enum Type {
     #[postgres(name = "buy")]
     Buy,
@@ -99,7 +99,7 @@ pub enum Type {
     Sell,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct CreateListing {
     pub item_id: item::Id,
     pub user_id: i64,
@@ -149,9 +149,9 @@ impl ItemOrder for Buy {
 
         tracing::info!("{:#?}", row);
 
-        txn.rollback().await?;
+        txn.commit().await?;
 
-        todo!()
+        Ok(buy)
     }
 
     fn delist(self, _db_handle: &crate::db::Handle, _user_id: i64) -> Result<Self, DelistError>
@@ -313,17 +313,17 @@ impl ItemOrder for Sell {
     {
         let mut client = db_handle.get_client().await?;
         let txn = client.transaction().await?;
-        let buy = do_create::<Buy>(&txn, params).await?;
+        let sell = do_create::<Sell>(&txn, params).await?;
 
-        tracing::info!("Created order: {:#?}", buy);
+        tracing::info!("Created order: {:#?}", sell);
 
-        let row: Vec<Sell> = do_match(&txn, &buy).await?;
+        let row: Vec<Buy> = do_match(&txn, &sell).await?;
 
         tracing::info!("{:#?}", row);
 
-        txn.rollback().await?;
+        txn.commit().await?;
 
-        todo!()
+        Ok(sell)
     }
 
     fn delist(self, db_handle: &crate::db::Handle, user_id: i64) -> Result<Self, DelistError>

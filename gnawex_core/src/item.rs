@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
 use postgres_types::{FromSql, ToSql};
+use serde::Deserialize;
 use tokio_postgres::Row;
 
 use crate::{db, error::ParseError, sql};
@@ -17,7 +18,7 @@ pub struct Item {
     pub wiki_link: String,
 }
 
-#[derive(Clone, Copy, Debug, FromSql, ToSql, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, FromSql, ToSql, PartialEq)]
 #[postgres(transparent)]
 pub struct Id(pub i64);
 

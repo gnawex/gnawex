@@ -20,7 +20,7 @@
   <div style="margin-top: var(--4); width: 100%;">
     <form
       id="item-order-form"
-      action="/"
+      action="/items/{{ item.id }}"
       method="post"
     >
       <div>
@@ -28,7 +28,7 @@
           <label class="label" for="batches">Batches</label>
           <input
             class="input input--full"
-            name="batches"
+            name="unit_quantity"
             type="text"
             inputmode="numeric"
             pattern="[0-9]*"
@@ -41,7 +41,7 @@
           <label class="label" for="batchedby">Quantity per batch</label>
           <input
             class="input input--full"
-            name="batchedby"
+            name="batched_by"
             type="text"
             inputmode="numeric"
             pattern="[0-9]*"
@@ -63,11 +63,11 @@
         </div>
 
         <div>
-          <label class="label" for="type">Order type</label>
-          <select class="select select--full" for="type" required>
+          <label class="label" for="kind">Order type</label>
+          <select class="select select--full" for="kind" name="kind" required>
             <option disabled selected hidden>Select order type</option>
-            <option value="BUY">BUY</option>
-            <option value="SELL">SELL</option>
+            <option value="Buy">BUY</option>
+            <option value="Sell">SELL</option>
           </select>
         </div>
       </div>

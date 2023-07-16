@@ -17,3 +17,4 @@ gnawex_html = { workspace = true }
 gnawex_core = { workspace = true }
 askama = { workspace = true }
 askama_axum = { workspace = true }
+serde = { workspace = true }
