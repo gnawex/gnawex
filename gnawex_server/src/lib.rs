@@ -176,7 +176,7 @@ async fn item_show(Path(id): Path<i64>, State(state): State<Arc<AppState>>) -> H
             grouped_sell_orders: grouped_orders.sell_orders,
         }
         .render(),
-        (Err(GetItemError::NoSingleMatch(_)), _) => gnawex_html::error::Error404Page.render(),
+        (Err(GetItemError::NotFound), _) => gnawex_html::error::Error404Page.render(),
         (_, _) => gnawex_html::error::Error500Page.render(),
     }
     .expect("not a valid template");

@@ -22,3 +22,6 @@ tracing = { workspace = true }
 
 # Date/time
 chrono = { workspace = true }
+
+# Error
+thiserror = { workspace = true }

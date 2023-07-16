@@ -1,13 +1,17 @@
 use crate::{db, error::ParseError};
+use thiserror::Error;
 
 /// Unable to list items
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ListItemsError {
     /// Failed to communicate with the database
+    #[error("Failed to communicate with the DB: {0}")]
     Db(tokio_postgres::Error),
     /// Failed to get a DB client from the pool
+    #[error("Failed to acquire a Postgres client from the pool: {0}")]
     GetClient(db::GetClientError),
     /// Unable to parse the DB type to `Item`
+    #[error("Failed to parse row to an Item: {0}")]
     Parse(ParseError),
 }
 
@@ -23,7 +27,7 @@ pub enum GetItemError {
     /// Item being looked for either does not have a match, or has multiple
     /// matches. Though as long as `app.tradable_items.id` is unique then it's
     /// the former.
-    NoSingleMatch(String),
+    NotFound,
 }
 
 /// Unable to create an item
@@ -63,7 +67,7 @@ impl From<tokio_postgres::Error> for GetItemError {
         // Since `tokio_postgres::ErrorInner` is private, it's not possible to
         // figure out exactly what went wrong, and I could only guess.
         match (err.as_db_error(), err.code(), err.is_closed()) {
-            (None, None, false) => Self::NoSingleMatch(err.to_string()),
+            (None, None, false) => Self::NotFound,
             _ => Self::Db(err),
         }
     }
