@@ -7,10 +7,16 @@ use gnawex_core::{
     item,
     item_order::{self, Buy, CreateListing, ItemOrder, Sell},
 };
-use gnawex_html::app::{ItemIndexPage, ItemShowPage};
+use gnawex_html::{
+    app::{ItemIndexPage, ItemShowPage},
+    error::Error404Page,
+};
+use hyper::Uri;
 use serde::Deserialize;
 use std::{net::SocketAddr, sync::Arc};
 use tower_http::services::ServeDir;
+
+// TODO: Move handlers into their own files
 
 struct AppState {
     db_handle: gnawex_core::db::Handle,
@@ -48,8 +54,15 @@ fn app() -> Router {
         .route("/items", get(item_index))
         .route("/items/:id", get(item_show))
         .route("/items/:id", post(item_order_create))
+        .fallback(error_404)
         .nest_service("/assets", ServeDir::new("assets"))
         .with_state(app_state)
+}
+
+async fn error_404(uri: Uri) -> Error404Page {
+    println!("{:#?}", uri);
+
+    Error404Page {}
 }
 
 #[derive(Debug, Deserialize)]
