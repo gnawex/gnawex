@@ -1,16 +1,24 @@
+use askama::{Error, Template};
 use axum::{
     extract::{Path, State},
+    response::Html,
     routing::{get, post},
     Form, Router, Server,
 };
 use gnawex_core::{
-    item,
+    item::{self, error::GetItemError},
     item_order::{self, Buy, CreateListing, ItemOrder, Sell},
 };
-use gnawex_html::app::{ItemIndexPage, ItemShowPage};
+use gnawex_html::{
+    app::{ItemIndexPage, ItemShowPage},
+    error::Error404Page,
+};
+use hyper::Uri;
 use serde::Deserialize;
 use std::{net::SocketAddr, sync::Arc};
 use tower_http::services::ServeDir;
+
+// TODO: Move handlers into their own files
 
 struct AppState {
     db_handle: gnawex_core::db::Handle,
@@ -48,8 +56,15 @@ fn app() -> Router {
         .route("/items", get(item_index))
         .route("/items/:id", get(item_show))
         .route("/items/:id", post(item_order_create))
+        .fallback(error_404)
         .nest_service("/assets", ServeDir::new("assets"))
         .with_state(app_state)
+}
+
+async fn error_404(uri: Uri) -> Error404Page {
+    println!("{:#?}", uri);
+
+    Error404Page {}
 }
 
 #[derive(Debug, Deserialize)]
@@ -122,40 +137,51 @@ async fn item_order_create(
     }
 }
 
-async fn item_index(State(state): State<Arc<AppState>>) -> ItemIndexPage {
+async fn item_index(State(state): State<Arc<AppState>>) -> Html<String> {
     // TODO: Error handling. Render an error page instead
-    tracing::info!("hey");
-    let items = gnawex_core::item::list_items(&state.db_handle)
-        .await
-        .unwrap();
 
-    tracing::info!("{:#?}", items);
-
-    gnawex_html::app::ItemIndexPage {
-        items,
-        next_page: Some(3),
-        prev_page: Some(1),
+    let template = match gnawex_core::item::list_items(&state.db_handle).await {
+        Ok(items) => gnawex_html::app::ItemIndexPage {
+            items,
+            next_page: Some(3),
+            prev_page: Some(1),
+        }
+        .render(),
+        Err(_err) => gnawex_html::error::Error500Page.render(),
     }
+    .expect("not a valid template");
+
+    Html(template)
 }
 
-async fn item_show(Path(id): Path<i64>, State(state): State<Arc<AppState>>) -> ItemShowPage {
+async fn item_show(Path(id): Path<i64>, State(state): State<Arc<AppState>>) -> Html<String> {
     // TODO: Handle errors by rendering error page
-    let item = gnawex_core::item::get_item(&state.db_handle, gnawex_core::item::Id(id))
-        .await
-        .unwrap();
+    let item = gnawex_core::item::get_item(&state.db_handle, gnawex_core::item::Id(id)).await;
 
     let grouped_orders = gnawex_core::item_grouped_order::get_grouped_orders_by_item_id(
         &state.db_handle,
         gnawex_core::item::Id(id),
     )
-    .await
-    .unwrap();
+    .await;
 
-    gnawex_html::app::ItemShowPage {
-        item,
-        grouped_buy_orders: grouped_orders.buy_orders,
-        grouped_sell_orders: grouped_orders.sell_orders,
+    // TODO: Have grouped orders only run if item exists
+    // Maybe it's better to create an `IntoResponse` instance for
+    // (item, grouped_orders). That way rendering templates doesn't need to be
+    // reimplemented in each handler that needs it.
+
+    let template = match (item, grouped_orders) {
+        (Ok(item), Ok(grouped_orders)) => gnawex_html::app::ItemShowPage {
+            item,
+            grouped_buy_orders: grouped_orders.buy_orders,
+            grouped_sell_orders: grouped_orders.sell_orders,
+        }
+        .render(),
+        (Err(GetItemError::NoSingleMatch(_)), _) => gnawex_html::error::Error404Page.render(),
+        (_, _) => gnawex_html::error::Error500Page.render(),
     }
+    .expect("not a valid template");
+
+    Html(template)
 }
 
 async fn signal_shutdown() {
