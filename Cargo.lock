@@ -483,6 +483,7 @@ dependencies = [
  "gnawex_core",
  "gnawex_html",
  "hyper",
+ "serde",
  "tokio",
  "tower-http",
  "tracing",
