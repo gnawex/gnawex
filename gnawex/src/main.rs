@@ -1,6 +1,11 @@
+use tracing::Level;
+use tracing_subscriber::FmtSubscriber;
+
 #[tokio::main]
 async fn main() {
-    let subscriber = tracing_subscriber::FmtSubscriber::new();
+    let subscriber = FmtSubscriber::builder()
+        .with_max_level(Level::DEBUG)
+        .finish();
 
     tracing::subscriber::set_global_default(subscriber).unwrap();
 
