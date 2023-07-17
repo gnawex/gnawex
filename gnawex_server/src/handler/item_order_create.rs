@@ -1,14 +1,20 @@
 use std::sync::Arc;
 
+use askama::Template;
 use axum::{
     extract::{Path, State},
+    response::Html,
     Form,
 };
 use gnawex_core::{
-    item,
+    item::{self, error::GetItemError, get_item},
+    item_grouped_order::{filter_grouped_orders_by_item_id, FilterByItemIdError},
     item_order::{self, Buy, CreateListing, ItemOrder, Sell},
 };
-use gnawex_html::app::ItemShowPage;
+use gnawex_html::{
+    app::ItemShowPage,
+    error::{Error404Page, Error500Page},
+};
 use serde::Deserialize;
 
 use crate::AppState;
@@ -25,14 +31,10 @@ pub(crate) async fn handle(
     State(state): State<Arc<AppState>>,
     Path(item_id): Path<item::Id>,
     Form(new_order): Form<NewItemOrder>,
-) -> ItemShowPage {
-    println!("{:#?}", item_id);
-    println!("{:#?}", new_order);
-
-    // TODO: Refactor to have these in the same txn (create & match, get grouped orders)
-    // TODO: Refactor to extract user ID from session instead of it being hardcoded
-    // TODO: Remove unwraps
-    // TODO: Render error page when any of the operations fail.
+) -> Html<String> {
+    tracing::debug!("{:#?}", state);
+    tracing::debug!("{:#?}", item_id);
+    tracing::debug!("{:#?}", new_order);
 
     match new_order.kind {
         item_order::Type::Buy => {
@@ -48,7 +50,7 @@ pub(crate) async fn handle(
             )
             .await;
 
-            println!("{:#?}", buy);
+            tracing::debug!("{:#?}", buy);
         }
         item_order::Type::Sell => {
             let sell = Sell::create_and_match(
@@ -63,22 +65,24 @@ pub(crate) async fn handle(
             )
             .await;
 
-            println!("{:#?}", sell);
+            tracing::debug!("{:#?}", sell);
         }
     };
 
-    let item = gnawex_core::item::get_item(&state.db_handle, item_id)
-        .await
-        .unwrap();
+    let html = match get_item(&state.db_handle, item_id).await {
+        Ok(item) => match filter_grouped_orders_by_item_id(&state.db_handle, item_id).await {
+            Ok(grouped_orders) => ItemShowPage {
+                item,
+                grouped_buy_orders: grouped_orders.buy_orders,
+                grouped_sell_orders: grouped_orders.sell_orders,
+            }
+            .render(),
+            Err(FilterByItemIdError::NotFound) => Error404Page.render(),
+            Err(_) => Error500Page.render(),
+        },
+        Err(GetItemError::NotFound) => Error404Page.render(),
+        Err(_) => Error500Page.render(),
+    };
 
-    let grouped_orders =
-        gnawex_core::item_grouped_order::get_grouped_orders_by_item_id(&state.db_handle, item_id)
-            .await
-            .unwrap();
-
-    gnawex_html::app::ItemShowPage {
-        item,
-        grouped_buy_orders: grouped_orders.buy_orders,
-        grouped_sell_orders: grouped_orders.sell_orders,
-    }
+    Html(html.unwrap())
 }

@@ -9,6 +9,7 @@ use tower_http::services::ServeDir;
 
 pub(crate) mod handler;
 
+#[derive(Debug)]
 pub struct AppState {
     db_handle: gnawex_core::db::Handle,
 }
