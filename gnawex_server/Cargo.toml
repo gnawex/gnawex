@@ -18,3 +18,5 @@ gnawex_core = { workspace = true }
 askama = { workspace = true }
 askama_axum = { workspace = true }
 serde = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
