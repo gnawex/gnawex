@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use deadpool_postgres::{
     Client, CreatePoolError, ManagerConfig, PoolError, RecyclingMethod, Runtime,
 };
+use thiserror::Error;
 use tokio_postgres::NoTls;
 
 #[derive(Debug)]
@@ -10,23 +11,13 @@ pub struct Handle {
     pool: deadpool_postgres::Pool,
 }
 
-#[derive(Debug)]
-pub struct CreateHandleError(CreatePoolError);
+#[derive(Debug, Error)]
+#[error(transparent)]
+pub struct CreateHandleError(#[from] CreatePoolError);
 
-#[derive(Debug)]
-pub struct GetClientError(PoolError);
-
-impl From<PoolError> for GetClientError {
-    fn from(err: PoolError) -> Self {
-        GetClientError(err)
-    }
-}
-
-impl From<CreatePoolError> for CreateHandleError {
-    fn from(err: CreatePoolError) -> Self {
-        CreateHandleError(err)
-    }
-}
+#[derive(Debug, Error)]
+#[error(transparent)]
+pub struct GetClientError(#[from] PoolError);
 
 impl Handle {
     pub fn new(
