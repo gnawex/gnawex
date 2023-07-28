@@ -141,6 +141,7 @@ impl ItemOrder for Buy {
     {
         let mut client = db_handle.get_client().await?;
         let txn = client.transaction().await?;
+        let _ = user::set_current_user(&txn).await?;
         let buy = do_create::<Buy>(&txn, params).await?;
 
         tracing::info!("Created order: {:#?}", buy);
@@ -313,6 +314,7 @@ impl ItemOrder for Sell {
     {
         let mut client = db_handle.get_client().await?;
         let txn = client.transaction().await?;
+        let _ = user::set_current_user(&txn).await?;
         let sell = do_create::<Sell>(&txn, params).await?;
 
         tracing::info!("Created order: {:#?}", sell);
@@ -528,12 +530,11 @@ where
     MatchedListing: ItemOrder + TryFrom<Row> + std::fmt::Debug,
     <MatchedListing as TryFrom<Row>>::Error: std::fmt::Debug,
 {
-    user::set_current_user(txn).await?;
-    let statement = txn.prepare(sql::item_order::MATCH_LISTING).await?;
+    let find_matches_statement = txn.prepare(sql::item_order::FIND_MATCHING_ORDERS).await?;
 
-    let rows = txn
+    let matching_rows = txn
         .query(
-            &statement,
+            &find_matches_statement,
             &[
                 &order.get_item_id(),
                 &order.get_user_id(),
@@ -544,7 +545,7 @@ where
         )
         .await?;
 
-    let orders: Result<Vec<MatchedListing>, _> = rows
+    let orders: Result<Vec<MatchedListing>, _> = matching_rows
         .into_iter()
         .map(|r| MatchedListing::try_from(r))
         .collect();
@@ -563,8 +564,6 @@ where
     O: ItemOrder + TryFrom<Row>,
     CreateListingError: From<<O>::Error>,
 {
-    user::set_current_user(txn).await?;
-
     let statement = txn.prepare(sql::item_order::CREATE_LISTING).await?;
 
     tracing::info!("{:?}", statement.params());
