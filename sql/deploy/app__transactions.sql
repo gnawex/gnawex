@@ -18,7 +18,9 @@ CREATE TABLE app.tradable_item_transactions (
     -- keep a record so that we can sum all transactions which gives us the
     -- original quantity.
   , quantity              INT NOT NULL
-  , status                app.TRANSACTION_STATUS NOT NULL
+  , status                app.TRANSACTION_STATUS
+                            DEFAULT 'pending'
+                            NOT NULL
 
     -- This is here for convenience
     -- FIXME: Consider removing these two columns?
