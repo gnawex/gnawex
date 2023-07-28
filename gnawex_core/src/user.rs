@@ -12,5 +12,5 @@ pub(crate) async fn set_current_user(
         .await
         .unwrap();
 
-    txn.execute(&statement, &[&2_i64.to_string()]).await
+    txn.execute(&statement, &[&3_i64.to_string()]).await
 }

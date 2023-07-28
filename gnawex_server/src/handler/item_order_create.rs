@@ -32,9 +32,9 @@ pub(crate) async fn handle(
     Path(item_id): Path<item::Id>,
     Form(new_order): Form<NewItemOrder>,
 ) -> Html<String> {
-    tracing::debug!("{:#?}", state);
-    tracing::debug!("{:#?}", item_id);
-    tracing::debug!("{:#?}", new_order);
+    tracing::debug!("State: {:#?}", state);
+    tracing::debug!("Item ID: {:#?}", item_id);
+    tracing::debug!("New order params: {:#?}", new_order);
 
     match new_order.kind {
         item_order::Type::Buy => {
@@ -42,7 +42,7 @@ pub(crate) async fn handle(
                 &state.db_handle,
                 CreateListing {
                     item_id,
-                    user_id: 2,
+                    user_id: 3,
                     batched_by: new_order.batched_by,
                     unit_quantity: new_order.unit_quantity,
                     cost: new_order.cost,
@@ -57,7 +57,7 @@ pub(crate) async fn handle(
                 &state.db_handle,
                 CreateListing {
                     item_id,
-                    user_id: 2,
+                    user_id: 3,
                     batched_by: new_order.batched_by,
                     unit_quantity: new_order.unit_quantity,
                     cost: new_order.cost,

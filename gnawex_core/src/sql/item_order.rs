@@ -14,7 +14,7 @@ pub(crate) const CREATE_LISTING: &str = "
         RETURNING *
 ";
 
-pub(crate) const MATCH_LISTING: &str = "
+pub(crate) const FIND_MATCHING_ORDERS: &str = "
     SELECT *
          , sum(current_unit_quantity)
              OVER (ORDER BY created_at ASC)
