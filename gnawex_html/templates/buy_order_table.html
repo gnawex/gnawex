@@ -33,3 +33,9 @@
     {% endfor %}
   </tbody>
 </table>
+
+{% if grouped_buy_orders.len() == 0 %}
+<p style="text-align: center; margin: var(--1);">
+  There are currently no buy orders
+</p>
+{% endif %}
