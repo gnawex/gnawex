@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use deadpool_postgres::Transaction;
 use postgres_types::{FromSql, ToSql};
 use serde::{Deserialize, Serialize};
 use tokio_postgres::Row;
@@ -14,8 +15,8 @@ use crate::{db, item, sql, user};
 #[async_trait]
 pub trait ItemOrder {
     /// Creates, and matches the created order with a relevant order.
-    async fn create_and_match(
-        db_handle: &db::Handle,
+    async fn create_and_match<'t>(
+        txn: &Transaction<'t>,
         params: CreateListing,
     ) -> Result<Self, CreateListingError>
     where
@@ -102,17 +103,16 @@ pub enum Type {
 #[derive(Debug, Deserialize)]
 pub struct CreateListing {
     pub item_id: item::Id,
-    pub user_id: i64,
     pub batched_by: i16,
     pub unit_quantity: i32,
     pub cost: i32,
 }
 
-pub async fn create_and_match<O: ItemOrder>(
-    db_handle: &db::Handle,
+pub async fn create_and_match<'t, O: ItemOrder>(
+    txn: &Transaction<'t>,
     params: CreateListing,
 ) -> Result<O, CreateListingError> {
-    O::create_and_match(db_handle, params).await
+    O::create_and_match(txn, params).await
 }
 
 /// Possible failure scenarios when trying to create a order.
@@ -132,16 +132,13 @@ pub enum CreateListingError {
 // Buy
 #[async_trait]
 impl ItemOrder for Buy {
-    async fn create_and_match(
-        db_handle: &crate::db::Handle,
+    async fn create_and_match<'t>(
+        txn: &Transaction<'t>,
         params: CreateListing,
     ) -> Result<Self, CreateListingError>
     where
         Self: Sized,
     {
-        let mut client = db_handle.get_client().await?;
-        let txn = client.transaction().await?;
-        let _ = user::set_current_user(&txn).await?;
         let buy = do_create::<Buy>(&txn, params).await?;
 
         tracing::info!("Created order: {:#?}", buy);
@@ -149,8 +146,6 @@ impl ItemOrder for Buy {
         let row: Vec<Sell> = do_match(&txn, &buy).await?;
 
         tracing::info!("{:#?}", row);
-
-        txn.commit().await?;
 
         Ok(buy)
     }
@@ -305,16 +300,14 @@ impl TryFrom<Row> for Buy {
 
 #[async_trait]
 impl ItemOrder for Sell {
-    async fn create_and_match(
-        db_handle: &crate::db::Handle,
+    async fn create_and_match<'t>(
+        txn: &Transaction<'t>,
         params: CreateListing,
     ) -> Result<Self, CreateListingError>
     where
         Self: Sized,
     {
-        let mut client = db_handle.get_client().await?;
-        let txn = client.transaction().await?;
-        let _ = user::set_current_user(&txn).await?;
+        let _ = user::set_current_user(&txn, user::Id(2)).await?;
         let sell = do_create::<Sell>(&txn, params).await?;
 
         tracing::info!("Created order: {:#?}", sell);
@@ -322,8 +315,6 @@ impl ItemOrder for Sell {
         let row: Vec<Buy> = do_match(&txn, &sell).await?;
 
         tracing::info!("{:#?}", row);
-
-        txn.commit().await?;
 
         Ok(sell)
     }
@@ -575,8 +566,6 @@ where
             &[
                 // Item ID
                 &params.item_id,
-                // User ID
-                &params.user_id,
                 // Listing type
                 &O::get_type(),
                 // Batched by quantity

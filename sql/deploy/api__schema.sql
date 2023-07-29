@@ -47,14 +47,15 @@ GRANT EXECUTE ON FUNCTION api.current_user TO verified_user;
 
 --------------------------------------------------------------------------------
 
-CREATE FUNCTION api.login(username CITEXT, password TEXT)
+CREATE FUNCTION api.login(username TEXT, password TEXT)
   RETURNS TEXT
   LANGUAGE plpgsql
   AS $$
     DECLARE
       session_token TEXT;
     BEGIN
-      SELECT auth.login(login.username, login.password) INTO session_token;
+      SELECT auth.login(login.username :: CITEXT, login.password)
+        INTO session_token;
 
       IF session_token IS NULL THEN
         raise insufficient_privilege

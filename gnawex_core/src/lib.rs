@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+pub mod context;
 pub mod db;
 pub mod error;
 pub mod item;

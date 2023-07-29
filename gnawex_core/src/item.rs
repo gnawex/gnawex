@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use deadpool_postgres::Transaction;
 use postgres_types::{FromSql, ToSql};
 use serde::Deserialize;
 use tokio_postgres::Row;
@@ -81,10 +82,11 @@ pub async fn list_items(db_handle: &db::Handle) -> Result<Vec<Item>, ListItemsEr
         .map_err(ListItemsError::from)
 }
 
-pub async fn get_item(db_handle: &db::Handle, item_id: Id) -> Result<Item, GetItemError> {
-    let client = db_handle.get_client().await?;
-    let item = client
-        .query_one(sql::item::GET_ITEM, &[&item_id.0])
+pub async fn get_item<'t>(txn: &Transaction<'t>, item_id: Id) -> Result<Item, GetItemError> {
+    let statement = txn.prepare(sql::item::GET_ITEM).await?;
+
+    let item = txn
+        .query_one(&statement, &[&item_id.0])
         .await
         .map_err(GetItemError::from)?;
 

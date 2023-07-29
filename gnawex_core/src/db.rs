@@ -6,7 +6,7 @@ use deadpool_postgres::{
 use thiserror::Error;
 use tokio_postgres::NoTls;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Handle {
     pool: deadpool_postgres::Pool,
 }

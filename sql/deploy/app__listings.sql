@@ -79,7 +79,7 @@ CREATE FUNCTION app.adjust_item_listing()
       SELECT gcd(NEW.cost, NEW.batched_by) INTO divisor;
 
       NEW.unit_quantity := NEW.unit_quantity * divisor;
-      NEW.current_unit_quantity := NEW.current_unit_quantity * divisor;
+      NEW.current_unit_quantity := NEW.unit_quantity;
       NEW.cost := NEW.cost / divisor;
       NEW.batched_by := NEW.batched_by / divisor;
 

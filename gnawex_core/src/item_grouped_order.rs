@@ -1,4 +1,5 @@
 use crate::{db, error::ParseError, sql};
+use deadpool_postgres::Transaction;
 use thiserror::Error;
 use tokio_postgres::Row;
 
@@ -64,13 +65,11 @@ impl TryFrom<Row> for GroupedOrder {
 }
 
 // TODO: Make a public version of this where it doesn't filter user ID
-pub async fn filter_grouped_orders_by_item_id(
-    db_handle: &db::Handle,
+pub async fn filter_grouped_orders_by_item_id<'t>(
+    txn: &Transaction<'t>,
     item_id: crate::item::Id,
 ) -> Result<GroupedOrders, FilterByItemIdError> {
     // TODO: Clean up unwraps
-    let mut client = db_handle.get_client().await?;
-    let txn = client.transaction().await?;
     let user_statement = txn.prepare(sql::user::SET_CURRENT_USER_ID).await?;
 
     let buy_statement = txn
@@ -85,8 +84,6 @@ pub async fn filter_grouped_orders_by_item_id(
 
     let buy_rows = txn.query(&buy_statement, &[&item_id]).await?;
     let sell_rows = txn.query(&sell_statement, &[&item_id]).await?;
-
-    txn.commit().await?;
 
     let buy_orders: Result<Vec<GroupedOrder>, ParseError> = buy_rows
         .into_iter()

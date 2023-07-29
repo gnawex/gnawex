@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use askama::Template;
 use axum::{
     extract::{Path, State},
@@ -14,22 +12,33 @@ use gnawex_html::{
     error::{Error404Page, Error500Page},
 };
 
-use crate::AppState;
+use crate::{ArcAppState, AuthContext};
 
-pub async fn handle(Path(id): Path<item::Id>, State(state): State<Arc<AppState>>) -> Html<String> {
-    let html = match get_item(&state.db_handle, id).await {
-        Ok(item) => match filter_grouped_orders_by_item_id(&state.db_handle, id).await {
-            Ok(grouped_orders) => ItemShowPage {
-                item,
-                grouped_buy_orders: grouped_orders.buy_orders,
-                grouped_sell_orders: grouped_orders.sell_orders,
+pub async fn handle(
+    State(state): State<ArcAppState>,
+    _context: AuthContext,
+    Path(id): Path<item::Id>,
+) -> Html<String> {
+    let mut client = state.0.db_handle.get_client().await.unwrap();
+    let txn = client.transaction().await.unwrap();
+
+    let html = match get_item(&txn, id).await {
+        Ok(item) => match filter_grouped_orders_by_item_id(&txn, id).await {
+            Ok(grouped_orders) => {
+                txn.commit().await.unwrap();
+                ItemShowPage {
+                    item,
+                    grouped_buy_orders: grouped_orders.buy_orders,
+                    grouped_sell_orders: grouped_orders.sell_orders,
+                    current_user: None,
+                }
+                .render()
             }
-            .render(),
-            Err(FilterByItemIdError::NotFound) => Error404Page.render(),
-            Err(_) => Error500Page.render(),
+            Err(FilterByItemIdError::NotFound) => Error404Page { current_user: None }.render(),
+            Err(_) => Error500Page { current_user: None }.render(),
         },
-        Err(GetItemError::NotFound) => Error404Page.render(),
-        Err(_) => Error500Page.render(),
+        Err(GetItemError::NotFound) => Error404Page { current_user: None }.render(),
+        Err(_) => Error500Page { current_user: None }.render(),
     };
 
     Html(html.unwrap())

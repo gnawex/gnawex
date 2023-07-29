@@ -11,7 +11,7 @@ CREATE FUNCTION app.current_user_id()
   RETURNS INTEGER
   LANGUAGE SQL
   AS $$
-    SELECT NULLIF(current_setting('auth.user_id', TRUE), '') :: INTEGER
+    SELECT NULLIF(current_setting('auth.user_id', true), '') :: INTEGER
   $$;
 
 COMMENT ON FUNCTION app.current_user_id() IS

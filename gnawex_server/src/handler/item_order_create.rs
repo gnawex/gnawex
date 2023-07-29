@@ -1,15 +1,14 @@
-use std::sync::Arc;
-
 use askama::Template;
 use axum::{
     extract::{Path, State},
-    response::Html,
+    response::{Html, Redirect},
     Form,
 };
 use gnawex_core::{
     item::{self, error::GetItemError, get_item},
     item_grouped_order::{filter_grouped_orders_by_item_id, FilterByItemIdError},
     item_order::{self, Buy, CreateListing, ItemOrder, Sell},
+    user,
 };
 use gnawex_html::{
     app::ItemShowPage,
@@ -17,7 +16,7 @@ use gnawex_html::{
 };
 use serde::Deserialize;
 
-use crate::AppState;
+use crate::{ArcAppState, AuthContext};
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct NewItemOrder {
@@ -28,21 +27,28 @@ pub(crate) struct NewItemOrder {
 }
 
 pub(crate) async fn handle(
-    State(state): State<Arc<AppState>>,
+    State(state): State<ArcAppState>,
+    context: AuthContext,
     Path(item_id): Path<item::Id>,
     Form(new_order): Form<NewItemOrder>,
-) -> Html<String> {
-    tracing::debug!("State: {:#?}", state);
+) -> Redirect {
     tracing::debug!("Item ID: {:#?}", item_id);
     tracing::debug!("New order params: {:#?}", new_order);
+
+    let mut client = state.0.db_handle.get_client().await.unwrap();
+    let txn = client.transaction().await.unwrap();
+
+    let _ = user::set_session_token(&txn, context.session_token)
+        .await
+        .unwrap();
+    let _ = user::authenticate(&txn).await.unwrap();
 
     match new_order.kind {
         item_order::Type::Buy => {
             let buy = Buy::create_and_match(
-                &state.db_handle,
+                &txn,
                 CreateListing {
                     item_id,
-                    user_id: 3,
                     batched_by: new_order.batched_by,
                     unit_quantity: new_order.unit_quantity,
                     cost: new_order.cost,
@@ -50,14 +56,13 @@ pub(crate) async fn handle(
             )
             .await;
 
-            tracing::debug!("{:#?}", buy);
+            tracing::debug!("Buy: {:#?}", buy);
         }
         item_order::Type::Sell => {
             let sell = Sell::create_and_match(
-                &state.db_handle,
+                &txn,
                 CreateListing {
                     item_id,
-                    user_id: 3,
                     batched_by: new_order.batched_by,
                     unit_quantity: new_order.unit_quantity,
                     cost: new_order.cost,
@@ -65,24 +70,11 @@ pub(crate) async fn handle(
             )
             .await;
 
-            tracing::debug!("{:#?}", sell);
+            tracing::debug!("Sell: {:#?}", sell);
         }
     };
 
-    let html = match get_item(&state.db_handle, item_id).await {
-        Ok(item) => match filter_grouped_orders_by_item_id(&state.db_handle, item_id).await {
-            Ok(grouped_orders) => ItemShowPage {
-                item,
-                grouped_buy_orders: grouped_orders.buy_orders,
-                grouped_sell_orders: grouped_orders.sell_orders,
-            }
-            .render(),
-            Err(FilterByItemIdError::NotFound) => Error404Page.render(),
-            Err(_) => Error500Page.render(),
-        },
-        Err(GetItemError::NotFound) => Error404Page.render(),
-        Err(_) => Error500Page.render(),
-    };
+    txn.commit().await.unwrap();
 
-    Html(html.unwrap())
+    Redirect::to(format!("/items/{}", item_id.0).as_str())
 }
