@@ -48,7 +48,7 @@ GRANT EXECUTE ON FUNCTION api.current_user TO verified_user;
 --------------------------------------------------------------------------------
 
 CREATE FUNCTION api.login(username CITEXT, password TEXT)
-  RETURNS VOID
+  RETURNS TEXT
   LANGUAGE plpgsql
   AS $$
     DECLARE
@@ -61,13 +61,15 @@ CREATE FUNCTION api.login(username CITEXT, password TEXT)
           using detail = 'invalid credentials';
       END IF;
 
-      PERFORM set_config(
-        'response.headers',
-        '[{"Set-Cookie": "session_token='
-          || session_token
-          || '; Path=/; Max-Age=600; HttpOnly"}]',
-          TRUE
-      );
+      RETURN session_token;
+
+      -- PERFORM set_config(
+      --   'response.headers',
+      --   '[{"Set-Cookie": "session_token='
+      --     || session_token
+      --     || '; Path=/; Max-Age=600; HttpOnly"}]',
+      --     TRUE
+      -- );
     END;
   $$;
 
@@ -159,7 +161,7 @@ GRANT EXECUTE ON FUNCTION api.register TO anon;
 --------------------------------------------------------------------------------
 
 CREATE VIEW api.transactions AS
-  SELECT buy_order FROM app.transactions;
+  SELECT buy_item_listing__id FROM app.tradable_item_transactions;
 
 GRANT SELECT ON api.transactions TO verified_user;
 
@@ -237,10 +239,6 @@ CREATE FUNCTION api.get_item(item_id BIGINT)
   $$;
 
 GRANT EXECUTE ON FUNCTION api.get_item TO anon, verified_user;
-
-SET LOCAL ROLE postgres;
-
-ALTER DATABASE gnawex_db SET search_path TO app,api,auth,public;
 
 --------------------------------------------------------------------------------
 
