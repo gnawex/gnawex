@@ -80,6 +80,7 @@
                 cargo-flamegraph
                 cargo-watch
                 sqitchPg
+                esbuild
               ];
 
               pre-commit.hooks = {

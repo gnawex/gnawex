@@ -48,7 +48,7 @@ fn mk_app() -> anyhow::Result<Router> {
         .route("/items/:id", get(item_show::handle))
         .route("/items/:id", post(item_order_create::handle))
         .fallback(error::error_404)
-        .nest_service("/assets", ServeDir::new("assets"))
+        .nest_service("/assets", ServeDir::new("dist"))
         .with_state(app_state);
 
     Ok(router)

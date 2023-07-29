@@ -31,3 +31,6 @@ rust-project.json
 
 ### Pre-commit Hooks ###
 .pre-commit-config.yaml
+
+dist/style.css
+dist/*.js

@@ -1,3 +1,4 @@
+@import url(reset.css);
 @import url(var.css);
 
 .input, .select {
@@ -42,7 +43,7 @@ body {
 
 #item-order-form > div {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   grid-column-gap: var(--2);
 }
 
@@ -218,9 +219,6 @@ select.select--full {
   text-underline-offset: var(--1);
 }
 
-@-moz-document url-prefix() {
-}
-
 @media (prefers-color-scheme: dark) {
   .theme.adaptive {
     background: #0c0c0c;
@@ -294,6 +292,12 @@ select.select--full {
     grid-template-columns: 1fr 1fr;
     grid-gap: var(--2);
     margin-top: var(--4);
+  }
+
+  #item-order-form > div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-column-gap: var(--2);
   }
 }
 
