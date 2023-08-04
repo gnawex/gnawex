@@ -3,10 +3,10 @@ use axum::{extract::State, response::Html};
 use axum_macros::debug_handler;
 use gnawex_html::{app::ItemIndexPage, error::Error500Page};
 
-use crate::ArcAppState;
+use crate::AppState;
 
 #[debug_handler]
-pub async fn handle(State(state): State<ArcAppState>) -> Html<String> {
+pub async fn handle(State(state): State<AppState>) -> Html<String> {
     let template = match gnawex_core::item::list_items(&state.0.db_handle).await {
         Ok(items) => ItemIndexPage {
             items,

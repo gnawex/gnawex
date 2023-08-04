@@ -1,12 +1,12 @@
 use axum::{extract::State, response::Redirect, Form};
-use axum_extra::extract::cookie::{Cookie, PrivateCookieJar, SameSite};
+use axum_extra::extract::cookie::{Cookie, PrivateCookieJar};
 use axum_macros::debug_handler;
-use gnawex_core::user;
+use gnawex_core::session;
 use gnawex_html::app::LoginPage;
 use serde::Deserialize;
 use time::{Duration, OffsetDateTime};
 
-use crate::ArcAppState;
+use crate::AppState;
 
 #[derive(Debug, Deserialize)]
 pub struct Credentials {
@@ -24,12 +24,12 @@ pub async fn show() -> LoginPage {
 
 #[debug_handler]
 pub async fn new(
-    State(state): State<ArcAppState>,
+    State(state): State<AppState>,
     cookie_jar: PrivateCookieJar,
     Form(credentials): Form<Credentials>,
 ) -> impl axum::response::IntoResponse {
     tracing::info!("POST /login -> {:#?}", credentials);
-    let token = user::login(
+    let token = session::new(
         &state.0.db_handle,
         credentials.username,
         credentials.password,
@@ -38,7 +38,7 @@ pub async fn new(
 
     match token {
         Ok(token) => {
-            let session_cookie = Cookie::build("session", token)
+            let session_cookie = Cookie::build("session", token.0)
                 .http_only(true)
                 .expires(OffsetDateTime::now_utc() + Duration::days(30))
                 .finish();

@@ -1,4 +1,4 @@
-use crate::{db, error::ParseError, sql};
+use crate::{db, error::ParseError};
 use deadpool_postgres::Transaction;
 use thiserror::Error;
 use tokio_postgres::Row;
@@ -10,14 +10,8 @@ pub struct GroupedOrder {
     pub cost: i32,
 }
 
-#[derive(Debug)]
-pub struct GroupedOrders {
-    pub buy_orders: Vec<GroupedOrder>,
-    pub sell_orders: Vec<GroupedOrder>,
-}
-
 #[derive(Debug, Error)]
-pub enum FilterByItemIdError {
+pub enum GetGroupedOrdersError {
     /// Failed to communicate with the database
     #[error("Failed to communicate with the database. Reason: {0}")]
     Db(#[from] tokio_postgres::Error),
@@ -57,49 +51,37 @@ impl TryFrom<Row> for GroupedOrder {
         })?;
 
         Ok(GroupedOrder {
-            cost,
-            batchedby,
             batches,
+            batchedby,
+            cost,
         })
     }
 }
 
-// TODO: Make a public version of this where it doesn't filter user ID
-pub async fn filter_grouped_orders_by_item_id<'t>(
+pub async fn get_grouped_buy_orders<'t>(
     txn: &Transaction<'t>,
     item_id: crate::item::Id,
-) -> Result<GroupedOrders, FilterByItemIdError> {
-    // TODO: Clean up unwraps
-    let user_statement = txn.prepare(sql::user::SET_CURRENT_USER_ID).await?;
+) -> Result<Vec<GroupedOrder>, GetGroupedOrdersError> {
+    let rows = gnawex_db::item_order::get_grouped_buy_orders(txn, item_id.0).await?;
 
-    let buy_statement = txn
-        .prepare(sql::item_grouped_order::AUTH_LIST_GROUPED_BUY_ORDERS)
-        .await?;
-
-    let sell_statement = txn
-        .prepare(sql::item_grouped_order::AUTH_LIST_GROUPED_SELL_ORDERS)
-        .await?;
-
-    txn.execute(&user_statement, &[&String::from("1")]).await?;
-
-    let buy_rows = txn.query(&buy_statement, &[&item_id]).await?;
-    let sell_rows = txn.query(&sell_statement, &[&item_id]).await?;
-
-    let buy_orders: Result<Vec<GroupedOrder>, ParseError> = buy_rows
+    let grouped_orders = rows
         .into_iter()
-        .map(|r| GroupedOrder::try_from(r))
-        .collect();
+        .map(GroupedOrder::try_from)
+        .collect::<Result<Vec<GroupedOrder>, ParseError>>()?;
 
-    let sell_orders: Result<Vec<GroupedOrder>, ParseError> = sell_rows
+    Ok(grouped_orders)
+}
+
+pub async fn get_grouped_sell_orders<'t>(
+    txn: &Transaction<'t>,
+    item_id: crate::item::Id,
+) -> Result<Vec<GroupedOrder>, GetGroupedOrdersError> {
+    let rows = gnawex_db::item_order::get_grouped_sell_orders(txn, item_id.0).await?;
+
+    let grouped_orders = rows
         .into_iter()
-        .map(|r| GroupedOrder::try_from(r))
-        .collect();
+        .map(GroupedOrder::try_from)
+        .collect::<Result<Vec<GroupedOrder>, ParseError>>()?;
 
-    tracing::info!("Buy: {:#?}", buy_orders);
-    tracing::info!("Sell {:#?}", sell_orders);
-
-    Ok(GroupedOrders {
-        buy_orders: buy_orders?,
-        sell_orders: sell_orders?,
-    })
+    Ok(grouped_orders)
 }

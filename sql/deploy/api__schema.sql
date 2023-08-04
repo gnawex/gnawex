@@ -24,14 +24,14 @@ GRANT SELECT, UPDATE(username) ON api.users TO verified_user;
 
 --------------------------------------------------------------------------------
 
-CREATE TYPE api.user AS (
-  id   BIGINT,
+CREATE TYPE api."User" AS (
+  id        BIGINT,
   hunter_id BIGINT,
   username  TEXT
 );
 
 CREATE FUNCTION api.current_user()
-  RETURNS api.user
+  RETURNS api."User"
   LANGUAGE sql
   SECURITY DEFINER
   AS $$

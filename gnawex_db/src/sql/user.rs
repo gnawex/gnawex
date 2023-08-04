@@ -1,4 +1,4 @@
-pub const SET_CURRENT_USER_ID: &str = "SELECT set_config('auth.user_id', $1, true)";
+pub const SET_CURRENT_USER_ID: &str = "SELECT set_config('auth.user_id', ($1::BIGINT)::TEXT, true)";
 pub const LOGIN: &str = "SELECT api.login($1, $2)";
 pub const GET_CURRENT_USER: &str = "SELECT api.current_user()";
 pub const USER_ID_FROM_SESSION_TOKEN: &str = "SELECT auth.session_user_id($1)";

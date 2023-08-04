@@ -1,29 +1,28 @@
 [package]
-name = "gnawex_core"
+name = "gnawex_db"
 version = "0.1.0"
-edition = "2021"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+readme.workspace = true
 
 [dependencies]
-gnawex_db = { workspace = true }
-
 # Database & connection pooling
 tokio-postgres = { workspace = true }
 postgres-types = { workspace = true }
 deadpool-postgres = { workspace = true }
 
-# Serialization/deserialization
-serde = { workspace = true }
-
-# Async runtime
+# Async
 tokio = { workspace = true }
 futures = { workspace = true }
-async-trait = { workspace = true }
+
+# Data types
+## Date/time
+chrono = { workspace = true }
+
+## Serialization/deserialization
+serde = { workspace = true }
 
 # Logging
 tracing = { workspace = true }
-
-# Date/time
-chrono = { workspace = true }
-
-# Error
-thiserror = { workspace = true }

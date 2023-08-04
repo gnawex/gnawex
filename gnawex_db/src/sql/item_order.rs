@@ -1,5 +1,5 @@
 /// Create a new buy/sell listing
-pub(crate) const CREATE_LISTING: &str = "
+pub(crate) const CREATE_ORDER: &str = "
     INSERT INTO api.tradable_item_listings
         ( tradable_item__id
         , type

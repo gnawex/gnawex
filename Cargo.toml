@@ -17,6 +17,9 @@ gnawex = { path = "gnawex", version = "0.1" }
 ## Core logic
 gnawex_core = { path = "gnawex_core", version = "0.1" }
 
+## DB
+gnawex_db = { path = "gnawex_db", version = "0.1" }
+
 ## HTML templates and components
 gnawex_html = { path = "gnawex_html", version = "0.1" }
 

@@ -555,9 +555,24 @@ dependencies = [
  "chrono",
  "deadpool-postgres",
  "futures",
+ "gnawex_db",
  "postgres-types",
  "serde",
  "thiserror",
+ "tokio",
+ "tokio-postgres",
+ "tracing",
+]
+
+[[package]]
+name = "gnawex_db"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "deadpool-postgres",
+ "futures",
+ "postgres-types",
+ "serde",
  "tokio",
  "tokio-postgres",
  "tracing",
