@@ -8,8 +8,6 @@ use gnawex_core::user::User;
 pub struct ItemIndexPage {
     pub current_user: Option<User>,
     pub items: Vec<Item>,
-    pub next_page: Option<u32>,
-    pub prev_page: Option<u32>,
 }
 
 #[derive(Template)]

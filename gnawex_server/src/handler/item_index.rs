@@ -3,17 +3,19 @@ use axum::{extract::State, response::Html};
 use axum_macros::debug_handler;
 use gnawex_html::{app::ItemIndexPage, error::Error500Page};
 
-use crate::AppState;
+use crate::{extract::context::Context, AppState};
 
 #[debug_handler]
-pub async fn handle(State(state): State<AppState>) -> Html<String> {
+pub async fn handle(State(state): State<AppState>, context: Context) -> Html<String> {
+    let current_user = match context {
+        Context::Authenticated { current_user, .. } => Some(current_user),
+        Context::Guest => None,
+    };
+
     let template = match gnawex_core::item::list_items(&state.0.db_handle).await {
         Ok(items) => ItemIndexPage {
             items,
-            // TODO: Pagination
-            next_page: Some(3),
-            prev_page: Some(1),
-            current_user: None,
+            current_user,
         }
         .render(),
         Err(_err) => Error500Page { current_user: None }.render(),

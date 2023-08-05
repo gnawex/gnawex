@@ -6,7 +6,7 @@ use axum::{
 use gnawex_core::{item, item_order};
 use serde::Deserialize;
 
-use crate::{extractor::context::AuthContext, AppState};
+use crate::{extract::context::AuthContext, AppState};
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct NewItemOrder {

@@ -4,17 +4,20 @@ use std::{net::SocketAddr, sync::Arc};
 
 use axum::{
     extract::FromRef,
+    middleware::from_fn_with_state,
     routing::{get, post},
     Router, Server,
 };
 use axum_extra::extract::cookie::Key;
-use extractor::context::Context;
+use extract::context::Context;
 use gnawex_core::db;
-use handler::{error, item_index, item_order_create, item_show, login};
+use handler::{error, item_index, item_order_create, item_show, session};
+use tower::ServiceBuilder;
 use tower_http::services::ServeDir;
 
-pub(crate) mod extractor;
+pub(crate) mod extract;
 pub(crate) mod handler;
+pub(crate) mod middleware;
 
 struct AppStateKind {
     db_handle: gnawex_core::db::Handle,
@@ -78,8 +81,12 @@ fn mk_app() -> anyhow::Result<Router> {
         .route("/items", get(item_index::handle))
         .route("/items/:id", get(item_show::handle))
         .route("/items/:id", post(item_order_create::handle))
-        .route("/login", get(login::show))
-        .route("/login", post(login::new))
+        .route("/login", get(session::show))
+        .route("/login", post(session::new))
+        .route_layer(ServiceBuilder::new().layer(from_fn_with_state(
+            AppState(app_state.clone()),
+            middleware::refresh_session,
+        )))
         .fallback(error::error_404)
         .nest_service("/assets", ServeDir::new("dist"))
         .with_state(AppState(app_state));
