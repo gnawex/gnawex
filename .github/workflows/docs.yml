@@ -1,60 +1,61 @@
-name: Build docs
+# TODO: Find another doc thing
+# name: Build docs
 
-on:
-  push:
-    paths:
-      - 'docs/**'
-      - 'mkdocs.yml'
-      - '.github/workflows/docs.yml'
-      - 'flake.*'
+# on:
+#   push:
+#     paths:
+#       - 'docs/**'
+#       - 'mkdocs.yml'
+#       - '.github/workflows/docs.yml'
+#       - 'flake.*'
 
-    branches:
-      - main
+#     branches:
+#       - main
 
-  pull_request:
-    paths:
-      - 'docs/**'
-      - 'mkdocs.yml'
-      - '.github/workflows/docs.yml'
-      - 'flake.*'
+#   pull_request:
+#     paths:
+#       - 'docs/**'
+#       - 'mkdocs.yml'
+#       - '.github/workflows/docs.yml'
+#       - 'flake.*'
 
-jobs:
-  deploy:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-22.04
+#     steps:
+#       - uses: actions/checkout@v3
+#         with:
+#           fetch-depth: 0
 
-      - name: Install SSH key
-        uses: shimataro/ssh-key-action@v2
-        with:
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          known_hosts: ${{ secrets.KNOWN_HOSTS }}
-          name: id_ed25519
-          if_key_exists: fail
+#       - name: Install SSH key
+#         uses: shimataro/ssh-key-action@v2
+#         with:
+#           key: ${{ secrets.SSH_PRIVATE_KEY }}
+#           known_hosts: ${{ secrets.KNOWN_HOSTS }}
+#           name: id_ed25519
+#           if_key_exists: fail
 
-      - name: Setup Nix
-        uses: cachix/install-nix-action@v15
-        with:
-          extra_nix_config: |
-            trusted-public-keys = hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
-            substituters = https://hydra.iohk.io https://cache.nixos.org/
+#       - name: Setup Nix
+#         uses: cachix/install-nix-action@v15
+#         with:
+#           extra_nix_config: |
+#             trusted-public-keys = hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+#             substituters = https://hydra.iohk.io https://cache.nixos.org/
 
-      # - run: nix flake show
+#       # - run: nix flake show
 
-      - name: Build docs
-        run: |
-          nix develop .#devShells.x86_64-linux.ci \
-            --command mkdocs build
+#       - name: Build docs
+#         run: |
+#           nix develop .#devShells.x86_64-linux.ci \
+#             --command mkdocs build
 
-      - name: Dump config for custom domain
-        if: ${{ github.ref == 'refs/heads/main' }}
-        run: echo 'docs.gnawex.com' > ./site/CNAME
+#       - name: Dump config for custom domain
+#         if: ${{ github.ref == 'refs/heads/main' }}
+#         run: echo 'docs.gnawex.com' > ./site/CNAME
 
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        if: ${{ github.ref == 'refs/heads/main' }}
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./site
+#       - name: Deploy
+#         uses: peaceiris/actions-gh-pages@v3
+#         if: ${{ github.ref == 'refs/heads/main' }}
+#         with:
+#           github_token: ${{ secrets.GITHUB_TOKEN }}
+#           publish_dir: ./site
