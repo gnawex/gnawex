@@ -10,7 +10,7 @@ pub async fn set_current_user_id<'t>(
 ) -> Result<(), tokio_postgres::Error> {
     let statement = txn
         .prepare_typed(
-            sql::user::SET_CURRENT_USER_ID,
+            sql::session::SET_CURRENT_USER_ID,
             &[postgres_types::Type::INT8],
         )
         .await?;
@@ -22,15 +22,15 @@ pub async fn set_current_user_id<'t>(
 
 pub async fn set_session_token<'t>(txn: &Transaction<'t>, token: String) -> Result<(), Error> {
     tracing::debug!("Setting session token: {}", token);
-    let statement = txn.prepare(sql::user::SET_SESSION_TOKEN).await?;
+    let statement = txn.prepare(sql::session::SET_SESSION_TOKEN).await?;
     txn.execute(&statement, &[&token]).await?;
 
     Ok(())
 }
 
 pub async fn authenticate<'t>(txn: &Transaction<'t>) -> Result<(), Error> {
-    let anon_stmt = txn.prepare(sql::user::SET_ANON_ROLE).await?;
-    let auth_stmt = txn.prepare_typed(sql::user::AUTHENTICATE, &[]).await?;
+    let anon_stmt = txn.prepare(sql::session::SET_ANON_ROLE).await?;
+    let auth_stmt = txn.prepare_typed(sql::session::AUTHENTICATE, &[]).await?;
 
     txn.execute(&anon_stmt, &[]).await?;
     txn.execute(&auth_stmt, &[]).await?;
@@ -44,8 +44,8 @@ pub async fn new<'t>(
     username: String,
     password: String,
 ) -> Result<String, Error> {
-    let _auth_stmt = txn.prepare(sql::user::SET_ANON_ROLE).await?;
-    let login_statement = txn.prepare(sql::user::LOGIN).await?;
+    let _auth_stmt = txn.prepare(sql::session::SET_ANON_ROLE).await?;
+    let login_statement = txn.prepare(sql::session::LOGIN).await?;
     let row = txn
         .query_one(&login_statement, &[&username, &password])
         .await?;
@@ -55,8 +55,15 @@ pub async fn new<'t>(
 }
 
 pub async fn get_current_user<'t>(txn: &Transaction<'t>) -> Result<Row, Error> {
-    let statement = txn.prepare(sql::user::GET_CURRENT_USER).await?;
+    let statement = txn.prepare(sql::session::GET_CURRENT_USER).await?;
     let row = txn.query_one(&statement, &[]).await?;
 
     Ok(row)
+}
+
+pub async fn refresh<'t>(txn: &Transaction<'t>) -> Result<(), Error> {
+    let statement = txn.prepare(sql::session::REFRESH_SESSION).await?;
+    txn.query_one(&statement, &[]).await?;
+
+    Ok(())
 }

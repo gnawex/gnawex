@@ -5,3 +5,4 @@ pub const USER_ID_FROM_SESSION_TOKEN: &str = "SELECT auth.session_user_id($1)";
 pub const SET_ANON_ROLE: &str = "SET LOCAL ROLE anon";
 pub const SET_SESSION_TOKEN: &str = "SELECT set_config('request.session_token', $1, true)";
 pub const AUTHENTICATE: &str = "SELECT auth.authenticate()";
+pub const REFRESH_SESSION: &str = "SELECT api.refresh_session()";
