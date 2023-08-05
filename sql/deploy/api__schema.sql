@@ -58,19 +58,11 @@ CREATE FUNCTION api.login(username TEXT, password TEXT)
         INTO session_token;
 
       IF session_token IS NULL THEN
-        raise insufficient_privilege
-          using detail = 'invalid credentials';
+        RAISE insufficient_privilege
+          USING detail = 'invalid credentials';
       END IF;
 
       RETURN session_token;
-
-      -- PERFORM set_config(
-      --   'response.headers',
-      --   '[{"Set-Cookie": "session_token='
-      --     || session_token
-      --     || '; Path=/; Max-Age=600; HttpOnly"}]',
-      --     TRUE
-      -- );
     END;
   $$;
 
@@ -88,18 +80,10 @@ CREATE FUNCTION api.refresh_session()
     DECLARE
       session_token TEXT;
     BEGIN
-      SELECT current_setting('request.cookies', FALSE)::json->>'session_token'
+      SELECT current_setting('request.session_token', false)
         INTO STRICT session_token;
 
       PERFORM auth.refresh_session(session_token);
-
-      PERFORM set_config(
-        'response.headers',
-        '[{"Set-Cookie": "session_token='
-          || session_token
-          || '; Path=/; Max-Age=600; HttpOnly"}]',
-          TRUE
-      );
     END;
   $$;
 

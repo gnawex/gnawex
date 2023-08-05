@@ -85,7 +85,8 @@ CREATE FUNCTION auth.refresh_session(session_token TEXT)
   AS $$
     UPDATE sessions
       SET expires_on = DEFAULT
-      WHERE token = session_token AND expires_on > clock_timestamp();
+      WHERE token = session_token
+        AND expires_on > clock_timestamp();
   $$;
 
 COMMENT ON FUNCTION auth.refresh_session IS
