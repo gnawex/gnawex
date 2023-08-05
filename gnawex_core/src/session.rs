@@ -34,6 +34,18 @@ pub enum GetSessionUserError {
     Parse(#[from] ParseError),
 }
 
+#[derive(Debug, Error)]
+pub enum RefreshSessionError {
+    #[error("failed to communicate with the DB")]
+    Db(#[from] tokio_postgres::Error),
+    #[error("failed to get a Postgres client")]
+    GetClient(#[from] db::GetClientError),
+    #[error("invalid session token")]
+    InvalidSession,
+    #[error("failed to parse row into `User`")]
+    Parse(#[from] ParseError),
+}
+
 pub async fn new(
     db_handle: &db::Handle,
     username: String,
@@ -64,4 +76,19 @@ pub async fn get_session_user(
     let user: User = row.get("current_user");
 
     Ok(user)
+}
+
+pub async fn refresh(
+    db_handle: &db::Handle,
+    session_token: Token,
+) -> Result<(), RefreshSessionError> {
+    let mut client = db_handle.get_client().await?;
+    let txn = client.transaction().await?;
+
+    gnawex_db::session::set_session_token(&txn, session_token.0).await?;
+    gnawex_db::session::refresh(&txn).await?;
+
+    txn.commit().await?;
+
+    Ok(())
 }
