@@ -22,7 +22,7 @@
         {% match current_user %}
           {% when Some with (val) %}
             <a href="/inbox">Inbox (1)</a>
-            <a href="/@sekun">sekun</a>
+            <a href="/@{{ val.username }}">{{ val.username }}</a>
             <a href="/logout">Logout</a>
 
           {% when None %}
