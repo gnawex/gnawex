@@ -7,7 +7,7 @@
     flake-utils.url = "github:numtide/flake-utils";
     fenix.url = "github:nix-community/fenix";
     naersk.url = "github:nix-community/naersk";
-    devenv.url = "github:cachix/devenv";
+    devenv.url = "github:cachix/devenv/v0.6.3";
   };
 
   outputs =
@@ -81,6 +81,7 @@
                 cargo-watch
                 sqitchPg
                 esbuild
+                scc
               ];
 
               pre-commit.hooks = {
@@ -98,6 +99,12 @@
                   enable = true;
                   package = pkgs.postgresql_15;
                   listen_addresses = "127.0.0.1";
+                  extensions = extensions: [ extensions.pg_cron ];
+
+                  settings = {
+                    "cron.database_name" = "gnawex_development";
+                    "shared_preload_libraries " = "pg_cron";
+                  };
 
                   initialScript = ''
                     CREATE USER gnawex SUPERUSER LOGIN PASSWORD 'gnawex';
