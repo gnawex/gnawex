@@ -230,6 +230,8 @@ pub async fn create(
     )
     .await?;
 
+    txn.commit().await?;
+
     let item_order = ItemOrder::try_from(row)?;
 
     Ok(item_order)
