@@ -1,12 +1,13 @@
 use std::fmt::Display;
 
+use deadpool_postgres::Transaction;
 use postgres_types::{FromSql, ToSql};
 use serde::Deserialize;
 use tokio_postgres::Row;
 
-use crate::{db, error::ParseError, sql};
+use crate::{db, error::ParseError, item_grouped_order::GroupedOrder, item_order::ItemOrder};
 
-use self::error::{CreateItemError, GetItemError, ListItemsError};
+use self::error::{CreateItemError, GetItemDetailsError, GetItemError, ListItemsError};
 
 pub mod error;
 
@@ -68,30 +69,51 @@ impl TryFrom<Row> for Item {
 
 /// Lists all tradable items
 pub async fn list_items(db_handle: &db::Handle) -> Result<Vec<Item>, ListItemsError> {
-    let client = db_handle.get_client().await?;
-    let items = client
-        .query(sql::item::INDEX_ITEMS, &[])
+    let mut client = db_handle.get_client().await?;
+    let txn = client.transaction().await?;
+
+    let rows = gnawex_db::item::list_items(&txn)
         .await
         .map_err(ListItemsError::from)?;
 
-    items
-        .into_iter()
+    rows.into_iter()
         .map(Item::try_from)
         .collect::<Result<Vec<_>, _>>()
         .map_err(ListItemsError::from)
 }
 
-pub async fn get_item(db_handle: &db::Handle, item_id: Id) -> Result<Item, GetItemError> {
-    let client = db_handle.get_client().await?;
-    let item = client
-        .query_one(sql::item::GET_ITEM, &[&item_id.0])
-        .await
-        .map_err(GetItemError::from)?;
-
-    Item::try_from(item).map_err(GetItemError::from)
+pub async fn get<'t>(txn: &Transaction<'t>, item_id: Id) -> Result<Item, GetItemError> {
+    let row = gnawex_db::item::get(txn, item_id.0).await?;
+    Item::try_from(row).map_err(GetItemError::from)
 }
 
-pub async fn create_item(
+pub async fn get_item_details(
+    db_handle: &db::Handle,
+    item_id: Id,
+) -> Result<(Item, Vec<GroupedOrder>, Vec<GroupedOrder>), GetItemDetailsError> {
+    let mut client = db_handle.get_client().await?;
+    let txn = client.transaction().await?;
+    let item_row = gnawex_db::item::get(&txn, item_id.0).await?;
+    let grouped_buy_rows = gnawex_db::item_order::get_grouped_buy_orders(&txn, item_id.0).await?;
+    let grouped_sell_rows = gnawex_db::item_order::get_grouped_sell_orders(&txn, item_id.0).await?;
+    let item = Item::try_from(item_row).map_err(GetItemDetailsError::from)?;
+
+    let grouped_buys = grouped_buy_rows
+        .into_iter()
+        .map(GroupedOrder::try_from)
+        .collect::<Result<Vec<GroupedOrder>, ParseError>>()?;
+
+    let grouped_sells = grouped_sell_rows
+        .into_iter()
+        .map(GroupedOrder::try_from)
+        .collect::<Result<Vec<GroupedOrder>, ParseError>>()?;
+
+    txn.commit().await?;
+
+    Ok((item, grouped_buys, grouped_sells))
+}
+
+pub async fn create(
     db_handle: &db::Handle,
     name: String,
     description: String,
@@ -115,141 +137,4 @@ pub async fn create_item(
         .map_err(CreateItemError::from)?;
 
     Item::try_from(item).map_err(CreateItemError::from)
-}
-
-// TODO: Move to own file
-#[cfg(test)]
-mod tests {
-    use crate::db;
-    use crate::item;
-
-    async fn setup() -> db::Handle {
-        let db_handle = db::Handle::new(
-            "127.0.0.1".to_string(),
-            "gnawex_test".to_string(),
-            5432,
-            "gnawex".to_string(),
-            Some("gnawex".to_string()),
-            None,
-        )
-        .expect("Failed to create DB handle");
-
-        let client = db_handle
-            .get_client()
-            .await
-            .expect("Failed to get client from pool");
-
-        client
-            .execute("TRUNCATE TABLE app.tradable_items, app.tradable_item_listings, app.tradable_item_transactions RESTART IDENTITY", &[])
-            .await
-            .expect("Failed to delete rows from app.tradable_items. Have you tried running the schema migrations first?");
-
-        db_handle
-    }
-
-    #[tokio::test]
-    async fn it_should_create_an_item() {
-        let db_handle = setup().await;
-
-        let item = item::create_item(
-            &db_handle,
-            "Adorned Empyrean Jewel".to_string(),
-            "Just farm bro".to_string(),
-            "https://mhwiki.com".to_string(),
-        )
-        .await
-        .expect("Expected to create an item");
-
-        assert_eq!(item.name, "Adorned Empyrean Jewel".to_string());
-        assert_eq!(item.description, "Just farm bro".to_string());
-        assert_eq!(item.wiki_link, "https://mhwiki.com".to_string());
-    }
-
-    #[tokio::test]
-    async fn it_should_list_all_items() {
-        let db_handle = setup().await;
-
-        item::create_item(
-            &db_handle,
-            "Adorned Empyrean Jewel".to_string(),
-            "Just farm bro".to_string(),
-            "https://mhwiki.com".to_string(),
-        )
-        .await
-        .expect("Expected to create an item");
-
-        item::create_item(
-            &db_handle,
-            "Timesplit Rune".to_string(),
-            "Time machine type beat".to_string(),
-            "https://mhwiki.com".to_string(),
-        )
-        .await
-        .expect("Expected to create an item");
-
-        item::create_item(
-            &db_handle,
-            "Gilded Treasure Scroll".to_string(),
-            "Shiny".to_string(),
-            "https://mhwiki.com".to_string(),
-        )
-        .await
-        .expect("Expected to create an item");
-
-        let items = item::list_items(&db_handle)
-            .await
-            .expect("Expected to list all items");
-
-        println!("{:?}", items);
-
-        let mut iter = items.into_iter();
-
-        assert_eq!(
-            item::Item {
-                id: item::Id(1),
-                name: "Adorned Empyrean Jewel".to_string(),
-                description: "Just farm bro".to_string(),
-                wiki_link: "https://mhwiki.com".to_string()
-            },
-            iter.next().unwrap()
-        );
-
-        assert_eq!(
-            item::Item {
-                id: item::Id(3),
-                name: "Gilded Treasure Scroll".to_string(),
-                description: "Shiny".to_string(),
-                wiki_link: "https://mhwiki.com".to_string()
-            },
-            iter.next().unwrap()
-        );
-
-        assert_eq!(
-            item::Item {
-                id: item::Id(2),
-                name: "Timesplit Rune".to_string(),
-                description: "Time machine type beat".to_string(),
-                wiki_link: "https://mhwiki.com".to_string()
-            },
-            iter.next().unwrap()
-        );
-    }
-
-    #[tokio::test]
-    async fn it_should_get_an_item() {
-        let db_handle = setup().await;
-
-        let item = item::create_item(
-            &db_handle,
-            "Adorned Empyrean Jewel".to_string(),
-            "Just farm bro".to_string(),
-            "https://mhwiki.com".to_string(),
-        )
-        .await
-        .expect("Expected to create an item");
-
-        assert_eq!(item.name, "Adorned Empyrean Jewel".to_string());
-        assert_eq!(item.description, "Just farm bro".to_string());
-        assert_eq!(item.wiki_link, "https://mhwiki.com".to_string());
-    }
 }

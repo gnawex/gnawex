@@ -65,9 +65,9 @@ CREATE FUNCTION auth.login(username CITEXT, password TEXT)
   AS $$
     INSERT INTO auth.active_sessions(user_id)
       SELECT id
-      FROM app.users
-      WHERE username = login.username
-        AND password = crypt(login.password, password)
+        FROM app.users
+        WHERE username = login.username
+          AND password = crypt(login.password, password)
       RETURNING token;
   $$;
 
@@ -84,8 +84,9 @@ CREATE FUNCTION auth.refresh_session(session_token TEXT)
   SECURITY DEFINER
   AS $$
     UPDATE sessions
-    SET expires_on = DEFAULT
-    WHERE token = session_token AND expires_on > clock_timestamp();
+      SET expires_on = DEFAULT
+      WHERE token = session_token
+        AND expires_on > clock_timestamp();
   $$;
 
 COMMENT ON FUNCTION auth.refresh_session IS
@@ -101,8 +102,8 @@ CREATE FUNCTION auth.logout(session_token TEXT)
   SECURITY DEFINER
   AS $$
     UPDATE auth.sessions
-    SET expires_on = clock_timestamp()
-    WHERE token = session_token;
+      SET expires_on = clock_timestamp()
+      WHERE token = session_token;
   $$;
 
 GRANT EXECUTE ON FUNCTION auth.logout TO verified_user;
@@ -131,20 +132,24 @@ CREATE FUNCTION auth.authenticate()
       session_token   TEXT;
       session_user_id INT;
     BEGIN
-      SELECT current_setting('request.cookies', TRUE)::json->>'session_token'
+      SELECT current_setting('request.session_token', true)
         INTO session_token;
+
+      RAISE LOG 'SESSION TOKEN: %', session_token;
 
       SELECT auth.session_user_id(session_token)
         INTO session_user_id;
 
+      RAISE LOG 'SESSION USER ID: %', session_user_id;
+
       IF session_user_id IS NOT NULL THEN
         SET LOCAL ROLE verified_user;
 
-        PERFORM set_config('auth.user_id', session_user_id :: TEXT, TRUE);
+        PERFORM set_config('auth.user_id', session_user_id :: TEXT, true);
       ELSE
         SET LOCAL ROLE anon;
 
-        PERFORM set_config('auth.user_id', '', TRUE);
+        PERFORM set_config('auth.user_id', '', true);
       END IF;
     END;
   $$;

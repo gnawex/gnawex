@@ -1,0 +1,35 @@
+{% extends "app.html" %}
+
+{% block title %}Login | Gnawnian Exchange{% endblock %}
+
+{% block app_content %}
+<h1 class="heading">Login</h1>
+
+{% if bad_credentials %}
+<div class="flash flash--sm flash--error">
+  Invalid username and/or password
+</div>
+{% endif %}
+
+<form id="login-form" action="/login" method="post">
+  <div>
+    <label class="label label--sm" for="username">Username:</label>
+
+    <div>
+      <input class="input input--1-2" name="username" type="text" required />
+    </div>
+  </div>
+
+  <div>
+    <label class="label label--sm" for="password">Password:</label>
+
+    <div>
+      <input class="input input--1-2" name="password" type="password" required />
+    </div>
+  </div>
+
+  <button class="button" type="submit">
+    Login
+  </button>
+</form>
+{% endblock %}

@@ -1,16 +1,14 @@
 /// Create a new buy/sell listing
-pub(crate) const CREATE_LISTING: &str = "
-    INSERT INTO app.tradable_item_listings
+pub(crate) const CREATE_ORDER: &str = "
+    INSERT INTO api.tradable_item_listings
         ( tradable_item__id
-        , user__id
         , type
         , batched_by
         , unit_quantity
-        , current_unit_quantity
         , cost
         , active
         )
-        VALUES ($1, $2, $3, $4, $5, $5, $6, true)
+        VALUES ($1, $2, $3, $4, $5, true)
         RETURNING *
 ";
 
