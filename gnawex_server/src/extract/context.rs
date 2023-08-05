@@ -86,13 +86,14 @@ where
         let context = match token {
             Some(token) => {
                 let current_user =
-                    session::get_session_user(&app_state.0.db_handle, Token(token.clone()))
-                        .await
-                        .unwrap();
+                    session::get_session_user(&app_state.0.db_handle, Token(token.clone())).await;
 
-                Context::Authenticated {
-                    current_user,
-                    session_token: session::Token(token),
+                match current_user {
+                    Ok(current_user) => Context::Authenticated {
+                        current_user,
+                        session_token: session::Token(token),
+                    },
+                    Err(_) => Context::Guest,
                 }
             }
             None => Context::Guest,
