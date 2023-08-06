@@ -13,22 +13,22 @@ jobs:
   test:
     runs-on: ubuntu-22.04
 
-    # Service containers to run with `container-job`
-    services:
-      # Label used to access the service container
-      postgres:
-        # Docker Hub image
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: postgres
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
+    # # Service containers to run with `container-job`
+    # services:
+    #   # Label used to access the service container
+    #   postgres:
+    #     # Docker Hub image
+    #     image: postgres:15
+    #     env:
+    #       POSTGRES_PASSWORD: postgres
+    #     # Set health checks to wait until postgres has started
+    #     options: >-
+    #       --health-cmd pg_isready
+    #       --health-interval 10s
+    #       --health-timeout 5s
+    #       --health-retries 5
+    #     ports:
+    #       - 5432:5432
 
     env:
       PGUSER: postgres
@@ -39,59 +39,68 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: cachix/install-nix-action@v18
+      - uses: cachix/install-nix-action@v22
         with:
           extra_nix_config: |
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
             trusted-public-keys = hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
             substituters = https://cache.iog.io https://cache.nixos.org/
 
-      - name: Create gnawex_test
-        run: createdb gnawex_test
+      - run: nix flake check --impure
 
-      - name: Create DB user
-        run: |
-          psql \
-            --host localhost \
-            --username postgres \
-            --dbname gnawex_test \
-            --command "CREATE USER gnawex SUPERUSER LOGIN PASSWORD 'gnawex'"
+      - name: Build gnawex
+        run: nix build .#gnawex
 
-      - name: Checkout pgtap
-        uses: actions/checkout@v2
-        with:
-          repository: theory/pgtap
-          path: pgtap
-          ref: v1.2.0
+      - name: Build static bin
+        run: nix build .#gnawex-static
 
-      - name: Install pgtap
-        working-directory: pgtap
-        run: |
-          make && \
-            psql \
-              --host localhost \
-              --username postgres \
-              --dbname gnawex_test \
-              --file sql/pgtap.sql
+      # TODO: Either reuse an existing image of Postgres with pg_cron, or build
+      # one with nix.
 
-      - name: Check if DB migrations work
-        run: |
-          nix develop .#devShells.x86_64-linux.ci-db \
-            --command sqitch deploy --db-name gnawex_test
+      # - name: Create gnawex_test
+      #   run: createdb gnawex_test
 
-      - name: Run gnawex_core tests
-        run: |
-          nix develop .#devShells.x86_64-linux.ci-db \
-            --command cargo test --package gnawex_core -- --test-threads=1
+      # - name: Create DB user
+      #   run: |
+      #     psql \
+      #       --host localhost \
+      #       --username postgres \
+      #       --dbname gnawex_test \
+      #       --command "CREATE USER gnawex SUPERUSER LOGIN PASSWORD 'gnawex'"
 
-      - name: Run gnawex_core tests
-        run: |
-          nix develop .#devShells.x86_64-linux.ci-db \
-            --command cargo test --package gnawex_core -- --test-threads=1
+      # - name: Checkout pgtap
+      #   uses: actions/checkout@v2
+      #   with:
+      #     repository: theory/pgtap
+      #     path: pgtap
+      #     ref: v1.2.0
 
-      - name: Check if DB migrations revert work
-        run: |
-          nix develop .#devShells.x86_64-linux.ci-db \
-            --command sqitch revert --db-name gnawex_test
+      # - name: Install pgtap
+      #   working-directory: pgtap
+      #   run: |
+      #     make && \
+      #       psql \
+      #         --host localhost \
+      #         --username postgres \
+      #         --dbname gnawex_test \
+      #         --file sql/pgtap.sql
 
-      # TODO: Run pg_tap tests
+      # - name: Check if DB migrations work
+      #   run: |
+      #     nix develop .#devShells.x86_64-linux.ci-db \
+      #       --command sqitch deploy --db-name gnawex_test
+
+      # - name: Run gnawex_core tests
+      #   run: |
+      #     nix develop .#devShells.x86_64-linux.ci-db \
+      #       --command cargo test --package gnawex_core -- --test-threads=1
+
+      # - name: Run gnawex_core tests
+      #   run: |
+      #     nix develop .#devShells.x86_64-linux.ci-db \
+      #       --command cargo test --package gnawex_core -- --test-threads=1
+
+      # - name: Check if DB migrations revert work
+      #   run: |
+      #     nix develop .#devShells.x86_64-linux.ci-db \
+      #       --command sqitch revert --db-name gnawex_test
