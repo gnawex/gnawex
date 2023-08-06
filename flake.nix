@@ -63,6 +63,25 @@
           doCheck = false;
           nativeBuildInputs = with pkgs; [ openssl pkg-config ];
         };
+
+        gnawex-static = naersk'.buildPackage {
+          src = ./.;
+          doCheck = false;
+          nativeBuildInputs = with pkgs; [ pkgsStatic.stdenv.cc ];
+
+          # Tells Cargo that we're building for musl.
+          # (https://doc.rust-lang.org/cargo/reference/config.html#buildtarget)
+          CARGO_BUILD_TARGET = "x86_64-unknown-linux-musl";
+
+          # Tells Cargo to enable static compilation.
+          # (https://doc.rust-lang.org/cargo/reference/config.html#buildrustflags)
+          #
+          # Note that the resulting binary might still be considered dynamically
+          # linked by ldd, but that's just because the binary might have
+          # position-independent-execution enabled.
+          # (see: https://github.com/rust-lang/rust/issues/79624#issuecomment-737415388)
+          CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
+        };
       };
 
       devShells = {
