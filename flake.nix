@@ -3,7 +3,6 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.05";
-    mkdocs-material.url = "github:sekunho/mkdocs-material/update-to-9";
     flake-utils.url = "github:numtide/flake-utils";
     fenix.url = "github:nix-community/fenix";
     naersk.url = "github:nix-community/naersk";
@@ -13,7 +12,6 @@
   outputs =
     { self
     , nixpkgs
-    , mkdocs-material
     , flake-utils
     , fenix
     , naersk
@@ -21,9 +19,6 @@
     } @ inputs:
     flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
     let
-      mkdocs' =
-        mkdocs-material.packages.${system};
-
       rustOverlay = self: super: {
         rustc = toolchain;
         cargo = toolchain;
@@ -90,9 +85,6 @@
 
           modules = [
             ({ pkgs, config, ... }: {
-              # TODO: Can't add mkdocs-material to shell packages because of:
-              # https://github.com/cachix/devenv/issues/601
-              # The workaround is to use the CI shell to run `mkdocs serve`.
               packages = with pkgs; [
                 nil
                 nixpkgs-fmt
@@ -156,8 +148,6 @@
             })
           ];
         };
-
-        ci = pkgs.mkShell { buildInputs = [ mkdocs'.mkdocs-material-insiders ]; };
 
         ci-db = pkgs.mkShell {
           buildInputs = with pkgs; [
