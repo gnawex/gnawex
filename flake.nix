@@ -7,6 +7,10 @@
     fenix.url = "github:nix-community/fenix";
     naersk.url = "github:nix-community/naersk";
     devenv.url = "github:cachix/devenv/v0.6.3";
+    nixos-generators = {
+      url = "github:nix-community/nixos-generators";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -16,6 +20,7 @@
     , fenix
     , naersk
     , devenv
+    , nixos-generators
     } @ inputs:
     flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
     let
@@ -77,6 +82,12 @@
           # (see: https://github.com/rust-lang/rust/issues/79624#issuecomment-737415388)
           CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
         };
+
+        gce = nixos-generators.nixosGenerate {
+          system = "x86_64-linux";
+          format = "gce";
+
+        };
       };
 
       devShells = {
@@ -93,6 +104,7 @@
                 sqitchPg
                 esbuild
                 scc
+                google-cloud-sdk
               ];
 
               pre-commit.hooks = {
