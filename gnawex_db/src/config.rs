@@ -9,6 +9,7 @@ pub struct DbConfig {
     pub host: String,
     pub port: u16,
     pub user: String,
+    pub pool_size: u16,
     pub password: Option<String>,
     pub password_file: Option<PathBuf>,
     pub ca_cert_file: Option<PathBuf>,
