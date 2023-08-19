@@ -5,13 +5,13 @@ use thiserror::Error;
 
 #[derive(Debug, Deserialize)]
 pub struct DbConfig {
-    db_name: String,
-    db_host: String,
-    db_port: u16,
-    db_user: String,
-    db_password: Option<PathBuf>,
-    db_password_file: Option<PathBuf>,
-    db_ca_cert_file: Option<PathBuf>,
+    pub db_name: String,
+    pub db_host: String,
+    pub db_port: u16,
+    pub db_user: String,
+    pub db_password: Option<String>,
+    pub db_password_file: Option<PathBuf>,
+    pub db_ca_cert_file: Option<PathBuf>,
 }
 
 #[derive(Debug, Error)]

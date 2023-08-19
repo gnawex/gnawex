@@ -45,7 +45,7 @@ impl FromRef<AppState> for Key {
 
 /// Runs the GNAWEX server on port 3000
 pub async fn run() -> anyhow::Result<()> {
-    let port: u16 = std::env::var("GX_PORT")?.parse()?;
+    let port: u16 = std::env::var("GX__PORT")?.parse()?;
     let app = mk_app()?;
     let addr = SocketAddr::from(([127, 0, 0, 1], port));
 
@@ -60,17 +60,8 @@ pub async fn run() -> anyhow::Result<()> {
 }
 
 fn mk_app() -> anyhow::Result<Router> {
-    // TODO: Error handling
-    // TODO: Use `config`
-    let db_name = std::env::var("GX_DB_NAME")?;
-    let db_user = std::env::var("GX_DB_USER")?;
-    let db_host = std::env::var("GX_DB_HOST")?;
-    let db_port: u16 = std::env::var("GX_DB_PORT")?.parse()?;
-    let db_password = std::env::var("GX_DB_PASSWORD").expect("huh");
-    let db_password_file = std::env::var("GX_DB_PASSWORD_FILE");
-
-    let db_handle =
-        gnawex_core::db::Handle::new(db_host, db_name, db_port, db_user, Some(db_password), None)?;
+    let db_config = gnawex_db::config::DbConfig::from_env()?;
+    let db_handle = gnawex_core::db::Handle::new(db_config)?;
 
     // TODO: Load cookie key from config
     let app_state = Arc::new(AppStateKind {
