@@ -5,13 +5,13 @@ use thiserror::Error;
 
 #[derive(Debug, Deserialize)]
 pub struct DbConfig {
-    pub db_name: String,
-    pub db_host: String,
-    pub db_port: u16,
-    pub db_user: String,
-    pub db_password: Option<String>,
-    pub db_password_file: Option<PathBuf>,
-    pub db_ca_cert_file: Option<PathBuf>,
+    pub name: String,
+    pub host: String,
+    pub port: u16,
+    pub user: String,
+    pub password: Option<String>,
+    pub password_file: Option<PathBuf>,
+    pub ca_cert_file: Option<PathBuf>,
 }
 
 #[derive(Debug, Error)]
@@ -22,7 +22,7 @@ pub enum DbConfigError {
 
 impl DbConfig {
     pub fn from_env() -> Result<DbConfig, DbConfigError> {
-        let source = config::Environment::with_prefix("GX")
+        let source = config::Environment::with_prefix("GX_DB")
             .try_parsing(true)
             .separator("__");
 

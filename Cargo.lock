@@ -643,6 +643,7 @@ dependencies = [
  "axum",
  "axum-extra",
  "axum-macros",
+ "config",
  "deadpool-postgres",
  "gnawex_core",
  "gnawex_db",

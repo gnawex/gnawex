@@ -134,13 +134,15 @@
               };
 
               env = {
-                GX__PORT = "3000";
-                GX__DB_NAME = "gnawex_development";
-                GX__DB_HOST = "127.0.0.1";
-                GX__DB_PORT = "5432";
-                GX__DB_USER = "gnawex";
-                GX__DB_PASSWORD = "gnawex";
-                GX__DB_POOL_SIZE = "10";
+                GX_SERVER__PORT = "3000";
+                GX_SERVER__ENV = "Dev";
+                GX_SERVER__SECRET_KEY = "y2T-YcKjJ9WsntIGRPafygHddsoppeduokao0NZZBXPyUlouchBFNPeOScJ0q-mi-JnyunWL-YK7Uc4Djqp4sw";
+                GX_DB__NAME = "gnawex_development";
+                GX_DB__HOST = "127.0.0.1";
+                GX_DB__PORT = "5432";
+                GX_DB__USER = "gnawex";
+                GX_DB__PASSWORD = "gnawex";
+                GX_DB__POOL_SIZE = "10";
               };
 
               languages = {

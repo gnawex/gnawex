@@ -5,7 +5,7 @@ use postgres_types::{FromSql, ToSql};
 use serde::Deserialize;
 use tokio_postgres::Row;
 
-use crate::{db, error::ParseError, item_grouped_order::GroupedOrder, item_order::ItemOrder};
+use crate::{db, error::ParseError, item_grouped_order::GroupedOrder};
 
 use self::error::{CreateItemError, GetItemDetailsError, GetItemError, ListItemsError};
 
