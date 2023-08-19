@@ -11,6 +11,9 @@ async fn main() {
 
     // TODO: Error handling
     let _foo = gnawex_server::run().await;
+    let config = gnawex_db::config::DbConfig::from_env();
+
+    println!("{:#?}", config);
 
     // let hello = HelloTemplate {
     //     name: "Hey".to_string(),

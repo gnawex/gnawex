@@ -8,6 +8,7 @@ pub struct GroupedOrder {
     pub batches: i64,
     pub batchedby: i16,
     pub cost: i32,
+    pub cost_per_unit: f32,
 }
 
 #[derive(Debug, Error)]
@@ -54,6 +55,7 @@ impl TryFrom<Row> for GroupedOrder {
             batches,
             batchedby,
             cost,
+            cost_per_unit: cost as f32 / batchedby as f32,
         })
     }
 }

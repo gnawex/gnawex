@@ -10,6 +10,7 @@ gnawex_db = { workspace = true }
 tokio-postgres = { workspace = true }
 postgres-types = { workspace = true }
 deadpool-postgres = { workspace = true }
+tokio-postgres-rustls = { workspace = true }
 
 # Serialization/deserialization
 serde = { workspace = true }

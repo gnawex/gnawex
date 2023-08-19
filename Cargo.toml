@@ -32,6 +32,7 @@ gnawex_server = { path = "gnawex_server", version = "0.1" }
 tokio-postgres = { version = "0.7", features = ["with-chrono-0_4"] }
 postgres-types = { version = "0.2", features = ["derive"] }
 deadpool-postgres = { version = "0.10", features = ["serde"] }
+tokio-postgres-rustls = { version = "0.8" }
 
 ## HTTP
 hyper = { version = "0.14", features = ["full"] }

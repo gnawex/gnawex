@@ -24,5 +24,11 @@ chrono = { workspace = true }
 ## Serialization/deserialization
 serde = { workspace = true }
 
+## Error
+thiserror = { workspace = true }
+
 # Logging
 tracing = { workspace = true }
+
+# Configuration
+config = { workspace = true }

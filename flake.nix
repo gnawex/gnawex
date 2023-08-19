@@ -3,19 +3,22 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.05";
+    nixpkgs-22-11.url = "github:NixOS/nixpkgs/nixos-22.11";
     flake-utils.url = "github:numtide/flake-utils";
     fenix.url = "github:nix-community/fenix";
     naersk.url = "github:nix-community/naersk";
     devenv.url = "github:cachix/devenv/v0.6.3";
+
     nixos-generators = {
       url = "github:nix-community/nixos-generators";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-22-11";
     };
   };
 
   outputs =
     { self
     , nixpkgs
+    , nixpkgs-22-11
     , flake-utils
     , fenix
     , naersk
@@ -68,27 +71,17 @@
           src = ./.;
           doCheck = false;
           nativeBuildInputs = with pkgs; [ pkgsStatic.stdenv.cc ];
-
-          # Tells Cargo that we're building for musl.
-          # (https://doc.rust-lang.org/cargo/reference/config.html#buildtarget)
           CARGO_BUILD_TARGET = "x86_64-unknown-linux-musl";
-
-          # Tells Cargo to enable static compilation.
-          # (https://doc.rust-lang.org/cargo/reference/config.html#buildrustflags)
-          #
-          # Note that the resulting binary might still be considered dynamically
-          # linked by ldd, but that's just because the binary might have
-          # position-independent-execution enabled.
-          # (see: https://github.com/rust-lang/rust/issues/79624#issuecomment-737415388)
           CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
         };
 
         gce = nixos-generators.nixosGenerate {
           system = "x86_64-linux";
           format = "gce";
-
         };
       };
+
+      nixosModules.default = import ./nix/modules/gnawex.nix;
 
       devShells = {
         default = devenv.lib.mkShell {
@@ -138,6 +131,16 @@
                     { name = "gnawex_test"; }
                   ];
                 };
+              };
+
+              env = {
+                GX__PORT = "3000";
+                GX__DB_NAME = "gnawex_development";
+                GX__DB_HOST = "127.0.0.1";
+                GX__DB_PORT = "5432";
+                GX__DB_USER = "gnawex";
+                GX__DB_PASSWORD = "gnawex";
+                GX__DB_POOL_SIZE = "10";
               };
 
               languages = {
