@@ -15,6 +15,9 @@ use handler::{error, item_index, item_order_create, item_show, session};
 use tower::ServiceBuilder;
 use tower_http::services::ServeDir;
 
+use crate::config::ServerConfig;
+
+pub(crate) mod config;
 pub(crate) mod extract;
 pub(crate) mod handler;
 pub(crate) mod middleware;
@@ -45,8 +48,9 @@ impl FromRef<AppState> for Key {
 
 /// Runs the GNAWEX server on port 3000
 pub async fn run() -> anyhow::Result<()> {
-    let app = mk_app()?;
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let server_config = ServerConfig::from_env()?;
+    let app = mk_app(server_config.clone())?;
+    let addr = SocketAddr::from(([127, 0, 0, 1], server_config.port));
 
     tracing::debug!("listening on {}", addr);
 
@@ -58,22 +62,15 @@ pub async fn run() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn mk_app() -> anyhow::Result<Router> {
-    // TODO: Error handling
-    let db_handle = gnawex_core::db::Handle::new(
-        "127.0.0.1".to_string(),
-        "gnawex_development".to_string(),
-        5432,
-        "gnawex".to_string(),
-        Some("gnawex".to_string()),
-        None,
-    )?;
+fn mk_app(server_config: ServerConfig) -> anyhow::Result<Router> {
+    let db_config = gnawex_db::config::DbConfig::from_env()?;
+    let db_handle = gnawex_core::db::Handle::new(db_config)?;
 
     // TODO: Load cookie key from config
     let app_state = Arc::new(AppStateKind {
         db_handle,
         // TODO: Replace this to load from config
-        cookie_key: Key::from(b"y2T-YcKjJ9WsntIGRPafygHddsoppeduokao0NZZBXPyUlouchBFNPeOScJ0q-mi-JnyunWL-YK7Uc4Djqp4sw"),
+        cookie_key: Key::from(server_config.secret_key.as_bytes()),
     });
 
     let router = Router::new()

@@ -17,6 +17,7 @@ tracing-subscriber = { workspace = true }
 tokio = { workspace = true }
 gnawex_html = { workspace = true }
 gnawex_core = { workspace = true }
+gnawex_db = { workspace = true }
 askama = { workspace = true }
 askama_axum = { workspace = true }
 serde = { workspace = true }
@@ -24,3 +25,4 @@ anyhow = { workspace = true }
 thiserror = { workspace = true }
 time = { workspace = true }
 tower = { workspace = true }
+config = { workspace = true }

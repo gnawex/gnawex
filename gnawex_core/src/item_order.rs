@@ -13,17 +13,17 @@ use crate::{db, item};
 /// Represents an item order
 #[derive(Debug)]
 pub struct ItemOrder {
-    id: Id,
+    pub id: Id,
     // TODO: Replace with `UserId` when `User` module is created
-    user_id: i64,
-    item_id: item::Id,
-    batched_by: i16,
-    unit_quantity: i32,
-    current_unit_quantity: i32,
-    cost: i32,
-    active: bool,
-    created_at: DateTime<Utc>,
-    updated_at: Option<DateTime<Utc>>,
+    pub user_id: i64,
+    pub item_id: item::Id,
+    pub batched_by: i16,
+    pub unit_quantity: i32,
+    pub current_unit_quantity: i32,
+    pub cost: i32,
+    pub active: bool,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Deserialize)]

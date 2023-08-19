@@ -3,27 +3,30 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.05";
-    mkdocs-material.url = "github:sekunho/mkdocs-material/update-to-9";
+    nixpkgs-22-11.url = "github:NixOS/nixpkgs/nixos-22.11";
     flake-utils.url = "github:numtide/flake-utils";
     fenix.url = "github:nix-community/fenix";
     naersk.url = "github:nix-community/naersk";
     devenv.url = "github:cachix/devenv/v0.6.3";
+
+    nixos-generators = {
+      url = "github:nix-community/nixos-generators";
+      inputs.nixpkgs.follows = "nixpkgs-22-11";
+    };
   };
 
   outputs =
     { self
     , nixpkgs
-    , mkdocs-material
+    , nixpkgs-22-11
     , flake-utils
     , fenix
     , naersk
     , devenv
+    , nixos-generators
     } @ inputs:
     flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
     let
-      mkdocs' =
-        mkdocs-material.packages.${system};
-
       rustOverlay = self: super: {
         rustc = toolchain;
         cargo = toolchain;
@@ -63,7 +66,22 @@
           doCheck = false;
           nativeBuildInputs = with pkgs; [ openssl pkg-config ];
         };
+
+        gnawex-static = naersk'.buildPackage {
+          src = ./.;
+          doCheck = false;
+          nativeBuildInputs = with pkgs; [ pkgsStatic.stdenv.cc ];
+          CARGO_BUILD_TARGET = "x86_64-unknown-linux-musl";
+          CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
+        };
+
+        gce = nixos-generators.nixosGenerate {
+          system = "x86_64-linux";
+          format = "gce";
+        };
       };
+
+      nixosModules.default = import ./nix/modules/gnawex.nix;
 
       devShells = {
         default = devenv.lib.mkShell {
@@ -71,9 +89,6 @@
 
           modules = [
             ({ pkgs, config, ... }: {
-              # TODO: Can't add mkdocs-material to shell packages because of:
-              # https://github.com/cachix/devenv/issues/601
-              # The workaround is to use the CI shell to run `mkdocs serve`.
               packages = with pkgs; [
                 nil
                 nixpkgs-fmt
@@ -82,6 +97,7 @@
                 sqitchPg
                 esbuild
                 scc
+                google-cloud-sdk
               ];
 
               pre-commit.hooks = {
@@ -117,6 +133,18 @@
                 };
               };
 
+              env = {
+                GX_SERVER__PORT = "3000";
+                GX_SERVER__ENV = "Dev";
+                GX_SERVER__SECRET_KEY = "y2T-YcKjJ9WsntIGRPafygHddsoppeduokao0NZZBXPyUlouchBFNPeOScJ0q-mi-JnyunWL-YK7Uc4Djqp4sw";
+                GX_DB__NAME = "gnawex_development";
+                GX_DB__HOST = "127.0.0.1";
+                GX_DB__PORT = "5432";
+                GX_DB__USER = "gnawex";
+                GX_DB__PASSWORD = "gnawex";
+                GX_DB__POOL_SIZE = "10";
+              };
+
               languages = {
                 nix.enable = true;
 
@@ -137,8 +165,6 @@
             })
           ];
         };
-
-        ci = pkgs.mkShell { buildInputs = [ mkdocs'.mkdocs-material-insiders ]; };
 
         ci-db = pkgs.mkShell {
           buildInputs = with pkgs; [

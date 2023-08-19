@@ -1,8 +1,7 @@
-use std::path::PathBuf;
-
 use deadpool_postgres::{
     Client, CreatePoolError, ManagerConfig, PoolError, RecyclingMethod, Runtime,
 };
+use gnawex_db::config::DbConfig;
 use thiserror::Error;
 use tokio_postgres::NoTls;
 
@@ -13,34 +12,50 @@ pub struct Handle {
 
 #[derive(Debug, Error)]
 #[error(transparent)]
-pub struct CreateHandleError(#[from] CreatePoolError);
+pub enum CreateHandleError {
+    Pool(#[from] CreatePoolError),
+    Path(#[from] std::io::Error),
+}
 
 #[derive(Debug, Error)]
 #[error(transparent)]
 pub struct GetClientError(#[from] PoolError);
 
 impl Handle {
-    pub fn new(
-        host: String,
-        dbname: String,
-        port: u16,
-        user: String,
-        password: Option<String>,
-        ca_cert_path: Option<PathBuf>,
-    ) -> Result<Self, CreateHandleError> {
+    pub fn new(db_config: DbConfig) -> Result<Self, CreateHandleError> {
         let mut cfg = deadpool_postgres::Config::new();
         let async_runtime = Some(Runtime::Tokio1);
 
-        cfg.dbname = Some(dbname);
-        cfg.user = Some(user);
-        cfg.host = Some(host);
-        cfg.password = password;
-        cfg.port = Some(port);
+        let db_password = match db_config {
+            DbConfig {
+                password: Some(_password),
+                password_file: Some(path),
+                ..
+            } => Some(std::fs::read_to_string(path)?),
+            DbConfig {
+                password: Some(password),
+                password_file: None,
+                ..
+            } => Some(password),
+            DbConfig {
+                password: None,
+                password_file: Some(path),
+                ..
+            } => Some(std::fs::read_to_string(path)?),
+            _ => None,
+        };
+
+        cfg.dbname = Some(db_config.name);
+        cfg.user = Some(db_config.user);
+        cfg.host = Some(db_config.host);
+        cfg.password = db_password;
+        cfg.port = Some(db_config.port);
+
         cfg.manager = Some(ManagerConfig {
             recycling_method: RecyclingMethod::Fast,
         });
 
-        let pool = match ca_cert_path {
+        let pool = match db_config.ca_cert_file {
             // TODO: Implement TLS
             Some(_path) => cfg.create_pool(async_runtime, NoTls),
             None => cfg.create_pool(async_runtime, NoTls),

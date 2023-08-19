@@ -10,7 +10,9 @@ async fn main() {
     tracing::subscriber::set_global_default(subscriber).unwrap();
 
     // TODO: Error handling
-    let _foo = gnawex_server::run().await;
+    let foo = gnawex_server::run().await;
+
+    println!("{:#?}", foo);
 
     // let hello = HelloTemplate {
     //     name: "Hey".to_string(),
