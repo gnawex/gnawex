@@ -11,65 +11,65 @@ with lib; {
         description = "Enable gnawex service";
       };
 
-      server_port = {
+      server_port = mkOption {
         default = "3000";
         type = with types; str;
         description = "Port number of the gnawex server";
       };
 
-      server_env = {
+      server_env = mkOption {
         default = "Prod";
         type = with types; str;
         description = "What environment gnawex's server will run as";
       };
 
-      server_secret_key = {
+      server_secret_key = mkOption {
         type = with types; str;
         description = "Secret key of gnawex";
       };
 
-      db_name = {
+      db_name = mkOption {
         type = with types; str;
         description = "DB name of gnawex";
       };
 
-      db_host = {
+      db_host = mkOption {
         type = with types; str;
         description = "DB host of gnawex";
       };
 
-      db_port = {
+      db_port = mkOption {
         default = "5432";
         type = with types; str;
         description = "DB port of gnawex";
       };
 
-      db_user = {
+      db_user = mkOption {
         type = with types; str;
         description = "DB user of gnawex";
       };
 
-      db_password_file = {
+      db_password_file = mkOption {
         type = with types; str;
         description = "Non-relative path to password of DB user";
       };
 
-      db_ca_cert_file = {
+      db_ca_cert_file = mkOption {
         type = with types; str;
         description = "Non-relative path to DB server CA cert file";
       };
 
-      db_client_cert_file = {
+      db_client_cert_file = mkOption {
         type = with types; str;
         description = "Non-relative path to DB client cert file";
       };
 
-      db_client_key_file = {
+      db_client_key_file = mkOption {
         type = with types; str;
         description = "Non-relative path to DB client key file";
       };
 
-      db_pool_size = {
+      db_pool_size = mkOption {
         default = "10";
         type = with types; str;
         description = "Pool size of DB";
