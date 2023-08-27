@@ -34,3 +34,5 @@ rust-project.json
 
 dist/style.css
 dist/*.js
+
+**/*.pem

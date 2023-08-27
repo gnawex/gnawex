@@ -11,6 +11,9 @@ tokio-postgres = { workspace = true }
 postgres-types = { workspace = true }
 deadpool-postgres = { workspace = true }
 tokio-postgres-rustls = { workspace = true }
+rustls = { workspace = true }
+rustls-pemfile = { workspace = true }
+webpki-roots = { workspace = true }
 
 # Serialization/deserialization
 serde = { workspace = true }

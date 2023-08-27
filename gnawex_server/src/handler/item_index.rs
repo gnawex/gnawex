@@ -18,7 +18,10 @@ pub async fn handle(State(state): State<AppState>, context: Context) -> Html<Str
             current_user,
         }
         .render(),
-        Err(_err) => Error500Page { current_user: None }.render(),
+        Err(err) => {
+            tracing::error!("{:#?}", err);
+            Error500Page { current_user: None }.render()
+        }
     };
 
     Html(template.unwrap())

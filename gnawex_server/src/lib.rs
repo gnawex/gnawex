@@ -66,6 +66,8 @@ fn mk_app(server_config: ServerConfig) -> anyhow::Result<Router> {
     let db_config = gnawex_db::config::DbConfig::from_env()?;
     let db_handle = gnawex_core::db::Handle::new(db_config)?;
 
+    tracing::debug!("Created DB handle");
+
     // TODO: Load cookie key from config
     let app_state = Arc::new(AppStateKind {
         db_handle,
