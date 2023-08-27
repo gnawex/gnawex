@@ -79,8 +79,8 @@ with lib; {
 
   config = mkIf cfg.enable {
     systemd.services.gnawex = {
-      wantedBy = "multi-user.target";
-      after = "network.target";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "network.target" ];
       description = "gnawex service";
 
       serviceConfig = {
