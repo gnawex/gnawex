@@ -72,7 +72,7 @@ impl Handle {
                 password: None,
                 password_file: Some(path),
                 ..
-            } => Some(std::fs::read_to_string(path)?),
+            } => Some(std::fs::read_to_string(path)?.trim().to_string()),
             _ => None,
         };
 
