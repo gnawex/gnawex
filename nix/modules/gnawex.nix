@@ -54,6 +54,21 @@ with lib; {
         description = "Non-relative path to password of DB user";
       };
 
+      db_ca_cert_file = {
+        type = with types; str;
+        description = "Non-relative path to DB server CA cert file";
+      };
+
+      db_client_cert_file = {
+        type = with types; str;
+        description = "Non-relative path to DB client cert file";
+      };
+
+      db_client_key_file = {
+        type = with types; str;
+        description = "Non-relative path to DB client key file";
+      };
+
       db_pool_size = {
         default = "10";
         type = with types; str;
@@ -73,23 +88,20 @@ with lib; {
         ExecStart = "${gnawex}/bin/gnawex";
       };
 
-      environment = mkMerge [
-        {
-          GX_SERVER__PORT = "${cfg.server_port}";
-          GX_SERVER__ENV = "${cfg.server_env}";
-          GX_SERVER__SECRET_KEY = "${cfg.server_secret_key}";
-          GX_DB__NAME = "${cfg.db_name}";
-          GX_DB__HOST = "${cfg.db_host}";
-          GX_DB__PORT = "${cfg.db_port}";
-          GX_DB__USER = "${cfg.db_user}";
-          GX_DB__PASSWORD_FILE = "${cfg.db_password_file}";
-          GX_DB__POOL_SIZE = "${cfg.db_pool_size}";
-        }
-
-        (mkIf ("${cfg.db_ca_cert_file}" != "") {
-          GX_DB__CA_CERT_FILE = "${cfg.db_ca_cert_file}";
-        })
-      ];
+      environment = {
+        GX_SERVER__PORT = "${cfg.server_port}";
+        GX_SERVER__ENV = "${cfg.server_env}";
+        GX_SERVER__SECRET_KEY = "${cfg.server_secret_key}";
+        GX_DB__NAME = "${cfg.db_name}";
+        GX_DB__HOST = "${cfg.db_host}";
+        GX_DB__PORT = "${cfg.db_port}";
+        GX_DB__USER = "${cfg.db_user}";
+        GX_DB__PASSWORD_FILE = "${cfg.db_password_file}";
+        GX_DB__POOL_SIZE = "${cfg.db_pool_size}";
+        GX_DB__CA_CERT_FILE = "${cfg.db_ca_cert_file}";
+        GX_DB__CLIENT_CERT_FILE = "${cfg.db_client_cert_file}";
+        GX_DB__CLIENT_KEY_FILE = "${cfg.db_client_key_file}";
+      };
     };
   };
 
