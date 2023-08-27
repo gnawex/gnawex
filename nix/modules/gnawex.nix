@@ -103,7 +103,7 @@ with lib; {
         GX_DB__CLIENT_KEY_FILE = "${cfg.db_client_key_file}";
       };
     };
-  };
 
-  environment.systemPackages = [ gnawex ];
+    environment.systemPackages = [ gnawex ];
+  };
 }
