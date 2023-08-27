@@ -92,6 +92,8 @@ COMMENT ON ROLE gnawex_merchant IS
 --------------------------------------------------------------------------------
 -- Permissions
 
+GRANT authenticator, anon, auth, api, verified_user, banned_user TO gnawex;
+
 -- Allows `authenticator` to switch to any of the ff:
 --
 -- 1. `anon`

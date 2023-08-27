@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use serde::Deserialize;
 use thiserror::Error;
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct DbConfig {
     pub name: String,
     pub host: String,
@@ -13,6 +13,8 @@ pub struct DbConfig {
     pub password: Option<String>,
     pub password_file: Option<PathBuf>,
     pub ca_cert_file: Option<PathBuf>,
+    pub client_cert_file: Option<PathBuf>,
+    pub client_key_file: Option<PathBuf>,
 }
 
 #[derive(Debug, Error)]
