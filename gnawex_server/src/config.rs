@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use serde::Deserialize;
 use thiserror::Error;
 
@@ -6,6 +8,7 @@ pub struct ServerConfig {
     pub port: u16,
     pub env: Env,
     pub secret_key: String,
+    pub static_assets_path: PathBuf,
 }
 
 #[derive(Clone, Debug, Deserialize)]

@@ -51,9 +51,6 @@ jobs:
       - name: Build gnawex
         run: nix build .#gnawex
 
-      - name: Build static bin
-        run: nix build .#gnawex-static
-
       # TODO: Either reuse an existing image of Postgres with pg_cron, or build
       # one with nix.
 

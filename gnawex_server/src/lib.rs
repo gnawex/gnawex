@@ -87,7 +87,7 @@ fn mk_app(server_config: ServerConfig) -> anyhow::Result<Router> {
             middleware::refresh_session,
         )))
         .fallback(error::error_404)
-        .nest_service("/assets", ServeDir::new("dist"))
+        .nest_service("/assets", ServeDir::new(server_config.static_assets_path))
         .with_state(AppState(app_state));
 
     Ok(router)
