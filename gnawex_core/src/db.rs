@@ -1,14 +1,14 @@
-use std::{io::BufReader, sync::Arc};
-
 use deadpool_postgres::{
     Client, CreatePoolError, ManagerConfig, PoolError, RecyclingMethod, Runtime,
 };
 use gnawex_db::config::DbConfig;
-use rustls::{Certificate, ClientConfig, OwnedTrustAnchor, PrivateKey, RootCertStore};
-use rustls_pemfile::Item;
+use openssl::{
+    error::ErrorStack,
+    ssl::{SslConnector, SslFiletype, SslMethod},
+};
+use postgres_openssl::MakeTlsConnector;
 use thiserror::Error;
 use tokio_postgres::NoTls;
-use tokio_postgres_rustls::MakeRustlsConnect;
 
 #[derive(Clone, Debug)]
 pub struct Handle {
@@ -20,34 +20,12 @@ pub struct Handle {
 pub enum CreateHandleError {
     Pool(#[from] CreatePoolError),
     Path(#[from] std::io::Error),
+    Tls(#[from] ErrorStack),
 }
 
 #[derive(Debug, Error)]
 #[error(transparent)]
 pub struct GetClientError(#[from] PoolError);
-
-// Implementation of `ServerCertVerifier` that verifies everything as trustworthy.
-struct SkipServerVerification;
-
-impl SkipServerVerification {
-    fn new() -> Arc<Self> {
-        Arc::new(Self)
-    }
-}
-
-impl rustls::client::ServerCertVerifier for SkipServerVerification {
-    fn verify_server_cert(
-        &self,
-        _end_entity: &rustls::Certificate,
-        _intermediates: &[rustls::Certificate],
-        _server_name: &rustls::ServerName,
-        _scts: &mut dyn Iterator<Item = &[u8]>,
-        _ocsp_response: &[u8],
-        _now: std::time::SystemTime,
-    ) -> Result<rustls::client::ServerCertVerified, rustls::Error> {
-        Ok(rustls::client::ServerCertVerified::assertion())
-    }
-}
 
 impl Handle {
     pub fn new(db_config: DbConfig) -> Result<Self, CreateHandleError> {
@@ -87,62 +65,28 @@ impl Handle {
         });
 
         let pool = match db_config {
-            // TODO: Implement TLS
             DbConfig {
                 ca_cert_file: Some(server_ca_path),
                 client_cert_file: Some(client_cert_path),
                 client_key_file: Some(client_key_path),
                 ..
             } => {
-                let tls_config = ClientConfig::builder();
+                let mut builder = SslConnector::builder(SslMethod::tls())?;
 
-                // TODO: Refactor this. Should probably move this to db crate
-                // TODO: Remove unwraps
+                builder.set_ca_file(server_ca_path)?;
+                builder.set_certificate_file(client_cert_path, SslFiletype::PEM)?;
+                builder.set_private_key_file(client_key_path, SslFiletype::PEM)?;
 
-                // Server CA
-                let server_ca_file = std::fs::File::open(&server_ca_path)?;
-                let mut server_ca_reader = BufReader::new(server_ca_file);
-                let server_ca = rustls_pemfile::certs(&mut server_ca_reader)?;
-                let mut root_cert_store = RootCertStore::empty();
-                let server_ca_certs: Vec<Certificate> =
-                    server_ca.into_iter().map(Certificate).collect();
+                let mut connector = MakeTlsConnector::new(builder.build());
 
-                // Client certificate
-                let client_cert_file = std::fs::File::open(client_cert_path)?;
-                let mut client_cert_reader = BufReader::new(client_cert_file);
-                let client_certs = rustls_pemfile::certs(&mut client_cert_reader)?;
-                let client_certs: Vec<Certificate> =
-                    client_certs.into_iter().map(Certificate).collect();
+                // https://github.com/sfackler/rust-openssl/issues/1572
+                connector.set_callback(|connect_config, _domain| {
+                    connect_config.set_verify_hostname(false);
 
-                // Client private key
-                let private_key_file = std::fs::File::open(client_key_path)?;
-                let mut private_key_reader = BufReader::new(private_key_file);
+                    Ok(())
+                });
 
-                let private_key = match rustls_pemfile::read_one(&mut private_key_reader) {
-                    Ok(Some(Item::RSAKey(key))) => PrivateKey(key),
-                    Ok(Some(_)) => todo!(),
-                    Ok(None) => todo!(),
-                    Err(_) => todo!(),
-                };
-
-                root_cert_store
-                    .add(server_ca_certs.get(0).unwrap())
-                    .unwrap();
-
-                let mut tls_config = tls_config
-                    .with_safe_defaults()
-                    .with_root_certificates(root_cert_store)
-                    .with_client_auth_cert(client_certs, private_key)
-                    .unwrap();
-
-                // TODO: Either find a way around this without `dangerous()` for
-                // Cloud SQL, or switch DB vendors.
-                tls_config
-                    .dangerous()
-                    .set_certificate_verifier(SkipServerVerification::new());
-
-                let tls = MakeRustlsConnect::new(tls_config);
-                cfg.create_pool(async_runtime, tls)
+                cfg.create_pool(async_runtime, connector)
             }
             _ => cfg.create_pool(async_runtime, NoTls),
         }?;

@@ -54,25 +54,26 @@
         cargo = toolchain;
         rustc = toolchain;
       };
+
+      gnawex = import ./nix/packages/gnawex.nix {
+        inherit pkgs;
+        inherit (naersk') buildPackage;
+      };
     in
     {
-      packages = rec {
+      packages = {
         default = gnawex;
+        gnawex-unwrapped = gnawex;
 
-        gnawex = naersk'.buildPackage {
-          pname = "gnawex";
-          version = "0.1.0";
-          src = ./.;
-          doCheck = false;
-          nativeBuildInputs = with pkgs; [ openssl pkg-config ];
-        };
+        gnawex = pkgs.symlinkJoin {
+          name = "gnawex";
+          paths = [ gnawex ];
+          buildInputs = [ pkgs.makeWrapper ];
 
-        gnawex-static = naersk'.buildPackage {
-          src = ./.;
-          doCheck = false;
-          nativeBuildInputs = with pkgs; [ pkgsStatic.stdenv.cc ];
-          CARGO_BUILD_TARGET = "x86_64-unknown-linux-musl";
-          CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
+          postBuild = ''
+            wrapProgram $out/bin/gnawex \
+              --set GX_SERVER__STATIC_ASSETS_PATH "${gnawex}/dist"
+          '';
         };
 
         gce = nixos-generators.nixosGenerate {
@@ -98,6 +99,7 @@
                 esbuild
                 scc
                 google-cloud-sdk
+                openssl
               ];
 
               pre-commit.hooks = {
@@ -123,7 +125,7 @@
                   };
 
                   initialScript = ''
-                    CREATE USER gnawex SUPERUSER LOGIN PASSWORD 'gnawex';
+                    CREATE USER gnawex LOGIN PASSWORD 'gnawex';
                   '';
 
                   initialDatabases = [
@@ -137,6 +139,7 @@
                 GX_SERVER__PORT = "3000";
                 GX_SERVER__ENV = "Dev";
                 GX_SERVER__SECRET_KEY = "y2T-YcKjJ9WsntIGRPafygHddsoppeduokao0NZZBXPyUlouchBFNPeOScJ0q-mi-JnyunWL-YK7Uc4Djqp4sw";
+                GX_SERVER__STATIC_ASSETS_PATH = "dist";
                 GX_DB__NAME = "gnawex_development";
                 GX_DB__HOST = "127.0.0.1";
                 GX_DB__PORT = "5432";
