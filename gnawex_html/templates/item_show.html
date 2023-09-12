@@ -25,19 +25,6 @@
     >
       <div>
         <div>
-          <label class="label label--xs label--semibold" for="batchedby">Quantity</label>
-          <input
-            class="input input--full"
-            name="quantity"
-            type="number"
-            step="2"
-            min="2"
-            placeholder="How many do you want to buy?"
-            required
-          />
-        </div>
-
-        <div>
           <label class="label label--xs label--semibold" for="cost">Cost (SB+)</label>
           <input
             class="input input--full"
@@ -46,6 +33,19 @@
             inputmode="numeric"
             pattern="^\d*(\.\d{0,2})?$"
             placeholder="How many SB+ per item?"
+            required
+          />
+        </div>
+
+        <div>
+          <label class="label label--xs label--semibold" for="batchedby">Quantity</label>
+          <input
+            class="input input--full"
+            name="quantity"
+            type="number"
+            step="2"
+            min="2"
+            placeholder="Item quantity"
             required
           />
         </div>
