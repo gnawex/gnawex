@@ -6,8 +6,7 @@
   </caption>
   <thead>
     <tr>
-      <th scope="col">Bundles</th>
-      <th scope="col">Item(s) per bundle</th>
+      <th scope="col">Quantity</th>
       <th scope="col">Cost</th>
     </tr>
   </thead>
@@ -20,14 +19,11 @@
       data-batches=""
       data-batchedby="">
       <td scope="row">
-        {{ order.batches }}
+        {{ order.batches * order.batchedby }}
       </td>
 
       <td scope="row">
-        {{ order.batchedby }}
-      </td>
-      <td scope="row">
-        {{ order.cost }} SB+
+        {{ order.cost_per_unit }} SB+
       </td>
     </tr>
     {% endfor %}

@@ -6,7 +6,7 @@ use tokio_postgres::Row;
 #[derive(Debug)]
 pub struct GroupedOrder {
     pub batches: i64,
-    pub batchedby: i16,
+    pub batchedby: i64,
     pub cost: i32,
     pub cost_per_unit: f32,
 }
@@ -52,8 +52,8 @@ impl TryFrom<Row> for GroupedOrder {
         })?;
 
         Ok(GroupedOrder {
+            batchedby: batchedby.into(),
             batches,
-            batchedby,
             cost,
             cost_per_unit: cost as f32 / batchedby as f32,
         })
