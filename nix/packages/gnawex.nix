@@ -15,6 +15,12 @@
       --outfile=dist/style.css \
       --target=chrome58,edge16,firefox57,node12,safari11 \
       --minify
+
+    esbuild \
+      --bundle assets/app.ts \
+      --outfile=dist/app.js \
+      --target=chrome58,edge16,firefox57,node12,safari11 \
+      --minify
   '';
 
   installPhase = old.installPhase + ''
