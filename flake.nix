@@ -7,7 +7,7 @@
     flake-utils.url = "github:numtide/flake-utils";
     fenix.url = "github:nix-community/fenix";
     naersk.url = "github:nix-community/naersk";
-    devenv.url = "github:cachix/devenv/v0.6.3";
+    devenv.url = "github:cachix/devenv";
 
     nixos-generators = {
       url = "github:nix-community/nixos-generators";
@@ -25,7 +25,7 @@
     , devenv
     , nixos-generators
     } @ inputs:
-    flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
+    flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-darwin" ] (system:
     let
       rustOverlay = self: super: {
         rustc = toolchain;
@@ -65,6 +65,8 @@
         default = gnawex;
         gnawex-unwrapped = gnawex;
 
+        devenv-up = self.devShells.${system}.default.config.procfileScript;
+
         gnawex = pkgs.symlinkJoin {
           name = "gnawex";
           paths = [ gnawex ];
@@ -100,7 +102,13 @@
                 scc
                 google-cloud-sdk
                 openssl
-              ];
+              ] ++ lib.optionals pkgs.stdenv.isDarwin (
+                with pkgs.darwin.apple_sdk; [
+                  frameworks.CoreFoundation
+                  frameworks.Security
+                  frameworks.SystemConfiguration
+                ]
+              );
 
               pre-commit.hooks = {
                 cargo-check.enable = true;
