@@ -164,7 +164,7 @@
                 rust = {
                   enable = true;
 
-                  packages = {
+                  toolchain = {
                     inherit (pkgs)
                       cargo
                       rustc
