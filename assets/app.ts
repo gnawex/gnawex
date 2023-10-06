@@ -4,28 +4,22 @@ let order_quantity = document.querySelector("#order-quantity") as HTMLInputEleme
 // TODO: Clean up this mess
 
 order_cost?.addEventListener("blur", _event => populateQuantity());
-
-order_quantity?.addEventListener("blur", _event => {
-  let costPerUnit = parseFloat(order_cost?.value);
-  let bundleCost = parseInt((costPerUnit * 100).toFixed(2));
-  let computation = compute(bundleCost);
-  let currentQuantity = parseInt(order_quantity?.value);
-
-  if(currentQuantity % computation[0] != 0) {
-    order_quantity.value = `${computation[0]}`;
-  }
-})
+order_quantity?.addEventListener("blur", _event => populateQuantity());
 
 function populateQuantity() {
   let costPerUnit = parseFloat(order_cost?.value);
   let bundleCost = parseInt((costPerUnit * 100).toFixed(2));
   let computation = compute(bundleCost);
   let incrementAsStr = `${computation[0]}`;
+  let currentQuantity = parseInt(order_quantity?.value);
 
   order_quantity?.setAttribute("step", incrementAsStr);
   order_quantity?.setAttribute("min", `${computation[0]}`);
   order_cost.value = `${bundleCost / 100}`;
-  order_quantity.value = incrementAsStr;
+
+  if (currentQuantity % computation[0] != 0) {
+    order_quantity.value = incrementAsStr;
+  }
 }
 
 // Computes the increments in quantity needed.
