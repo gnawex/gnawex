@@ -15,8 +15,8 @@
     <tr
       id="sell-{{ order.cost }}"
       data-type="SELL"
-      data-cost=""
-      data-quantity="">
+      data-cost="{{ order.cost }}"
+      data-quantity="{{ order.quantity }}">
       <td scope="row">
         {{ order.cost }} SB+
       </td>
