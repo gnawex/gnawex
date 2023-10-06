@@ -102,6 +102,7 @@
                 scc
                 google-cloud-sdk
                 openssl
+                nodePackages.typescript-language-server
               ] ++ lib.optionals pkgs.stdenv.isDarwin (
                 with pkgs.darwin.apple_sdk; [
                   frameworks.CoreFoundation
@@ -158,11 +159,12 @@
 
               languages = {
                 nix.enable = true;
+                typescript.enable = true;
 
                 rust = {
                   enable = true;
 
-                  packages = {
+                  toolchain = {
                     inherit (pkgs)
                       cargo
                       rustc

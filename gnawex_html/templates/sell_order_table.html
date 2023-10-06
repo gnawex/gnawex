@@ -6,28 +6,22 @@
   </caption>
   <thead>
     <tr>
-      <th scope="col">Bundles</th>
-      <th scope="col">Item(s) per bundle</th>
       <th scope="col">Cost</th>
+      <th scope="col">Quantity</th>
     </tr>
   </thead>
   <tbody>
     {% for order in grouped_sell_orders %}
     <tr
-      id="sell-1"
-      data-type="BUY"
-      data-cost=""
-      data-batches=""
-      data-batchedby="">
+      id="sell-{{ order.cost }}"
+      data-type="SELL"
+      data-cost="{{ order.cost }}"
+      data-quantity="{{ order.quantity }}">
       <td scope="row">
-        {{ order.batches }}
-      </td>
-
-      <td scope="row">
-        {{ order.batchedby }}
+        {{ order.cost }} SB+
       </td>
       <td scope="row">
-        {{ order.cost_per_unit }}
+        {{ order.quantity }}
       </td>
     </tr>
     {% endfor %}

@@ -1,7 +1,6 @@
 pub(crate) const LIST_GROUPED_BUY_ORDERS: &str = "
     SELECT sum(current_unit_quantity)
          , tradable_item__id
-         , batched_by
          , cost
       FROM app.tradable_item_listings
       WHERE tradable_item__id = $1
@@ -10,7 +9,6 @@ pub(crate) const LIST_GROUPED_BUY_ORDERS: &str = "
         AND active = true
         AND current_unit_quantity > 0
       GROUP BY tradable_item__id
-             , batched_by
              , cost
       ORDER BY cost DESC
 ";
@@ -18,7 +16,6 @@ pub(crate) const LIST_GROUPED_BUY_ORDERS: &str = "
 pub(crate) const LIST_GROUPED_SELL_ORDERS: &str = "
     SELECT sum(current_unit_quantity)
          , tradable_item__id
-         , batched_by
          , cost
       FROM app.tradable_item_listings
       WHERE tradable_item__id = $1
@@ -27,7 +24,6 @@ pub(crate) const LIST_GROUPED_SELL_ORDERS: &str = "
         AND active = true
         AND current_unit_quantity > 0
       GROUP BY tradable_item__id
-             , batched_by
              , cost
       ORDER BY cost ASC
 ";

@@ -10,9 +10,8 @@ use crate::{extract::context::AuthContext, AppState};
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct NewItemOrder {
-    batched_by: i16,
-    cost: i32,
-    unit_quantity: i32,
+    cost: f32,
+    quantity: i32,
     kind: item_order::OrderType,
 }
 
@@ -25,16 +24,17 @@ pub(crate) async fn handle(
     tracing::debug!("Item ID: {:#?}", item_id);
     tracing::debug!("New order params: {:#?}", new_order);
 
-    let _order = item_order::create(
+    let order = item_order::create(
         &state.0.db_handle,
         context.0,
         new_order.kind,
         item_id,
-        new_order.batched_by,
-        new_order.unit_quantity,
+        new_order.quantity,
         new_order.cost,
     )
     .await;
+
+    tracing::debug!("{:#?}", order);
 
     Redirect::to(format!("/items/{}", item_id.0).as_str())
 }

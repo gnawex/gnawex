@@ -10,7 +10,6 @@ SELECT
   , current_unit_quantity
   , cost
   , type
-  , batched_by
   , active
   , created_at
   , updated_at

@@ -3,12 +3,12 @@ pub(crate) const CREATE_ORDER: &str = "
     INSERT INTO api.tradable_item_listings
         ( tradable_item__id
         , type
-        , batched_by
         , unit_quantity
+        , current_unit_quantity
         , cost
         , active
         )
-        VALUES ($1, $2, $3, $4, $5, true)
+        VALUES ($1, $2, $3, $3, $4, true)
         RETURNING *
 ";
 
@@ -21,7 +21,6 @@ pub(crate) const FIND_MATCHING_ORDERS: &str = "
       WHERE tradable_item__id = $1
         AND user__id <> $2
         AND type = $3
-        AND batched_by = $4
-        AND cost = $5
+        AND cost = $4
         AND active = true
 ";

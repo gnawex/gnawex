@@ -1,6 +1,11 @@
 @import url(reset.css);
 @import url(var.css);
 
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 #login-form {
   & > div {
     display: grid;
