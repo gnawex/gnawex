@@ -47,9 +47,8 @@ pub async fn create<'t>(
     user_id: i64,
     item_id: i64,
     order_type: Type,
-    batched_by: i16,
     unit_quantity: i32,
-    cost: i32,
+    cost: f32,
 ) -> Result<Row, Error> {
     let statement = txn.prepare(sql::item_order::CREATE_ORDER).await?;
 
@@ -63,7 +62,7 @@ pub async fn create<'t>(
             // Order type
             &order_type,
             // Batched by quantity
-            &batched_by,
+            &0_i16,
             // Unit quantity
             &unit_quantity,
             // Individual cost

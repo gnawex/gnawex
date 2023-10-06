@@ -208,9 +208,8 @@ pub async fn create(
     context: AuthContext,
     order_type: OrderType,
     item_id: item::Id,
-    batched_by: i16,
     unit_quantity: i32,
-    cost: i32,
+    cost: f32,
 ) -> Result<ItemOrder, CreateItemOrderError> {
     let mut client = db_handle.get_client().await?;
     let txn = client.transaction().await?;
@@ -224,7 +223,6 @@ pub async fn create(
         context.current_user.id.0,
         item_id.0,
         order_type.into(),
-        batched_by,
         unit_quantity,
         cost,
     )

@@ -10,8 +10,7 @@ use crate::{extract::context::AuthContext, AppState};
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct NewItemOrder {
-    batched_by: i16,
-    cost: i32,
+    cost: f32,
     quantity: i32,
     kind: item_order::OrderType,
 }
@@ -30,7 +29,6 @@ pub(crate) async fn handle(
         context.0,
         new_order.kind,
         item_id,
-        new_order.batched_by,
         new_order.quantity,
         new_order.cost,
     )
