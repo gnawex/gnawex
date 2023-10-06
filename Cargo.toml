@@ -1,5 +1,6 @@
 [workspace]
 members = ["gnawex", "gnawex_*"]
+resolver = "2"
 
 [workspace.package]
 authors = ["sekun <software@sekun.net>"]

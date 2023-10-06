@@ -5,10 +5,8 @@ use tokio_postgres::Row;
 
 #[derive(Debug)]
 pub struct GroupedOrder {
-    pub batches: i64,
-    pub batchedby: i64,
-    pub cost: i32,
-    pub cost_per_unit: f32,
+    pub quantity: i64,
+    pub cost: f32,
 }
 
 #[derive(Debug, Error)]
@@ -33,30 +31,19 @@ impl TryFrom<Row> for GroupedOrder {
     type Error = ParseError;
 
     fn try_from(value: Row) -> Result<Self, Self::Error> {
-        let cost: i32 = value.try_get("cost").map_err(|e| ParseError {
+        let cost: f32 = value.try_get("cost").map_err(|e| ParseError {
             table: "app.tradable_item_listings".into(),
             field: "cost".into(),
             cause: e.to_string(),
         })?;
 
-        let batchedby: i16 = value.try_get("batched_by").map_err(|e| ParseError {
+        let quantity: i64 = value.try_get("sum").map_err(|e| ParseError {
             table: "app.tradable_item_listings".into(),
-            field: "batched_by".into(),
+            field: "current_unit_quantity".into(),
             cause: e.to_string(),
         })?;
 
-        let batches: i64 = value.try_get("sum").map_err(|e| ParseError {
-            table: "app.tradable_item_listings".into(),
-            field: "unit_quantity".into(),
-            cause: e.to_string(),
-        })?;
-
-        Ok(GroupedOrder {
-            batchedby: batchedby.into(),
-            batches,
-            cost,
-            cost_per_unit: cost as f32 / batchedby as f32,
-        })
+        Ok(GroupedOrder { quantity, cost })
     }
 }
 

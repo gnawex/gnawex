@@ -24,7 +24,7 @@ pub(crate) async fn handle(
     tracing::debug!("Item ID: {:#?}", item_id);
     tracing::debug!("New order params: {:#?}", new_order);
 
-    let _order = item_order::create(
+    let order = item_order::create(
         &state.0.db_handle,
         context.0,
         new_order.kind,
@@ -33,6 +33,8 @@ pub(crate) async fn handle(
         new_order.cost,
     )
     .await;
+
+    tracing::debug!("{:#?}", order);
 
     Redirect::to(format!("/items/{}", item_id.0).as_str())
 }

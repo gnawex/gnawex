@@ -61,8 +61,6 @@ pub async fn create<'t>(
             &item_id,
             // Order type
             &order_type,
-            // Batched by quantity
-            &0_i16,
             // Unit quantity
             &unit_quantity,
             // Individual cost

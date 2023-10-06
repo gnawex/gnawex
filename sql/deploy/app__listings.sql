@@ -14,10 +14,9 @@ CREATE TABLE app.tradable_item_listings (
   , user__id               BIGINT REFERENCES app.users (id)
 
   , type                   app.LISTING_TYPE NOT NULL
-  , batched_by             SMALLINT NOT NULL CHECK (batched_by > 0)
   , unit_quantity          INT NOT NULL CHECK (unit_quantity > 0)
   , current_unit_quantity  INT NOT NULL CHECK (current_unit_quantity >= 0)
-  , cost                   INT NOT NULL CHECK (cost >= 0)
+  , cost                   REAL NOT NULL CHECK (cost >= 0)
   , active                 BOOLEAN DEFAULT true NOT NULL
 
   -- Timestamps
@@ -66,37 +65,6 @@ CREATE TRIGGER set_listing_user_id
     ON app.tradable_item_listings
     FOR EACH ROW
       EXECUTE PROCEDURE app.set_listing_user_id();
-
---------------------------------------------------------------------------------
-
-CREATE FUNCTION app.adjust_item_listing()
-  RETURNS TRIGGER
-  LANGUAGE plpgsql
-  AS $$
-    DECLARE
-      divisor INTEGER;
-    BEGIN
-      SELECT gcd(NEW.cost, NEW.batched_by) INTO divisor;
-
-      NEW.unit_quantity := NEW.unit_quantity * divisor;
-      NEW.current_unit_quantity := NEW.unit_quantity;
-      NEW.cost := NEW.cost / divisor;
-      NEW.batched_by := NEW.batched_by / divisor;
-
-      RETURN NEW;
-    END;
-  $$;
-
-COMMENT ON FUNCTION app.adjust_item_listing IS
-  'Reduces needless batch sizes, and makes other adjustments accordingly.';
-
-CREATE TRIGGER normalize_tradable_item_listing
-  BEFORE INSERT
-    ON app.tradable_item_listings
-    FOR EACH ROW
-      EXECUTE PROCEDURE app.adjust_item_listing();
-
-GRANT EXECUTE ON FUNCTION app.adjust_item_listing TO verified_user;
 
 --------------------------------------------------------------------------------
 

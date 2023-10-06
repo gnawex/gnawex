@@ -6,24 +6,22 @@
   </caption>
   <thead>
     <tr>
-      <th scope="col">Quantity</th>
       <th scope="col">Cost</th>
+      <th scope="col">Quantity</th>
     </tr>
   </thead>
   <tbody>
     {% for order in grouped_buy_orders %}
     <tr
-      id="buy-1"
-      data-type="SELL"
+      id="buy-{{ order.cost }}"
+      data-type="BUY"
       data-cost=""
-      data-batches=""
-      data-batchedby="">
+      data-quantity="">
       <td scope="row">
-        {{ order.batches * order.batchedby }}
+        {{ order.cost }} SB+
       </td>
-
       <td scope="row">
-        {{ order.cost_per_unit }} SB+
+        {{ order.quantity }}
       </td>
     </tr>
     {% endfor %}

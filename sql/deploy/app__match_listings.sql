@@ -31,14 +31,12 @@ BEGIN
     SELECT
         id,
         current_unit_quantity,
-        batched_by,
         tradable_item__id,
         user__id,
         sum(current_unit_quantity) OVER (ORDER BY id ASC) AS running_amount
       FROM app.tradable_item_listings
       WHERE tradable_item__id = NEW.tradable_item__id
         AND active = true
-        AND batched_by = NEW.batched_by
         AND type = (
           CASE WHEN NEW.type = 'buy' THEN 'sell'
                ELSE 'buy'

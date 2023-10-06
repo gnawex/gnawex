@@ -11,7 +11,7 @@ REVOKE EXECUTE ON FUNCTION api.login FROM anon;
 REVOKE EXECUTE ON FUNCTION api.current_user FROM verified_user;
 REVOKE SELECT, UPDATE(username) ON api.users FROM verified_user;
 REVOKE SELECT ON api.tradable_item_listings FROM anon, verified_user;
-REVOKE INSERT (tradable_item__id, unit_quantity, cost, type, batched_by, active) ON api.tradable_item_listings FROM verified_user;
+REVOKE INSERT (tradable_item__id, unit_quantity, current_unit_quantity, cost, type, active) ON api.tradable_item_listings FROM verified_user;
 REVOKE USAGE ON SCHEMA api FROM anon, verified_user;
 
 DROP SCHEMA api CASCADE;

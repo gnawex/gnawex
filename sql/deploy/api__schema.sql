@@ -157,14 +157,14 @@ CREATE VIEW api.tradable_item_listings AS
       tradable_item__id,
       user__id,
       unit_quantity,
+      current_unit_quantity,
       cost,
       type,
-      batched_by,
       active
     FROM app.tradable_item_listings;
 
 GRANT SELECT ON api.tradable_item_listings TO anon, verified_user;
-GRANT INSERT (tradable_item__id, unit_quantity, cost, type, batched_by, active) ON api.tradable_item_listings TO verified_user;
+GRANT INSERT (tradable_item__id, unit_quantity, current_unit_quantity, cost, type, active) ON api.tradable_item_listings TO verified_user;
 
 --------------------------------------------------------------------------------
 
@@ -182,15 +182,15 @@ CREATE FUNCTION api.get_item(item_id BIGINT)
     -- header is so much easier.
     WITH buy_listings AS (
       WITH grouped_buy_orders AS (
-        SELECT tradable_item_listings.cost, sum(tradable_item_listings.unit_quantity) AS unit_quantity, tradable_item_listings.batched_by
+        SELECT tradable_item_listings.cost
+             , sum(tradable_item_listings.unit_quantity) AS unit_quantity
           FROM app.tradable_item_listings
           WHERE type = 'buy'
             AND active = true
             AND tradable_item_listings.tradable_item__id = get_item.item_id
-          GROUP BY tradable_item_listings.batched_by, tradable_item_listings.cost
+          GROUP BY tradable_item_listings.cost
           ORDER BY
-            tradable_item_listings.cost DESC,
-            tradable_item_listings.batched_by ASC
+            tradable_item_listings.cost DESC
         FETCH FIRST 5 ROWS ONLY
      )
      -- JSON? Nah. Me, and my homies love JSONB.
@@ -199,15 +199,14 @@ CREATE FUNCTION api.get_item(item_id BIGINT)
        FROM grouped_buy_orders
     ), sell_listings AS (
       WITH grouped_sell_orders AS (
-        SELECT tradable_item_listings.cost, sum(tradable_item_listings.unit_quantity) AS unit_quantity, tradable_item_listings.batched_by
+        SELECT tradable_item_listings.cost, sum(tradable_item_listings.unit_quantity) AS unit_quantity
           FROM app.tradable_item_listings
           WHERE type = 'sell'
             AND active = true
             AND tradable_item_listings.tradable_item__id = get_item.item_id
-            GROUP BY tradable_item_listings.batched_by, tradable_item_listings.cost
+            GROUP BY tradable_item_listings.cost
             ORDER BY
-              tradable_item_listings.cost ASC,
-              tradable_item_listings.batched_by ASC
+              tradable_item_listings.cost ASC
         FETCH FIRST 5 ROWS ONLY
      )
      SELECT coalesce(jsonb_agg(row_to_json(grouped_sell_orders)), '[]' :: JSONB)

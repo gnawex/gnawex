@@ -17,10 +17,9 @@ pub struct ItemOrder {
     // TODO: Replace with `UserId` when `User` module is created
     pub user_id: i64,
     pub item_id: item::Id,
-    pub batched_by: i16,
     pub unit_quantity: i32,
     pub current_unit_quantity: i32,
-    pub cost: i32,
+    pub cost: f32,
     pub active: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: Option<DateTime<Utc>>,
@@ -125,12 +124,6 @@ impl TryFrom<Row> for ItemOrder {
                         cause: e.to_string(),
                     })?;
 
-                let batched_by: i16 = value.try_get("batched_by").map_err(|e| ParseError {
-                    table: "app.tradable_item_orders".into(),
-                    field: "batched_by".into(),
-                    cause: e.to_string(),
-                })?;
-
                 let unit_quantity: i32 =
                     value.try_get("unit_quantity").map_err(|e| ParseError {
                         table: "app.tradable_item_orders".into(),
@@ -147,7 +140,7 @@ impl TryFrom<Row> for ItemOrder {
                             cause: e.to_string(),
                         })?;
 
-                let cost: i32 = value.try_get("cost").map_err(|e| ParseError {
+                let cost: f32 = value.try_get("cost").map_err(|e| ParseError {
                     table: "app.tradable_item_orders".into(),
                     field: "cost".into(),
                     cause: e.to_string(),
@@ -177,7 +170,6 @@ impl TryFrom<Row> for ItemOrder {
                     id,
                     user_id,
                     item_id,
-                    batched_by,
                     unit_quantity,
                     current_unit_quantity,
                     cost,
