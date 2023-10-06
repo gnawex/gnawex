@@ -22,10 +22,9 @@ function populateQuantity() {
   let computation = compute(bundleCost);
   let incrementAsStr = `${computation[0]}`;
 
-  order_cost?.setAttribute("value", `${bundleCost / 100}`);
-  order_cost.value = `${bundleCost / 100}`;
   order_quantity?.setAttribute("step", incrementAsStr);
   order_quantity?.setAttribute("min", `${computation[0]}`);
+  order_cost.value = `${bundleCost / 100}`;
   order_quantity.value = incrementAsStr;
 }
 
