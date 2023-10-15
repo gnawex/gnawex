@@ -25,7 +25,7 @@
     , devenv
     , nixos-generators
     } @ inputs:
-    flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-darwin" ] (system:
+    flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
     let
       rustOverlay = self: super: {
         rustc = toolchain;
@@ -65,8 +65,6 @@
         default = gnawex;
         gnawex-unwrapped = gnawex;
 
-        devenv-up = self.devShells.${system}.default.config.procfileScript;
-
         gnawex = pkgs.symlinkJoin {
           name = "gnawex";
           paths = [ gnawex ];
@@ -81,6 +79,27 @@
         gce = nixos-generators.nixosGenerate {
           system = "x86_64-linux";
           format = "gce";
+        };
+
+        gnawexDocker = pkgs.dockerTools.buildImage {
+          name = "gnawex";
+          tag = "latest";
+
+          copyToRoot = pkgs.buildEnv {
+            name = "image-root";
+            paths = [ pkgs.bashInteractive ];
+            pathsToLink = [ "/bin" ];
+          };
+
+          config = {
+            Cmd = [ "${self.packages.${system}.gnawex}/bin/gnawex" ];
+            WorkingDir = "/app";
+            Env = [ ];
+
+            ExposedPorts = {
+              "3000/tcp" = { };
+            };
+          };
         };
       };
 
@@ -103,13 +122,7 @@
                 google-cloud-sdk
                 openssl
                 nodePackages.typescript-language-server
-              ] ++ lib.optionals pkgs.stdenv.isDarwin (
-                with pkgs.darwin.apple_sdk; [
-                  frameworks.CoreFoundation
-                  frameworks.Security
-                  frameworks.SystemConfiguration
-                ]
-              );
+              ];
 
               pre-commit.hooks = {
                 cargo-check.enable = true;
