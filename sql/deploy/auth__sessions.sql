@@ -12,7 +12,7 @@ CREATE TABLE auth.sessions (
         DEFAULT encode(gen_random_bytes(32), 'base64'),
   user_id INTEGER REFERENCES app.users (id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
-  expires_on TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp() + '15min' :: INTERVAL,
+  expires_on TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp() + '30 days' :: INTERVAL,
 
   CHECK (expires_on > created_at)
 );
@@ -59,7 +59,7 @@ COMMENT ON FUNCTION auth.clean_sessions IS
 --------------------------------------------------------------------------------
 
 CREATE FUNCTION auth.login(username CITEXT, password TEXT)
-  RETURNS TEXT
+  RETURNS SETOF auth.sessions
   LANGUAGE sql
   SECURITY DEFINER
   AS $$
@@ -68,7 +68,7 @@ CREATE FUNCTION auth.login(username CITEXT, password TEXT)
         FROM app.users
         WHERE username = login.username
           AND password = crypt(login.password, password)
-      RETURNING token;
+      RETURNING *;
   $$;
 
 COMMENT ON FUNCTION auth.login IS

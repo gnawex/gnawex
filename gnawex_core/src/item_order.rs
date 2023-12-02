@@ -207,7 +207,7 @@ pub async fn create(
     let txn = client.transaction().await?;
 
     // TODO: Introduce new error variants for failing to authenticate
-    gnawex_db::session::set_session_token(&txn, context.session_token.0).await?;
+    gnawex_db::session::set_session_token(&txn, context.session_token).await?;
     gnawex_db::session::authenticate(&txn).await?;
 
     let row = gnawex_db::item_order::create(

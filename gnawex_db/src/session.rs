@@ -1,4 +1,6 @@
+use chrono::{DateTime, Utc};
 use deadpool_postgres::Transaction;
+use time::OffsetDateTime;
 use tokio_postgres::{Error, Row};
 
 use crate::sql;
@@ -43,15 +45,16 @@ pub async fn new<'t>(
     txn: &Transaction<'t>,
     username: String,
     password: String,
-) -> Result<String, Error> {
+) -> Result<(String, OffsetDateTime), Error> {
     let _auth_stmt = txn.prepare(sql::session::SET_ANON_ROLE).await?;
     let login_statement = txn.prepare(sql::session::LOGIN).await?;
     let row = txn
         .query_one(&login_statement, &[&username, &password])
         .await?;
-    let token = row.get("login");
+    let token = row.get("token");
+    let expires_on = row.get("expires_on");
 
-    Ok(token)
+    Ok((token, expires_on))
 }
 
 pub async fn get_current_user<'t>(txn: &Transaction<'t>) -> Result<Row, Error> {

@@ -17,61 +17,67 @@
     </div>
   </div>
 
-  <div style="margin-top: var(--4); width: 100%;">
-    <form
-      id="item-order-form"
-      action="/items/{{ item.id }}"
-      method="post"
-    >
-      <div>
-        <div>
-          <label class="label label--xs label--semibold" for="display-cost">Cost (SB+)</label>
-          <input
-            id="order-cost"
-            class="input input--full"
-            name="cost"
-            type="text"
-            inputmode="numeric"
-            pattern="^\d*(\.\d{0,2})?$"
-            placeholder="How many SB+ per item?"
-            autofocus
-            required
-          />
-        </div>
+  {% match current_user %}
 
-        <div>
-          <label class="label label--xs label--semibold" for="quantity">Quantity</label>
-          <input
-            id="order-quantity"
-            class="input input--full"
-            name="quantity"
-            type="number"
-            step="2"
-            min="2"
-            placeholder="Item quantity"
-            required
-          />
-        </div>
+    {% when Some with (current_user) %}
+      <div style="margin-top: var(--4); width: 100%;">
+        <form
+          id="item-order-form"
+          action="/items/{{ item.id }}"
+          method="post"
+        >
+          <div>
+            <div>
+              <label class="label label--xs label--semibold" for="display-cost">Cost (SB+)</label>
+              <input
+                id="order-cost"
+                class="input input--full"
+                name="cost"
+                type="text"
+                inputmode="numeric"
+                pattern="^\d*(\.\d{0,2})?$"
+                placeholder="How many SB+ per item?"
+                autofocus
+                required
+              />
+            </div>
 
-        <div>
-          <label class="label label--xs label--semibold" for="kind">Order type</label>
-          <select class="select select--full" for="kind" name="kind" required>
-            <option disabled selected hidden>Select order type</option>
-            <option value="Buy">BUY</option>
-            <option value="Sell">SELL</option>
-          </select>
-        </div>
+            <div>
+              <label class="label label--xs label--semibold" for="quantity">Quantity</label>
+              <input
+                id="order-quantity"
+                class="input input--full"
+                name="quantity"
+                type="number"
+                step="2"
+                min="2"
+                placeholder="Item quantity"
+                required
+              />
+            </div>
+
+            <div>
+              <label class="label label--xs label--semibold" for="kind">Order type</label>
+              <select class="select select--full" for="kind" name="kind" required>
+                <option disabled selected hidden>Select order type</option>
+                <option value="Buy">BUY</option>
+                <option value="Sell">SELL</option>
+              </select>
+            </div>
+          </div>
+
+          <button
+            class="button button--full"
+            type="submit"
+            style="margin-top: var(--3);"
+          >
+            Create order
+          </button>
+        </form>
       </div>
 
-      <button
-        class="button button--full"
-        type="submit"
-        style="margin-top: var(--3);"
-      >
-        Create order
-      </button>
-    </.form>
-  </div>
+      {% when None %}
+  {% endmatch %}
 
   <div id="pooled-item-listings">
     <div>

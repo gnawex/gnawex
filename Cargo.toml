@@ -30,19 +30,24 @@ gnawex_server = { path = "gnawex_server", version = "0.1" }
 # External crates
 
 ## Postgres
-tokio-postgres = { version = "0.7", features = ["with-chrono-0_4"] }
+tokio-postgres = { version = "0.7", features = [
+  "with-chrono-0_4",
+  "with-time-0_3",
+  "with-serde_json-1",
+] }
 postgres-types = { version = "0.2", features = ["derive"] }
 deadpool-postgres = { version = "0.10", features = ["serde"] }
 postgres-openssl = "0.5"
 openssl = { version = "0.10" }
 
 ## HTTP
-hyper = { version = "0.14", features = ["full"] }
-axum = { version = "0.6", features = [] }
-axum-extra = { version = "0.7", features = ["cookie", "cookie-private"] }
-axum-macros = { version = "0.3" }
+hyper = { version = "1.0", features = ["full"] }
+axum = { version = "0.7", features = [] }
+axum-extra = { version = "0.9", features = ["cookie", "cookie-private"] }
+axum-macros = { version = "0.4" }
 tower = { version = "0.4", features = ["util"] }
-tower-http = { version = "0.4", features = ["fs"] }
+tower-http = { version = "0.5", features = ["fs"] }
+cookie = { version = "0.18" }
 
 ## Serialization/Deserialization
 serde = "1.0"
@@ -71,7 +76,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 ## Templating
 askama = { version = "0.12" }
-askama_axum = { version = "0.3" }
+askama_axum = { version = "0.4" }
 
 time = { version = "0.3" }
 

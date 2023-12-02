@@ -3,27 +3,19 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.05";
-    nixpkgs-22-11.url = "github:NixOS/nixpkgs/nixos-22.11";
     flake-utils.url = "github:numtide/flake-utils";
     fenix.url = "github:nix-community/fenix";
     naersk.url = "github:nix-community/naersk";
     devenv.url = "github:cachix/devenv";
-
-    nixos-generators = {
-      url = "github:nix-community/nixos-generators";
-      inputs.nixpkgs.follows = "nixpkgs-22-11";
-    };
   };
 
   outputs =
     { self
     , nixpkgs
-    , nixpkgs-22-11
     , flake-utils
     , fenix
     , naersk
     , devenv
-    , nixos-generators
     } @ inputs:
     flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
     let
@@ -74,11 +66,6 @@
             wrapProgram $out/bin/gnawex \
               --set GX_SERVER__STATIC_ASSETS_PATH "${gnawex}/dist"
           '';
-        };
-
-        gce = nixos-generators.nixosGenerate {
-          system = "x86_64-linux";
-          format = "gce";
         };
 
         gnawexDocker = pkgs.dockerTools.buildImage {

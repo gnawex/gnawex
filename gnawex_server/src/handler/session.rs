@@ -5,13 +5,13 @@ use axum::{
     response::{Html, Redirect},
     Form,
 };
-use axum_extra::extract::cookie::{Cookie, PrivateCookieJar};
+use axum_extra::extract::cookie::{PrivateCookieJar, SameSite};
 use axum_macros::debug_handler;
+use cookie::Cookie;
 use gnawex_core::session;
 use gnawex_html::app::LoginPage;
-use hyper::{header, HeaderMap, StatusCode};
+use hyper::{header, StatusCode};
 use serde::Deserialize;
-use time::{Duration, OffsetDateTime};
 
 use crate::{extract::context::Context, AppState};
 
@@ -71,10 +71,10 @@ pub async fn new(
 
             match token {
                 Ok(token) => {
-                    let session_cookie = Cookie::build("session", token.0)
+                    let session_cookie = Cookie::build(("session", token.val))
                         .http_only(true)
-                        .expires(OffsetDateTime::now_utc() + Duration::days(30))
-                        .finish();
+                        .expires(token.expires_on)
+                        .same_site(SameSite::Lax);
 
                     (jar.add(session_cookie), Redirect::to("/items"))
                 }

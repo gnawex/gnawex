@@ -5,17 +5,14 @@ use axum::{
     response::Redirect,
 };
 use axum_extra::extract::{cookie::Key, PrivateCookieJar};
-use gnawex_core::{
-    session::{self, Token},
-    user::User,
-};
+use gnawex_core::{session, user::User};
 
 use crate::AppState;
 
 pub enum Context {
     Authenticated {
         current_user: User,
-        session_token: Token,
+        session_token: String,
     },
     Guest,
 }
@@ -39,23 +36,23 @@ where
         tracing::info!("{:#?}", jar);
 
         let app_state = AppState::from_ref(state);
-        let token = jar
-            .get("session")
-            .and_then(|cookie| Some(cookie.value().to_owned()));
+        let session_token = get_session_token(jar);
 
-        match token {
-            Some(token) => {
-                let current_user =
-                    session::get_session_user(&app_state.0.db_handle, Token(token.clone()))
-                        .await
-                        .unwrap();
+        match session_token {
+            Some(session_token) => {
+                match session::get_session_user(&app_state.0.db_handle, session_token.clone()).await
+                {
+                    Ok(current_user) => {
+                        let context = gnawex_core::context::AuthContext {
+                            current_user,
+                            session_token,
+                        };
 
-                let context = gnawex_core::context::AuthContext {
-                    current_user,
-                    session_token: session::Token(token),
-                };
+                        Ok(AuthContext(context))
+                    }
 
-                Ok(AuthContext(context))
+                    Err(_) => Err(Redirect::to("/login")),
+                }
             }
             None => Err(Redirect::to("/login")),
         }
@@ -75,23 +72,17 @@ where
         let jar = PrivateCookieJar::<Key>::from_request_parts(parts, state)
             .await
             .unwrap();
-
-        tracing::info!("{:#?}", jar);
-
         let app_state = AppState::from_ref(state);
-        let token = jar
-            .get("session")
-            .and_then(|cookie| Some(cookie.value().to_owned()));
-
-        let context = match token {
-            Some(token) => {
+        let session_token = get_session_token(jar);
+        let context = match session_token {
+            Some(session_token) => {
                 let current_user =
-                    session::get_session_user(&app_state.0.db_handle, Token(token.clone())).await;
+                    session::get_session_user(&app_state.0.db_handle, session_token.clone()).await;
 
                 match current_user {
                     Ok(current_user) => Context::Authenticated {
                         current_user,
-                        session_token: session::Token(token),
+                        session_token,
                     },
                     Err(_) => Context::Guest,
                 }
@@ -101,4 +92,11 @@ where
 
         Ok(context)
     }
+}
+
+fn get_session_token(jar: PrivateCookieJar) -> Option<String> {
+    let cookie = jar.get("session").and_then(|cookie| Some(cookie));
+    let token = cookie?.value().to_owned();
+
+    Some(token)
 }
