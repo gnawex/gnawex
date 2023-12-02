@@ -20,6 +20,7 @@ futures = { workspace = true }
 # Data types
 ## Date/time
 chrono = { workspace = true }
+time = { workspace = true }
 
 ## Serialization/deserialization
 serde = { workspace = true }

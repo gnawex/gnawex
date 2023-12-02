@@ -1,17 +1,17 @@
+use axum::body::Body;
 use axum::http::Request;
-use axum::response::{IntoResponse, Response};
+use axum::response::Response;
 use axum::{extract::State, middleware::Next};
-use axum_extra::extract::PrivateCookieJar;
-use gnawex_core::session::{self, Token};
+use gnawex_core::session;
 
 use crate::extract::context::Context;
 use crate::AppState;
 
-pub async fn refresh_session<B>(
+pub async fn refresh_session(
     State(state): State<AppState>,
     context: Context,
-    request: Request<B>,
-    next: Next<B>,
+    request: Request<Body>,
+    next: Next,
 ) -> Response {
     tracing::debug!("REFRESHING SESSION!!!!!!!!");
     tracing::debug!("Headers: {:#?}", request.headers());

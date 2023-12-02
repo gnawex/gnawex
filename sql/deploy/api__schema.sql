@@ -48,21 +48,22 @@ GRANT EXECUTE ON FUNCTION api.current_user TO verified_user;
 --------------------------------------------------------------------------------
 
 CREATE FUNCTION api.login(username TEXT, password TEXT)
-  RETURNS TEXT
+  RETURNS auth.sessions
   LANGUAGE plpgsql
   AS $$
     DECLARE
-      session_token TEXT;
+      session_record RECORD;
     BEGIN
-      SELECT auth.login(login.username :: CITEXT, login.password)
-        INTO session_token;
+      SELECT token, expires_on
+        FROM auth.login(login.username :: CITEXT, login.password)
+        INTO session_record;
 
-      IF session_token IS NULL THEN
+      IF session_record.token IS NULL THEN
         RAISE insufficient_privilege
           USING detail = 'invalid credentials';
       END IF;
 
-      RETURN session_token;
+      RETURN session_record;
     END;
   $$;
 

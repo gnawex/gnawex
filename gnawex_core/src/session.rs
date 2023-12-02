@@ -1,8 +1,13 @@
 use thiserror::Error;
+use time::OffsetDateTime;
 
 use crate::{db, error::ParseError, user::User};
 
-pub struct Token(pub String);
+#[derive(Clone, Debug)]
+pub struct Token {
+    pub val: String,
+    pub expires_on: OffsetDateTime,
+}
 
 #[derive(Debug, Error)]
 pub enum NewSessionError {
@@ -53,22 +58,25 @@ pub async fn new(
 ) -> Result<Token, NewSessionError> {
     let mut client = db_handle.get_client().await?;
     let txn = client.transaction().await?;
-    let token = gnawex_db::session::new(&txn, username, password).await?;
+    let (val, expires_on) = gnawex_db::session::new(&txn, username, password).await?;
+
+    println!("EXPIRES?? {expires_on}");
 
     txn.commit().await?;
 
-    Ok(Token(token))
+    Ok(Token { val, expires_on })
 }
 
 pub async fn get_session_user(
     db_handle: &db::Handle,
-    session_token: Token,
+    token: String,
 ) -> Result<User, GetSessionUserError> {
     let mut client = db_handle.get_client().await?;
     let txn = client.transaction().await?;
 
-    gnawex_db::session::set_session_token(&txn, session_token.0).await?;
+    gnawex_db::session::set_session_token(&txn, token).await?;
     gnawex_db::session::authenticate(&txn).await?;
+
     let row = gnawex_db::session::get_current_user(&txn).await?;
 
     txn.commit().await?;
@@ -80,12 +88,12 @@ pub async fn get_session_user(
 
 pub async fn refresh(
     db_handle: &db::Handle,
-    session_token: Token,
+    session_token: String,
 ) -> Result<(), RefreshSessionError> {
     let mut client = db_handle.get_client().await?;
     let txn = client.transaction().await?;
 
-    gnawex_db::session::set_session_token(&txn, session_token.0).await?;
+    gnawex_db::session::set_session_token(&txn, session_token).await?;
     gnawex_db::session::refresh(&txn).await?;
 
     txn.commit().await?;

@@ -10,6 +10,7 @@ hyper = { workspace = true }
 axum = { workspace = true }
 axum-extra = { workspace = true }
 axum-macros = { workspace = true }
+cookie = { workspace = true }
 deadpool-postgres = { workspace = true }
 tower-http = { workspace = true }
 tracing = { workspace = true }

@@ -1,12 +1,12 @@
 #![warn(unsafe_code, clippy::all, clippy::pedantic, clippy::cargo)]
 
-use std::{net::SocketAddr, sync::Arc};
+use std::{net::Ipv4Addr, sync::Arc};
 
 use axum::{
     extract::FromRef,
     middleware::from_fn_with_state,
     routing::{get, post},
-    Router, Server,
+    Router,
 };
 use axum_extra::extract::cookie::Key;
 use extract::context::Context;
@@ -50,14 +50,12 @@ impl FromRef<AppState> for Key {
 pub async fn run() -> anyhow::Result<()> {
     let server_config = ServerConfig::from_env()?;
     let app = mk_app(server_config.clone())?;
-    let addr = SocketAddr::from(([127, 0, 0, 1], server_config.port));
+    let ipv4_addr = Ipv4Addr::new(127, 0, 0, 1);
+    let listener = tokio::net::TcpListener::bind((ipv4_addr, server_config.port)).await?;
 
-    tracing::debug!("listening on {}", addr);
+    axum::serve(listener, app.into_make_service()).await?;
 
-    Server::bind(&addr)
-        .serve(app.into_make_service())
-        .with_graceful_shutdown(signal_shutdown())
-        .await?;
+    tracing::debug!("listening on {}", ipv4_addr);
 
     Ok(())
 }
