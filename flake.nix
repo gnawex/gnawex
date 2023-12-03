@@ -17,7 +17,7 @@
     , naersk
     , devenv
     } @ inputs:
-    flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
+    flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-darwin" ] (system:
     let
       rustOverlay = self: super: {
         rustc = toolchain;
@@ -55,7 +55,7 @@
     {
       packages = {
         default = gnawex;
-        gnawex-unwrapped = gnawex;
+        gnawexUnwrapped = gnawex;
 
         gnawex = pkgs.symlinkJoin {
           name = "gnawex";
